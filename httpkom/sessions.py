@@ -13,6 +13,8 @@ from misc import empty_response
 import version
 
 
+cookie_domain = '.osd.se' # FIXME! Move to configuration.
+
 _kom_server = 'kom.lysator.liu.se'
 
 kom_sessions = {}
@@ -134,7 +136,8 @@ def sessions_create():
             ksession = _login(request.json['pers_name'], request.json['password'])
         
         response = jsonify(to_dict(ksession, True, ksession))
-        response.set_cookie('session_id', value=ksession.id, max_age=7*24*60*60)
+        response.set_cookie('session_id', domain=cookie_domain,
+                            value=ksession.id, max_age=7*24*60*60)
         return response
     except (kom.InvalidPassword, kom.UndefinedPerson, kom.LoginDisallowed,
             kom.ConferenceZero) as ex:
