@@ -8,7 +8,6 @@ from flaskapp import app
 import conferences
 import sessions
 import texts
-import jskom
 
 
 @app.route("/")
