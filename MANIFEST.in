@@ -1,0 +1,2 @@
+recursive-include httpkom/templates *
+recursive-include httpkom/static *
