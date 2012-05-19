@@ -1,8 +1,34 @@
 # -*- coding: utf-8 -*-
 
-from flask import render_template, request
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
-from flaskapp import app
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+
+
+#if not app.debug:
+#    #file_handler = logging.FileHandler("httpkom.log")
+#    
+#    # keep 7 days of logs, rotated every midnight
+#    file_handler = TimedRotatingFileHandler(
+#        "log.txt", when='midnight', interval=1, backupCount=7)
+#    
+#    file_handler.setFormatter(logging.Formatter(
+#           '%(asctime)s %(levelname)s: %(message)s '
+#            '[in %(pathname)s:%(lineno)d]'
+#            ))
+#    
+#    #file_handler.setLevel(logging.WARNING)
+#    file_handler.setLevel(logging.DEBUG)
+#    
+#    app.logger.addHandler(file_handler)
+#    app.logger.setLevel(logging.DEBUG)
+#    app.logger.info("hej");
+
+
 
 # Load app parts
 import conferences

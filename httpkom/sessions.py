@@ -7,7 +7,8 @@ from flask import g, abort, request, jsonify, make_response, Response
 
 import kom
 from komsession import KomSession, KomSessionError, AmbiguousName, NameNotFound, to_dict
-from flaskapp import app
+
+from httpkom import app
 from errors import error_response
 from misc import empty_response
 import version

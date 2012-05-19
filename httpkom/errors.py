@@ -5,7 +5,7 @@ from flask import jsonify, make_response, Response
 import kom
 from komsession import KomSessionError
 
-from flaskapp import app
+from httpkom import app
 from misc import empty_response
 
 

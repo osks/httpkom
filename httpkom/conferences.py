@@ -4,7 +4,8 @@ from flask import g, request, jsonify
 
 import kom
 from komsession import KomSession, KomSessionError, KomText, to_dict, from_dict
-from flaskapp import app
+
+from httpkom import app
 from errors import error_response
 from misc import empty_response, get_bool_arg_with_default
 from sessions import requires_session
