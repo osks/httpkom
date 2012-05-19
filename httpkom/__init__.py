@@ -5,8 +5,23 @@ from logging.handlers import TimedRotatingFileHandler
 
 from flask import Flask, render_template, request
 
-app = Flask(__name__)
 
+default_settings = {
+    'HTTPKOM_COOKIE_DOMAIN': None,
+    
+    'HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS': '*',
+    'HTTPKOM_CROSSDOMAIN_MAX_AGE': 0,
+    'HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS': [ 'Origin', 'Accept', 'Cookie', 'Content-Type',
+                                         'X-Requested-With' ],
+    'HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS': [ 'Set-Cookie', 'Cookie' ],
+    'HTTPKOM_CROSSDOMAIN_ALLOW_METHODS': [ 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD' ],
+    'HTTPKOM_CROSSDOMAIN_ALLOW_CREDENTIALS': 'true',
+}
+
+
+app = Flask(__name__)
+app.config.from_object('httpkom.default_settings')
+app.config.from_envvar('HTTPKOM_SETTINGS')
 
 
 #if not app.debug:
@@ -36,27 +51,41 @@ import sessions
 import texts
 
 
-crossdomain_allowed_origins = [ 'https://jskom.osd.se', 'http://localhost:5000' ]
-crossdomain_allow_headers = [ 'Origin', 'Accept', 'Cookie', 'Content-Type',
-                              'X-Requested-With' ]
-crossdomain_expose_headers = [ 'Set-Cookie', 'Cookie' ]
-crossdomain_max_age = 1 #21600
-crossdomain_allow_methods = [ 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS' ]
-
 
 @app.after_request
 def allow_crossdomain(resp):
+    def is_allowed(origin):
+        allowed_origins = app.config['HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS']
+        if allowed_origins is not None:
+            if isinstance(allowed_origins, basestring) and allowed_origins == '*':
+                return True
+            
+            if origin in allowed_origins:
+                return True
+        
+        return False
+            
+    
     if 'Origin' in request.headers:
         h = resp.headers
         origin = request.headers['Origin']
-        if (origin in crossdomain_allowed_origins
-            or '*' in crossdomain_allowed_origins):
+        if is_allowed(origin):
             h['Access-Control-Allow-Origin'] = origin
-            h['Access-Control-Allow-Methods'] = ', '.join(crossdomain_allow_methods)
-            h['Access-Control-Allow-Credentials'] = 'true'
-            h['Access-Control-Max-Age'] = str(crossdomain_max_age)
-            h['Access-Control-Allow-Headers'] = ', '.join(crossdomain_allow_headers)
-            h['Access-Control-Expose-Headers'] = ', '.join(crossdomain_expose_headers)
+                          
+            h['Access-Control-Allow-Methods'] = \
+                ', '.join(app.config['HTTPKOM_CROSSDOMAIN_ALLOW_METHODS'])
+            
+            h['Access-Control-Allow-Credentials'] = \
+                app.config['HTTPKOM_CROSSDOMAIN_ALLOW_CREDENTIALS']
+            
+            h['Access-Control-Max-Age'] = \
+                str(app.config['HTTPKOM_CROSSDOMAIN_MAX_AGE'])
+            
+            h['Access-Control-Allow-Headers'] = \
+                ', '.join(app.config['HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS'])
+            
+            h['Access-Control-Expose-Headers'] = \
+                ', '.join(app.config['HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS'])
         else:
             h['Access-Control-Allow-Origin'] = 'null'
     
