@@ -6,17 +6,16 @@ from logging.handlers import TimedRotatingFileHandler
 from flask import Flask, render_template, request
 
 
-default_settings = {
-    'HTTPKOM_COOKIE_DOMAIN': None,
+class default_settings:
+    HTTPKOM_COOKIE_DOMAIN = None
     
-    'HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS': '*',
-    'HTTPKOM_CROSSDOMAIN_MAX_AGE': 0,
-    'HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS': [ 'Origin', 'Accept', 'Cookie', 'Content-Type',
-                                         'X-Requested-With' ],
-    'HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS': [ 'Set-Cookie', 'Cookie' ],
-    'HTTPKOM_CROSSDOMAIN_ALLOW_METHODS': [ 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD' ],
-    'HTTPKOM_CROSSDOMAIN_ALLOW_CREDENTIALS': 'true',
-}
+    HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS = '*'
+    HTTPKOM_CROSSDOMAIN_MAX_AGE = 0
+    HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS = [ 'Origin', 'Accept', 'Cookie', 'Content-Type',
+                                          'X-Requested-With' ]
+    HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS = [ 'Set-Cookie', 'Cookie' ]
+    HTTPKOM_CROSSDOMAIN_ALLOW_METHODS = [ 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD' ]
+    HTTPKOM_CROSSDOMAIN_ALLOW_CREDENTIALS = 'true'
 
 
 app = Flask(__name__)
