@@ -20,7 +20,7 @@ default_settings = {
 
 
 app = Flask(__name__)
-app.config.from_object('httpkom.default_settings')
+app.config.from_object(default_settings)
 app.config.from_envvar('HTTPKOM_SETTINGS')
 
 
