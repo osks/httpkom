@@ -7,6 +7,10 @@ clients in Javascript.
 
 The source code can be found at: https://github.com/osks/httpkom
 
+httpkom uses python-lyskom, which is also released under GPL. The
+following files belong to python-lyskom: httpkom/kom.py,
+httpkom/thkom.py and httpkom/komauxitems.py.
+
 
 Authors
 -------
