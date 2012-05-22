@@ -6,3 +6,9 @@ TODO
 * Dokumentera alla anrop i httpkom.
 
 * Läsordningen är inte djupet-först.
+
+* TODO: Handle images. Add something like /texts/<int:text_no>/body
+  that returns the body of a text in the HTTP body, with the
+  content-type from the aux-item in the HTTP header. This means we
+  could use a text with an image in it just like a normal image, and
+  use the URL in an img-tag.
