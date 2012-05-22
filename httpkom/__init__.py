@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
 import logging
 from logging.handlers import TimedRotatingFileHandler
