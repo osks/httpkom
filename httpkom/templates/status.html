@@ -17,7 +17,6 @@
       <tbody>
         {% for s_id in kom_sessions %}
         <tr>
-          <td>{{ s_id }}</td>
           <td>{{ kom_sessions[s_id].host }}:{{ kom_sessions[s_id].port }}</td>
           <td>{{ kom_sessions[s_id].current_user() }}</td>
         </tr>

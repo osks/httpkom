@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
+import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
 from flask import Flask, render_template, request
 
+from misc import empty_response
+
 
 class default_settings:
+    DEBUG = False
     HTTPKOM_COOKIE_DOMAIN = None
     
     HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS = '*'
@@ -21,7 +25,10 @@ class default_settings:
 
 app = Flask(__name__)
 app.config.from_object(default_settings)
-app.config.from_envvar('HTTPKOM_SETTINGS')
+if 'HTTPKOM_SETTINGS' in os.environ:
+    app.config.from_envvar('HTTPKOM_SETTINGS')
+else:
+    app.logger.info("No environment variable HTTPKOM_SETTINGS found, using default settings.")
 
 
 #if not app.debug:
@@ -98,4 +105,9 @@ def index():
 
 @app.route("/status")
 def status():
-    return render_template('status.html', kom_sessions=sessions.kom_sessions)
+    # Only enable status page in debug mode. It's not public information!
+    # IMPORTANT: the kom_session.id is VERY secret! You can take over a session with it.
+    if app.config['DEBUG']:
+        return render_template('status.html', kom_sessions=sessions.kom_sessions)
+    else:
+        return empty_response(404)
