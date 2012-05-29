@@ -21,6 +21,7 @@
 # could theoretically cause a deadlock.  So: don't put things on the
 # queue yourself, or use queues of infinite site.
 
+import socket
 import kom
 import thread
 import Queue
