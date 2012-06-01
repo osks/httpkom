@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
-from flask import g, request, jsonify
+import io
+
+from flask import g, request, jsonify, send_file, Response
 
 import kom
-from komsession import KomSession, KomSessionError, KomText, to_dict, from_dict
+from komsession import KomSession, KomSessionError, KomText, to_dict, from_dict, \
+    parse_content_type, mime_type_tuple_to_str
 
 from httpkom import app
 from errors import error_response
@@ -68,6 +71,29 @@ def texts_get(text_no):
     """
     try:
         return jsonify(to_dict(g.ksession.get_text(text_no), True, g.ksession))
+    except kom.NoSuchText as ex:
+        return error_response(404, kom_error=ex)
+
+
+@app.route('/texts/<int:text_no>/body')
+@requires_session
+def texts_get_body(text_no):
+    try:
+        text = g.ksession.get_text(text_no)
+        mime_type, encoding = parse_content_type(text.content_type)
+        
+        data = io.BytesIO()
+        if mime_type[0] == 'text':
+            data.write(text.body.encode('utf-8'))
+        else:
+            data.write(text.body)
+        data.flush()
+        data.seek(0)
+        response = send_file(data,
+                             mimetype=text.content_type,
+                             as_attachment=False)
+            
+        return response
     except kom.NoSuchText as ex:
         return error_response(404, kom_error=ex)
 

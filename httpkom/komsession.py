@@ -134,14 +134,28 @@ class KomSession(object):
         
         print misc_info.to_string()
         
+        mime_type = mimeparse.parse_mime_type(komtext.content_type)
+        # Because a text consists of both a subject and body, and you
+        # can have a text subject in combination with an image, a
+        # charset is needed to specify the encoding of the subject.
+        mime_type[2]['charset'] = 'utf-8'
+        content_type = mime_type_tuple_to_str(mime_type)
+        
+        # TODO: how would this work with images?
+        fulltext = str()
+        fulltext += komtext.subject.encode('utf-8') + "\n"
+        if (mime_type[0] == 'text'):
+            fulltext += komtext.body.encode('utf-8')
+        else:
+            fulltext += komtext.body
+        
         aux_items = []
         aux_items.append(kom.AuxItem(kom.AI_CREATING_SOFTWARE,
                                      data="%s %s" % (self.client_name, self.client_version)))
         aux_items.append(kom.AuxItem(kom.AI_CONTENT_TYPE,
-                                     data=komtext.get_content_type_str()))
+                                     data=content_type))
         
-        text_no = kom.ReqCreateText(self.conn, komtext.get_text(),
-                                    misc_info, aux_items).response()
+        text_no = kom.ReqCreateText(self.conn, fulltext, misc_info, aux_items).response()
         return text_no
 
     def mark_as_read_local(self, local_text_no, conf_no):
@@ -232,28 +246,20 @@ class KomText(object):
                     rawbody = text
                 else:
                     rawsubject, rawbody = text.split('\n', 1)
+                    # TODO: should we always decode the subject?
                     self.subject = decode_text(rawsubject, encoding)
                 
-                # TODO: only parse body if media type is text, and not an
-                # image, for example.  Also, if the subject is empty,
-                # everything becomes the subject, which will get decoded.
-                # Figure out how to handle all this. Assume empty subject
-                # means everything in body?
-                self.body = decode_text(rawbody, encoding)
+                if mime_type[0] == 'text':
+                    # Only decode body if media type is text, and not
+                    # an image, for example.  Also, if the subject is
+                    # empty, everything becomes the subject, which
+                    # will get decoded.  Figure out how to handle all
+                    # this. Assume empty subject means everything in
+                    # body?
+                    self.body = decode_text(rawbody, encoding)
+                else:
+                    self.body = rawbody
     
-    def get_text(self):
-        text = self.subject + "\n" + self.body
-        # TODO: how would this work with images? not very well...
-        text = text.encode('utf-8')
-        return text
-
-    def get_content_type_str(self):
-        # TODO: This will not handle non-text stuff
-        mime_type = mimeparse.parse_mime_type(self.content_type)
-        mime_type[2]['charset'] = 'utf-8'
-        content_type = mime_type_tuple_to_str(mime_type)
-        return content_type
-        
     def _get_content_type_from_text_stat(self, text_stat):
         try:
             contenttype = kom.first_aux_items_with_tag(
@@ -526,6 +532,9 @@ def MICommentIn_from_dict(d, lookups, session):
 # Misc functions
 
 def decode_text(text, encoding, backup_encoding='latin1'):
+    if encoding is None:
+        encoding = backup_encoding
+    
     try:
         decoded_text = text.decode(encoding)
     except UnicodeDecodeError:
@@ -541,10 +550,10 @@ def parse_content_type(contenttype):
         # Remove charset from mime_type, if we have it
         encoding = mime_type[2].pop("charset")
     else:
-        encoding = 'latin1'
+        encoding = None
     
     if encoding == 'x-ctext':
-        encoding = 'latin1' # trying to parse x-ctext as latin1 as backup
+        encoding = 'latin1'
     
     return mime_type, encoding
 
