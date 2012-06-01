@@ -376,8 +376,12 @@ def KomText_to_dict(komtext, lookups, session):
         text_no=komtext.text_no,
         author=pers_to_dict(komtext.author, lookups, session),
         content_type=komtext.content_type,
-        subject=komtext.subject,
-        body=komtext.body)
+        subject=komtext.subject)
+    
+    mime_type, encoding = parse_content_type(komtext.content_type)
+    # Only add body if text
+    if mime_type[0] == 'text':
+        d['body'] = komtext.body
     
     if komtext.recipient_list is None:
         d['recipient_list'] = None
