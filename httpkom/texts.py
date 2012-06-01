@@ -20,6 +20,8 @@ from sessions import requires_session
 def texts_get(text_no):
     """Get a text.
     
+    Note: The body will only be included in the response if the content type is text.
+    
     .. rubric:: Request
     
     ::
@@ -78,6 +80,42 @@ def texts_get(text_no):
 @app.route('/texts/<int:text_no>/body')
 @requires_session
 def texts_get_body(text_no):
+    """Get the body of text, with the content type of the body set in the HTTP header.
+    Useful for creating img-tags in HTML and specifying this URL as source.
+    
+    If the content type is text, the text will be recoded to UTF-8. For other types,
+    the content type will be left untouched.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      GET /texts/19680717/body HTTP/1.0
+    
+    .. rubric:: Responses
+    
+    Text exists::
+    
+      HTTP/1.0 200 OK
+      Content-Type: text/x-kom-basic; charset=utf-8
+      
+      räksmörgås
+    
+    Text does not exist::
+    
+      HTTP/1.0 404 NOT FOUND
+      
+      { TODO: error stuff }
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X GET -H "Content-Type: application/json" \\
+           http://localhost:5001/texts/19680717/body
+    
+    """
     try:
         text = g.ksession.get_text(text_no)
         mime_type, encoding = parse_content_type(text.content_type)
