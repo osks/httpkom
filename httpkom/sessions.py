@@ -87,6 +87,8 @@ def sessions_create():
     will be looked up before login. If the login is successful, the
     matched full name will be returned in the response.
     
+    If no client is specified in the request, "httpkom" will be used.
+    
     .. rubric:: Request
     
     ::
@@ -100,10 +102,11 @@ def sessions_create():
     
     Successful login::
     
-      HTTP/1.1 200 OK
-      Set-Cookie: session_id=abc123; expires=Sat, 19-May-2012 12:44:51 GMT; Max-Age=604800; Path=/
+      HTTP/1.0 200 OK
+      Set-Cookie: session_id=033556ee-3e52-423f-9c9a-d85aed7688a1; expires=Sat, 19-May-2012 12:44:51 GMT; Max-Age=604800; Path=/
       
-      { "id": "abc123", "pers_no": 14506, "pers_name": "Oskars testperson",
+      { "id": "033556ee-3e52-423f-9c9a-d85aed7688a1",
+        "pers_no": 14506, "pers_name": "Oskars testperson",
         "client": { "name": "jskom", "version": "0.1" } }
     
     Failed login::
@@ -119,7 +122,7 @@ def sessions_create():
       curl -b cookies.txt -c cookies.txt -v \\
            -X POST -H "Content-Type: application/json" \\
            -d '{ "pers_name": "Oskars testp", "password": "test123" }' \\
-            http://localhost:5000/sessions/
+            http://localhost:5001/sessions/
     
     """
     old_ksession = _get_komsession(_get_session_id())
@@ -155,7 +158,7 @@ def sessions_get(session_id):
     
     ::
     
-      GET /sessions/abc123 HTTP/1.1
+      GET /sessions/033556ee-3e52-423f-9c9a-d85aed7688a1 HTTP/1.1
     
     .. rubric:: Responses
     
@@ -163,9 +166,10 @@ def sessions_get(session_id):
     
       HTTP/1.1 200 OK
       
-      { "id": "abc123", "pers_no": 14506, "pers_name": "Oskars testperson",
+      { "id": "033556ee-3e52-423f-9c9a-d85aed7688a1",
+        "pers_no": 14506, "pers_name": "Oskars testperson",
         "client": { "name": "jskom", "version": "0.1" } }
-
+    
     Session does not exist (i.e. not logged in)::
     
       HTTP/1.1 404 Not Found
@@ -175,7 +179,7 @@ def sessions_get(session_id):
     ::
     
       curl -b cookies.txt -c cookies.txt -v \\
-           -X GET http://localhost:5000/sessions/abc123
+           -X GET http://localhost:5001/sessions/abc123
     
     """
     session_id = _get_session_id()
@@ -194,7 +198,7 @@ def sessions_delete(session_id):
     
     ::
     
-      DELETE /sessions/abc123 HTTP/1.1
+      DELETE /sessions/033556ee-3e52-423f-9c9a-d85aed7688a1 HTTP/1.1
     
     .. rubric:: Responses
     
@@ -212,7 +216,7 @@ def sessions_delete(session_id):
     ::
     
       curl -b cookies.txt -c cookies.txt -v \\
-           -X DELETE http://localhost:5000/sessions/abc123
+           -X DELETE http://localhost:5001/sessions/abc123
     
     """
     ksession = _get_komsession(session_id)

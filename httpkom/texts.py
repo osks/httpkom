@@ -12,38 +12,139 @@ from misc import empty_response
 from sessions import requires_session
 
 
-# curl -b cookies.txt -c cookies.txt -v \
-#      -X GET http://localhost:5000/texts/19680717
 @app.route('/texts/<int:text_no>')
 @requires_session
 def texts_get(text_no):
+    """Get a text.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      GET /texts/19680717 HTTP/1.0
+    
+    .. rubric:: Responses
+    
+    Text exists::
+    
+      HTTP/1.0 200 OK
+      
+      {
+        "body": "r\u00e4ksm\u00f6rg\u00e5s",
+        "recipient_list": [
+          {
+            "conf_name": "Oskars Testperson",
+            "type": "to",
+            "loc_no": 29,
+            "conf_no": 14506
+          }
+        ], 
+        "author": {
+          "pers_no": 14506,
+          "pers_name": "Oskars Testperson"
+        }, 
+        "creation_time": "2012-05-08 18:36:17",
+        "comment_in_list": [],
+        "content_type": "text/x-kom-basic",
+        "text_no": 19680717,
+        "comment_to_list": [],
+        "subject": "jaha"
+      }
+    
+    Text does not exist::
+    
+      HTTP/1.0 404 NOT FOUND
+      
+      { TODO: error stuff }
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X GET -H "Content-Type: application/json" \\
+           http://localhost:5001/texts/19680717
+    
+    """
     try:
         return jsonify(to_dict(g.ksession.get_text(text_no), True, g.ksession))
     except kom.NoSuchText as ex:
         return error_response(404, kom_error=ex)
 
 
-
-# curl -b cookies.txt -c cookies.txt -v \
-#      -X POST -H "Content-Type: application/json" \
-#      -d '{"body": "räksmörgås", "subject": "jaha", \
-#           "recipient_list": [ { "conf_name": "oska testp", "type": "to" } ], \
-#           "content_type": "text/x-kom-basic", \
-#           "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \
-#      http://localhost:5000/texts/
 @app.route('/texts/', methods=['POST'])
 @requires_session
 def texts_create():
+    """Create a text.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      POST /texts/ HTTP/1.0
+      
+      {
+        "body": "r\u00e4ksm\u00f6rg\u00e5s",
+        "subject": "jaha",
+        "recipient_list": [ { "conf_name": "oska testp", "type": "to" } ],
+        "content_type": "text/x-kom-basic",
+        "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ]
+      }
+    
+    .. rubric:: Responses
+    
+    Text was created::
+    
+      HTTP/1.0 200 OK
+      
+      {
+        "text_no": 19724960, 
+      }
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X POST H "Content-Type: application/json" \\
+           -d '{ "body": "r\u00e4ksm\u00f6rg\u00e5s", \\
+                 "subject": "jaha",
+                 "recpipent_list": [ { "conf_name": "oska testp", "type": "to" } ], \\
+                 "content_type": "text/x-kom-basic", \\
+                 "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \\
+           http://localhost:5001/texts/
+    
+    """
     komtext = from_dict(request.json, KomText, True, g.ksession)
     text_no = g.ksession.create_text(komtext)
     return jsonify(text_no=text_no)
 
 
-# curl -b cookies.txt -c cookies.txt -v \
-#      -X PUT http://localhost:5000/texts/19680717/read-marking
 @app.route('/texts/<int:text_no>/read-marking', methods=['PUT'])
 @requires_session
 def texts_put_read_marking(text_no):
+    """Mark a text as read in all recipient conferences.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      PUT /texts/<int:text_no>/read-marking HTTP/1.0
+    
+    .. rubric:: Responses
+    
+    Text was marked as read::
+    
+      HTTP/1.0 204 NO CONTENT
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X PUT http://localhost:5001/texts/19680717/read-marking
+    
+    """
     # Mark text as read in all recipient conferences
     
     g.ksession.mark_as_read(text_no)
