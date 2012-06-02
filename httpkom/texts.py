@@ -209,8 +209,6 @@ def texts_put_read_marking(text_no):
            -X PUT http://localhost:5001/texts/19680717/read-marking
     
     """
-    # Mark text as read in all recipient conferences
-    
     g.ksession.mark_as_read(text_no)
     return empty_response(204)
 
