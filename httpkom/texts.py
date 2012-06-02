@@ -122,7 +122,7 @@ def texts_get_body(text_no):
         mime_type, encoding = parse_content_type(text.content_type)
         
         #data = io.BytesIO()
-        data = StringIO.String()
+        data = StringIO.StringIO()
         if mime_type[0] == 'text':
             data.write(text.body.encode('utf-8'))
         else:
