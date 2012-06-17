@@ -132,11 +132,13 @@ def sessions_create():
         _logout(old_ksession)
     
     try:
+        pers_name = request.json.get('pers_name', '')
+        password = request.json.get('password', '')
         if 'client' in request.json and request.json['client'] is not None:
-            ksession = _login(request.json['pers_name'], request.json['password'],
+            ksession = _login(pers_name, password,
                               request.json['client']['name'], request.json['client']['version'])
         else:
-            ksession = _login(request.json['pers_name'], request.json['password'])
+            ksession = _login(pers_name, password)
         
         response = jsonify(to_dict(ksession, True, ksession))
         response.set_cookie('session_id', domain=app.config['HTTPKOM_COOKIE_DOMAIN'],
