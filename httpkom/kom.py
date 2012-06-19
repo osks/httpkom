@@ -2676,7 +2676,7 @@ class CachedUserConnection(CachedConnection):
         while more_to_fetch:
             try:
                 mapping = ReqLocalToGlobal(self, conf_no, last, 255).response()
-                unread.extend([e[1] for e in mapping.list])
+                unread.extend([e[1] for e in mapping.list if e[1] != 0])
                 last = mapping.range_end
                 more_to_fetch = mapping.later_texts_exists
             except NoSuchLocalText:
