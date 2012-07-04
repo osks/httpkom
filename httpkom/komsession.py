@@ -99,7 +99,7 @@ class KomSession(object):
     def get_unread_conferences(self):
         conf_nos = kom.ReqGetUnreadConfs(self.conn, self.current_user()).response()
         unread_confs = [ KomUnreadConference(self.get_conference(conf_no, full=False),
-                                             self.conn.no_unread[conf_no])
+                                             len(self.get_unread_in_conference(conf_no)))
                          for conf_no in conf_nos ]
         # Filter out unread conferences with 0 unread in, can happen
         # for some conferences, like "Ryd, Bastu" (conf_no: 9700).
