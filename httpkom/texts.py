@@ -213,11 +213,30 @@ def texts_put_read_marking(text_no):
     return empty_response(204)
 
 
-# curl -b cookies.txt -c cookies.txt -v \
-#      -X DELETE http://localhost:5000/texts/19680717/read-marking
 @app.route('/texts/<int:text_no>/read-marking', methods=['DELETE'])
 @requires_session
 def texts_delete_read_marking(text_no):
-    # Mark text as unread in all recipient conferences
+    """Mark a text as unread in all recipient conferences.
     
-    raise NotImplementedError()
+    .. rubric:: Request
+    
+    ::
+    
+      DELETE /texts/<int:text_no>/read-marking HTTP/1.0
+    
+    .. rubric:: Responses
+    
+    Text was marked as read::
+    
+      HTTP/1.0 204 NO CONTENT
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X DELETE http://localhost:5001/texts/19680717/read-marking
+    
+    """
+    g.ksession.mark_as_unread(text_no)
+    return empty_response(204)

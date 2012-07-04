@@ -163,11 +163,22 @@ class KomSession(object):
             kom.ReqMarkAsRead(self.conn, conf_no, [local_text_no]).response()
         except kom.NotMember:
             pass
+
+    def mark_as_unread_local(self, local_text_no, conf_no):
+        try:
+            kom.ReqMarkAsUnread(self.conn, conf_no, local_text_no).response()
+        except kom.NotMember:
+            pass
     
     def mark_as_read(self, text_no):
         text_stat = self.get_text_stat(text_no)
         for mi in text_stat.misc_info.recipient_list:
             self.mark_as_read_local(mi.loc_no, mi.recpt)
+
+    def mark_as_unread(self, text_no):
+        text_stat = self.get_text_stat(text_no)
+        for mi in text_stat.misc_info.recipient_list:
+            self.mark_as_unread_local(mi.loc_no, mi.recpt)
 
 
 
