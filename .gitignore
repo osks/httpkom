@@ -14,3 +14,6 @@ pip-log.txt
 #Emacs temp files
 *~
 .#*
+
+cookies.txt
+login.sh
