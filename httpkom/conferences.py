@@ -51,6 +51,21 @@ def conferences_get(conf_no):
         return error_response(404, kom_error=ex)
 
 
+@app.route('/conferences/<int:conf_no>/unread',
+            methods=['PUT'])
+@requires_session
+def conferences_set_unread(conf_no):
+    """ Expecting:
+            Content-Type: application/json 
+            Body: { "no-of-unread": 123 }}
+        Example:
+            curl -b cookies.txt -c cookies.txt -v -X PUT -H "Content-Type: application/json" \
+                http://localhost:5001/conferences/10486/unread -d '{ "no-of-unread": "10" }'
+    """
+    no_of_unread = request.json['no-of-unread']
+    g.ksession.set_unread(conf_no, no_of_unread)
+    return empty_response(204)
+
 # curl -b cookies.txt -c cookies.txt -v \
 #      -X GET http://localhost:5000/conferences/14506/read-markings/?unread=true
 @app.route('/conferences/<int:conf_no>/read-markings/')
