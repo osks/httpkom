@@ -12,11 +12,114 @@ from misc import empty_response, get_bool_arg_with_default
 from sessions import requires_session
 
 
-# curl -b cookies.txt -c cookies.txt -v \
-#      -X GET http://localhost:5000/conferences/?unread=true&full=true
 @app.route('/conferences/')
 @requires_session
 def conferences_list():
+    """Get list of conferences. Which conferences to get are filtered
+    with query parameters.
+    
+    Query parameters:
+    
+    =======  =======  =================================================================
+    Key      Type     Values
+    =======  =======  =================================================================
+    unread   boolean  :true: Return conferences with unread texts in.
+                      :false: *Not implemented.*
+    full     boolean  :true: Return full conference information.
+                      :false: Return micro conference information (`UConference <http://www.lysator.liu.se/lyskom/protocol/11.1/protocol-a.html#Conferences>`_) which causes less load on the server.
+    =======  =======  =================================================================
+        
+    .. rubric:: Request
+    
+    ::
+    
+      GET /conferences/?unread=true HTTP/1.0
+    
+    .. rubric:: Responses
+    
+    With full=false::
+    
+      HTTP/1.0 200 OK
+      
+      {
+        "confs": [
+          {
+            "highest_local_no": 1996, 
+            "nice": 77, 
+            "type": {
+              "forbid_secret": 0, 
+              "allow_anonymous": 1, 
+              "rd_prot": 1, 
+              "secret": 0, 
+              "letterbox": 1, 
+              "original": 0, 
+              "reserved3": 0, 
+              "reserved2": 0
+            }, 
+            "name": "Oskars Testperson", 
+            "conf_no": 14506
+          }
+        ]
+      }
+    
+    With full=true::
+    
+      HTTP/1.0 200 OK
+      
+      {
+        "confs": [
+          {
+            "super_conf": {
+              "conf_name": "", 
+              "conf_no": 0
+            }, 
+            "creator": {
+              "pers_no": 14506, 
+              "pers_name": "Oskars Testperson"
+            }, 
+            "no_of_texts": 1977, 
+            "no_of_members": 1, 
+            "creation_time": "2012-04-28 19:49:11", 
+            "permitted_submitters": {
+              "conf_name": "", 
+              "conf_no": 0
+            }, 
+            "conf_no": 14506, 
+            "last_written": "2012-07-31 00:00:11", 
+            "keep_commented": 77, 
+            "name": "Oskars Testperson", 
+            "type": {
+              "forbid_secret": 0, 
+              "allow_anonymous": 1, 
+              "rd_prot": 1, 
+              "secret": 0, 
+              "letterbox": 1, 
+              "original": 0, 
+              "reserved3": 0, 
+              "reserved2": 0
+            }, 
+            "first_local_no": 20, 
+            "expire": 0, 
+            "msg_of_day": 0, 
+            "supervisor": {
+              "conf_name": "Oskars Testperson", 
+              "conf_no": 14506
+            }, 
+            "presentation": 0, 
+            "nice": 77
+          }
+        ]
+      }
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X GET -H "Content-Type: application/json" \\
+           http://localhost:5001/conferences/?unread=true&full=false
+    
+    """
     full = get_bool_arg_with_default(request.args, 'full', False)
     unread = get_bool_arg_with_default(request.args, 'unread', False)
     
