@@ -12,6 +12,9 @@ from misc import empty_response
 
 class default_settings:
     DEBUG = False
+    
+    HTTPKOM_LYSKOM_SERVER = 'kom.lysator.liu.se'
+    
     HTTPKOM_COOKIE_DOMAIN = None
     
     HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS = '*'
@@ -56,6 +59,7 @@ else:
 import conferences
 import sessions
 import texts
+import persons
 
 
 

@@ -59,10 +59,9 @@ class KomSession(object):
         self.conn.socket.close()
         self.conn = None
     
-    def login(self, pers_name, password, client_name, client_version):
+    def login(self, pers_no, password, client_name, client_version):
         self.client_name = client_name
         self.client_version = client_version
-        pers_no = self.lookup_name_exact(pers_name, True, False)
         kom.ReqLogin(self.conn, pers_no, password).response()
         kom.ReqSetClientVersion(self.conn, self.client_name, self.client_version)
         self.conn.set_user(pers_no)
@@ -90,26 +89,26 @@ class KomSession(object):
     def get_conf_name(self, conf_no):
         return self.conn.conf_name(conf_no)
     
-    def get_conferences(self, unread=False, full=False):
+    def get_conferences(self, unread=False, micro=True):
         if unread:
             conf_nos = kom.ReqGetUnreadConfs(self.conn, self.current_user()).response()
-            return [ self.get_conference(conf_no, full) for conf_no in conf_nos ]
+            return [ self.get_conference(conf_no, micro) for conf_no in conf_nos ]
         raise NotImplementedError()
 
     def get_unread_conferences(self):
         conf_nos = kom.ReqGetUnreadConfs(self.conn, self.current_user()).response()
-        unread_confs = [ KomUnreadConference(self.get_conference(conf_no, full=False),
+        unread_confs = [ KomUnreadConference(self.get_conference(conf_no, micro=True),
                                              len(self.get_unread_in_conference(conf_no)))
                          for conf_no in conf_nos ]
         # Filter out unread conferences with 0 unread in, can happen
         # for some conferences, like "Ryd, Bastu" (conf_no: 9700).
         return [ uc for uc in unread_confs if uc.no_of_unread > 0 ]
         
-    def get_conference(self, conf_no, full=False):
-        if full:
-            return KomConference(conf_no, self.conn.conferences[conf_no])
-        else:
+    def get_conference(self, conf_no, micro=True):
+        if micro:
             return KomUConference(conf_no, self.conn.uconferences[conf_no])
+        else:
+            return KomConference(conf_no, self.conn.conferences[conf_no])
 
     def get_unread_in_conference(self, conf_no):
         return self.conn.get_unread_texts(conf_no)
@@ -319,17 +318,19 @@ def from_dict(d, cls, lookups=False, session=None):
         raise NotImplementedError("from_dict is not implemented for: %s" % cls)
 
 def KomSession_to_dict(ksession, lookups, session):
+    if lookups:
+        pers_no = ksession.current_user()
+        pers_name = ksession.get_conf_name(pers_no)
+    else:
+        pers_no = None
+        pers_name = None
+    
     d= dict(
         id=ksession.id,
-        pers_no=None,
-        pers_name=None,
+        person=dict(pers_no=pers_no, pers_name=pers_name),
         client=dict(name=ksession.client_name,
                     version=ksession.client_version))
     
-    if lookups:
-        pers_no = ksession.current_user()
-        d['pers_no'] = pers_no
-        d['pers_name'] = ksession.get_conf_name(pers_no)
     
     return d
 

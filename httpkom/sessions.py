@@ -15,7 +15,7 @@ from misc import empty_response
 import version
 
 
-_kom_server = 'kom.lysator.liu.se'
+_kom_server = app.config['HTTPKOM_LYSKOM_SERVER']
 
 kom_sessions = {}
 
@@ -31,11 +31,19 @@ def requires_session(f):
     return decorated
 
 
-def _create_komsession(pers_name, password, client_name, client_version):
+def optional_session(f):
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        g.ksession = _get_komsession(_get_session_id())
+        return f(*args, **kwargs)
+    return decorated
+
+
+def _create_komsession(pers_no, password, client_name, client_version):
     ksession = KomSession(_kom_server)
     ksession.connect()
     try:
-        ksession.login(pers_name, password, client_name, client_version)
+        ksession.login(pers_no, password, client_name, client_version)
         # todo: check for exceptions that we should return 401 for. or
         # should that be done here? we don't want to return http stuff here
     except:
@@ -64,9 +72,9 @@ def _get_komsession(session_id):
     
     return None
 
-def _login(pers_name, password, client_name=version.name, client_version=version.version):
+def _login(pers_no, password, client_name=version.name, client_version=version.version):
     app.logger.debug("Logging in")
-    ksession = _create_komsession(pers_name, password, client_name, client_version)
+    ksession = _create_komsession(pers_no, password, client_name, client_version)
     _save_komsession(ksession.id, ksession)
     return ksession
 
@@ -83,9 +91,8 @@ def _logout(ksession):
 def sessions_create():
     """Create a new session (i.e. login).
     
-    Note: "pers_name" in the request can be an abbreviated name, it
-    will be looked up before login. If the login is successful, the
-    matched full name will be returned in the response.
+    Note: If the login is successful, the matched full name will be
+    returned in the response.
     
     If no client is specified in the request, "httpkom" will be used.
     
@@ -95,8 +102,11 @@ def sessions_create():
     
       POST /sessions/ HTTP/1.1
       
-      { "pers_name": "oskars testp", "password": "test123",
-        "client": { "name": "jskom", "version": "0.1" } }
+      {
+        "person": { "pers_no": 14506 },
+        "password": "test123",
+        "client": { "name": "jskom", "version": "0.2" }
+      }
     
     .. rubric:: Responses
     
@@ -106,8 +116,8 @@ def sessions_create():
       Set-Cookie: session_id=033556ee-3e52-423f-9c9a-d85aed7688a1; expires=Sat, 19-May-2012 12:44:51 GMT; Max-Age=604800; Path=/
       
       { "id": "033556ee-3e52-423f-9c9a-d85aed7688a1",
-        "pers_no": 14506, "pers_name": "Oskars testperson",
-        "client": { "name": "jskom", "version": "0.1" } }
+        "person": { "pers_no": 14506, "pers_name": "Oskars testperson" },
+        "client": { "name": "jskom", "version": "0.2" } }
     
     Failed login::
     
@@ -121,7 +131,7 @@ def sessions_create():
     
       curl -b cookies.txt -c cookies.txt -v \\
            -X POST -H "Content-Type: application/json" \\
-           -d '{ "pers_name": "Oskars testp", "password": "test123" }' \\
+           -d '{ "pers_no": 14506, "password": "test123" }' \\
             http://localhost:5001/sessions/
     
     """
@@ -132,13 +142,26 @@ def sessions_create():
         _logout(old_ksession)
     
     try:
-        pers_name = request.json.get('pers_name', '')
-        password = request.json.get('password', '')
+        person = request.json['person']
+    except KeyError as ex:
+        return error_response(400, error_msg='Missing "person".')
+    
+    try:
+        pers_no = person['pers_no']
+    except KeyError as ex:
+        return error_response(400, error_msg='Missing "pers_no" in "person".')
+
+    try:
+        password = request.json['password']
+    except KeyError as ex:
+        return error_response(400, error_msg='Missing "password".')
+    
+    try:
         if 'client' in request.json and request.json['client'] is not None:
-            ksession = _login(pers_name, password,
+            ksession = _login(pers_no, password,
                               request.json['client']['name'], request.json['client']['version'])
         else:
-            ksession = _login(pers_name, password)
+            ksession = _login(pers_no, password)
         
         response = jsonify(to_dict(ksession, True, ksession))
         response.set_cookie('session_id', domain=app.config['HTTPKOM_COOKIE_DOMAIN'],
@@ -147,8 +170,6 @@ def sessions_create():
     except (kom.InvalidPassword, kom.UndefinedPerson, kom.LoginDisallowed,
             kom.ConferenceZero) as ex:
         return error_response(401, kom_error=ex)
-    except (AmbiguousName, NameNotFound) as ex2:
-        return error_response(401, error_msg=str(ex2))
 
 
 @app.route("/sessions/<string:session_id>")
@@ -169,8 +190,8 @@ def sessions_get(session_id):
       HTTP/1.1 200 OK
       
       { "id": "033556ee-3e52-423f-9c9a-d85aed7688a1",
-        "pers_no": 14506, "pers_name": "Oskars testperson",
-        "client": { "name": "jskom", "version": "0.1" } }
+        "person": { "pers_no": 14506, "pers_name": "Oskars testperson" },
+        "client": { "name": "jskom", "version": "0.2" } }
     
     Session does not exist (i.e. not logged in)::
     
@@ -229,18 +250,3 @@ def sessions_delete(session_id):
         return response
     else:
         return empty_response(404)
-    
-
-
-"""
-NOT IMPLEMENTED.
-
-(IDEA) Kolla vem man är inloggad som (använder session_id i cookien, latmask-funktion):
-  GET /sessions/whoami
-
-    Inloggad:
-      303
-      Location: /session/abc123
-"""
-def sessions_whoami():
-    pass
