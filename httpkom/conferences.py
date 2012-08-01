@@ -277,6 +277,26 @@ def conferences_get(conf_no):
         return error_response(404, kom_error=ex)
 
 
+@app.route('/conferences/set_unread',
+            methods=['POST'])
+@requires_session
+def conferences_set_unread():
+    """ Expecting:
+            Content-Type: application/json 
+            Body: { "no-of-unread": 123 }}
+        Example:
+            curl -b cookies.txt -c cookies.txt -v -X PUT -H "Content-Type: application/json" \
+                http://localhost:5001/conferences/set_unread -d '{ "no_of_unread": 10, \
+                                                                     "conf_name": "Aka intres" }'
+    """
+    conf_name = request.json['conf_name']
+    conf_no = g.ksession.lookup_name_exact(conf_name, True, True)
+    no_of_unread = int(request.json['no_of_unread'])
+    g.ksession.set_unread(conf_no, no_of_unread)
+    return empty_response(204)
+
+
+        
 @app.route('/conferences/<int:conf_no>/read-markings/')
 @requires_session
 def conferences_get_read_markings(conf_no):
