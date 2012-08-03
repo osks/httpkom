@@ -41,7 +41,7 @@ MICommentIn_str_to_type = { 'comment': kom.MIC_COMMENT,
 
 
 class KomSession(object):
-    """Hej!"""
+    """ A LysKom session. """
     def __init__(self, host, port=4894):
         self.id = str(uuid.uuid4())
         self.host = host
@@ -179,6 +179,8 @@ class KomSession(object):
         for mi in text_stat.misc_info.recipient_list:
             self.mark_as_unread_local(mi.loc_no, mi.recpt)
 
+    def set_unread(self, conf_no, no_of_unread):
+        kom.ReqSetUnread(self.conn, conf_no, no_of_unread).response()
 
 
 class KomConference(object):
