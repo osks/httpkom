@@ -13,7 +13,6 @@ Contents:
    
    intro
    conferences
-   persons
    sessions
    texts
 
