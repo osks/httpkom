@@ -9,103 +9,51 @@ from komsession import KomSession, KomSessionError, KomText, to_dict, from_dict
 from httpkom import app
 from errors import error_response
 from misc import empty_response, get_bool_arg_with_default
-from sessions import requires_session
+from sessions import requires_session, optional_session
 
 
 @app.route('/conferences/')
-@requires_session
+@optional_session
 def conferences_list():
-    """Get list of conferences.
+    """Lookup conference names.
+    
+    An existing session is not required, but if one exist (i.e. valid
+    cookie) it will be used. Otherwise a new session will be created
+    temporarily for this request.
     
     Query parameters:
     
-    =======  =======  =================================================================
-    Key      Type     Values
-    =======  =======  =================================================================
-    unread   boolean  :true: Return conferences with unread texts in.
-                      :false: (Default) *Not implemented.*
-    micro    boolean  :true: (Default) Return micro conference information (`UConference <http://www.lysator.liu.se/lyskom/protocol/11.1/protocol-a.html#Conferences>`_) which causes less load on the server.
-                      :false: Return full conference information.
-    =======  =======  =================================================================
+    ==========  =======  =================================================================
+    Key        Type     Values
+    ==========  =======  =================================================================
+    name        string   Name to look up according to `KOM conventions <http://www.lysator.liu.se/lyskom/protocol/11.1/protocol-a.html#Name%20Expansion>`_.
+    want_pers   boolean  :true: (Default) Include conferences that are mailboxes.
+                         :false: Do not include conferences that are mailboxes.
+    want_confs  boolean  :true: (Default) Include conferences that are not mailboxes.
+                         :false: Do not include conferences that are not mailboxes.
+    ==========  =======  =================================================================
         
     .. rubric:: Request
     
     ::
     
-      GET /conferences/?unread=true HTTP/1.0
+      GET /conferences/?name=osk%20t&want_confs=false HTTP/1.0
     
-    .. rubric:: Responses
+    .. rubric:: Response
     
-    With micro=true::
+    ::
     
       HTTP/1.0 200 OK
       
       {
         "confs": [
           {
-            "highest_local_no": 1996, 
-            "nice": 77, 
-            "type": {
-              "forbid_secret": 0, 
-              "allow_anonymous": 1, 
-              "rd_prot": 1, 
-              "secret": 0, 
-              "letterbox": 1, 
-              "original": 0, 
-              "reserved3": 0, 
-              "reserved2": 0
-            }, 
-            "name": "Oskars Testperson", 
+            "conf_name": "Oskars tredje person", 
+            "conf_no": 13212
+          }, 
+          {
+            "conf_name": "Oskars Testperson", 
             "conf_no": 14506
-          }
-        ]
-      }
-    
-    With micro=false::
-    
-      HTTP/1.0 200 OK
-      
-      {
-        "confs": [
-          {
-            "super_conf": {
-              "conf_name": "", 
-              "conf_no": 0
-            }, 
-            "creator": {
-              "pers_no": 14506, 
-              "pers_name": "Oskars Testperson"
-            }, 
-            "no_of_texts": 1977, 
-            "no_of_members": 1, 
-            "creation_time": "2012-04-28 19:49:11", 
-            "permitted_submitters": {
-              "conf_name": "", 
-              "conf_no": 0
-            }, 
-            "conf_no": 14506, 
-            "last_written": "2012-07-31 00:00:11", 
-            "keep_commented": 77, 
-            "name": "Oskars Testperson", 
-            "type": {
-              "forbid_secret": 0, 
-              "allow_anonymous": 1, 
-              "rd_prot": 1, 
-              "secret": 0, 
-              "letterbox": 1, 
-              "original": 0, 
-              "reserved3": 0, 
-              "reserved2": 0
-            }, 
-            "first_local_no": 20, 
-            "expire": 0, 
-            "msg_of_day": 0, 
-            "supervisor": {
-              "conf_name": "Oskars Testperson", 
-              "conf_no": 14506
-            }, 
-            "presentation": 0, 
-            "nice": 77
           }
         ]
       }
@@ -116,17 +64,30 @@ def conferences_list():
     
       curl -b cookies.txt -c cookies.txt -v \\
            -X GET -H "Content-Type: application/json" \\
-           http://localhost:5001/conferences/?unread=true&micro=false
+           http://localhost:5001/conferences/?name=osk%20t&want_confs=false
     
     """
-    micro = get_bool_arg_with_default(request.args, 'micro', True)
-    unread = get_bool_arg_with_default(request.args, 'unread', False)
-    
-    if unread:
-        return jsonify(confs=to_dict(g.ksession.get_conferences(unread, micro),
-                                     True, g.ksession))
+    name = request.args['name']
+    want_pers = get_bool_arg_with_default(request.args, 'want_pers', True)
+    want_confs = get_bool_arg_with_default(request.args, 'want_confs', True)
+    if g.ksession:
+        # Use exising session if we have one
+        ksession = g.ksession
     else:
-        abort(400) # nothing else is implemented
+        # .. otherwise create a new temporary session
+        ksession = KomSession(app.config['HTTPKOM_LYSKOM_SERVER'])
+        ksession.connect()
+        
+    try:
+        lookup = ksession.lookup_name(name, want_pers, want_confs)
+        confs = [ dict(conf_no=t[0], conf_name=t[1]) for t in lookup ]
+        return jsonify(dict(confs=confs))
+    except kom.Error as ex:
+        return error_response(400, kom_error=ex)
+    finally:
+        # if we created a new session, close it
+        if not g.ksession:
+            ksession.disconnect()
 
 
 @app.route('/conferences/unread/')
@@ -277,21 +238,24 @@ def conferences_get(conf_no):
         return error_response(404, kom_error=ex)
 
 
-@app.route('/conferences/set_unread',
-            methods=['POST'])
+@app.route('/conferences/<int:conf_no>/no-of-unread', methods=['POST'])
 @requires_session
-def conferences_set_unread():
+def conferences_set_unread(conf_no):
     """ Expecting:
             Content-Type: application/json 
-            Body: { "no-of-unread": 123 }}
+            Body: { "no_of_unread": 123 }}
         Example:
-            curl -b cookies.txt -c cookies.txt -v -X PUT -H "Content-Type: application/json" \
-                http://localhost:5001/conferences/set_unread -d '{ "no_of_unread": 10, \
-                                                                     "conf_name": "Aka intres" }'
+            curl -b cookies.txt -c cookies.txt -v -X POST -H "Content-Type: application/json" \
+                http://localhost:5001/conferences/14506/no-of-unread -d '{ "no_of_unread": 10 }'
     """
-    conf_name = request.json['conf_name']
-    conf_no = g.ksession.lookup_name_exact(conf_name, True, True)
-    no_of_unread = int(request.json['no_of_unread'])
+    # The property in the JSON object body is just a wrapper because
+    # most (all?) JSON libraries doesn't handle just sending a number
+    # in the body; they expect/require an object or an array.
+    try:
+        no_of_unread = request.json['no_of_unread']
+    except KeyError as ex:
+        return error_response(400, error_msg='Missing "no_of_unread".')
+    
     g.ksession.set_unread(conf_no, no_of_unread)
     return empty_response(204)
 

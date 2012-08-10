@@ -143,16 +143,22 @@ def sessions_create():
     
     try:
         person = request.json['person']
+        if person is None:
+            return error_response(400, error_msg='"person" is null.')
     except KeyError as ex:
         return error_response(400, error_msg='Missing "person".')
     
     try:
         pers_no = person['pers_no']
+        if pers_no is None:
+            return error_response(400, error_msg='"pers_no" in "person" is null.')
     except KeyError as ex:
         return error_response(400, error_msg='Missing "pers_no" in "person".')
 
     try:
         password = request.json['password']
+        if password is None:
+            return error_response(400, error_msg='"password" is null.')
     except KeyError as ex:
         return error_response(400, error_msg='Missing "password".')
     

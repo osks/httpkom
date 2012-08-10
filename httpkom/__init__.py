@@ -59,7 +59,6 @@ else:
 import conferences
 import sessions
 import texts
-import persons
 
 
 
