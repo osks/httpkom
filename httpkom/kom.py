@@ -2478,7 +2478,7 @@ class CachedConnection(Connection):
             try:
                 no = int(name[1:]) # Exception if not int
                 type = self.uconferences[no].type # Exception if not found
-                name = self.uconferences[no].name
+                name = self.uconferences[no].name.decode('latin1')
                 if (want_pers and type.letterbox) or \
                    (want_confs and (not type.letterbox)):
                     return [(no, name)]
@@ -2505,7 +2505,7 @@ class CachedConnection(Connection):
         matches = ReqReZLookup(self, regexp,
                                want_pers = want_pers,
                                want_confs = want_confs).response()
-        return [(x.conf_no, x.name) for x in matches]
+        return [(x.conf_no, x.name.decode('latin1')) for x in matches]
 
     def _case_insensitive_regexp(self, regexp):
         """Make regular expression case insensitive"""

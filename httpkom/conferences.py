@@ -80,7 +80,7 @@ def conferences_list():
         
     try:
         lookup = ksession.lookup_name(name, want_pers, want_confs)
-        confs = [ dict(conf_no=t[0], conf_name=t[1].decode('latin1')) for t in lookup ]
+        confs = [ dict(conf_no=t[0], conf_name=t[1]) for t in lookup ]
         return jsonify(dict(confs=confs))
     except kom.Error as ex:
         return error_response(400, kom_error=ex)
