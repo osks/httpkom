@@ -131,7 +131,7 @@ class KomSession(object):
                 if ct is not None:
                     misc_info.comment_to_list.append(ct)
         
-        print misc_info.to_string()
+        #print misc_info.to_string()
         
         mime_type = mimeparse.parse_mime_type(komtext.content_type)
         # Because a text consists of both a subject and body, and you
