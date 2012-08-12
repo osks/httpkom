@@ -73,13 +73,13 @@ def _get_komsession(session_id):
     return None
 
 def _login(pers_no, password, client_name=version.name, client_version=version.version):
-    app.logger.debug("Logging in")
+    #app.logger.debug("Logging in")
     ksession = _create_komsession(pers_no, password, client_name, client_version)
     _save_komsession(ksession.id, ksession)
     return ksession
 
 def _logout(ksession):
-    app.logger.debug("Logging out")
+    #app.logger.debug("Logging out")
     try:
         ksession.logout()
         ksession.disconnect()
