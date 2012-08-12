@@ -15,6 +15,7 @@ from misc import empty_response
 import version
 
 
+_default_client_name = 'httpkom'
 _kom_server = app.config['HTTPKOM_LYSKOM_SERVER']
 
 kom_sessions = {}
@@ -72,7 +73,10 @@ def _get_komsession(session_id):
     
     return None
 
-def _login(pers_no, password, client_name=version.name, client_version=version.version):
+def _login(pers_no,
+           password,
+           client_name=_default_client_name,
+           client_version=version.__version__):
     #app.logger.debug("Logging in")
     ksession = _create_komsession(pers_no, password, client_name, client_version)
     _save_komsession(ksession.id, ksession)
