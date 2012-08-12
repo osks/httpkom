@@ -24,7 +24,7 @@ def conferences_list():
     Query parameters:
     
     ==========  =======  =================================================================
-    Key        Type     Values
+    Key         Type     Values
     ==========  =======  =================================================================
     name        string   Name to look up according to `KOM conventions <http://www.lysator.liu.se/lyskom/protocol/11.1/protocol-a.html#Name%20Expansion>`_.
     want_pers   boolean  :true: (Default) Include conferences that are mailboxes.
@@ -241,12 +241,33 @@ def conferences_get(conf_no):
 @app.route('/conferences/<int:conf_no>/no-of-unread', methods=['POST'])
 @requires_session
 def conferences_set_unread(conf_no):
-    """ Expecting:
-            Content-Type: application/json 
-            Body: { "no_of_unread": 123 }}
-        Example:
-            curl -b cookies.txt -c cookies.txt -v -X POST -H "Content-Type: application/json" \
-                http://localhost:5001/conferences/14506/no-of-unread -d '{ "no_of_unread": 10 }'
+    """Set number of unread texts in the given conference.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      POST /conferences/14506/no-of-unread HTTP/1.1
+      
+      {
+        "no_of_unread": 17
+      }
+    
+    .. rubric:: Response
+    
+    ::
+    
+      HTTP/1.1 204 OK
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X POST -H "Content-Type: application/json" \\
+           -d { "no_of_unread": 17 } \\
+           http://localhost:5001/conferences/14506/no-of-unread
+    
     """
     # The property in the JSON object body is just a wrapper because
     # most (all?) JSON libraries doesn't handle just sending a number
