@@ -564,6 +564,9 @@ def decode_text(text, encoding, backup_encoding='latin1'):
 def parse_content_type(contenttype):
     mime_type = mimeparse.parse_mime_type(contenttype)
     
+    if mime_type[0] == 'x-kom' and mime_type[1] == 'text':
+        mime_type = ('text', 'x-kom-basic', mime_type[2])
+    
     if "charset" in mime_type[2]:
         # Remove charset from mime_type, if we have it
         encoding = mime_type[2].pop("charset")
