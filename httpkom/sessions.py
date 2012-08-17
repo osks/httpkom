@@ -127,8 +127,6 @@ def sessions_create():
     
       HTTP/1.1 401 Unauthorized
       
-      { TODO: error stuff }
-    
     .. rubric:: Example
     
     ::
@@ -260,3 +258,48 @@ def sessions_delete(session_id):
         return response
     else:
         return empty_response(404)
+
+
+@app.route("/sessions/<string:session_id>/working-conference", methods=['POST'])
+@requires_session
+def sessions_change_working_conference(session_id):
+    """Change current conference of a session.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      POST /sessions/033556ee-3e52-423f-9c9a-d85aed7688a1/working-conference HTTP/1.1
+      
+      {
+        "conf_no": 14506,
+      }
+    
+    .. rubric:: Responses
+    
+    ::
+    
+      HTTP/1.1 204 No Content
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X POST -H "Content-Type: application/json" \\
+           -d '{ "conf_no": 14506 }' \\
+           http://localhost:5001/sessions/033556ee-3e52-423f-9c9a-d85aed7688a1/working-conference
+    
+    """
+    try:
+        conf_no = request.json['conf_no']
+        if conf_no is None:
+            return error_response(400, error_msg='"conf_no" is null.')
+    except KeyError as ex:
+        return error_response(400, error_msg='Missing "conf_no".')
+    
+    try:
+        g.ksession.change_conference(conf_no)
+        return empty_response(204)
+    except kom.Error as ex:
+        return error_response(400, kom_error=ex)

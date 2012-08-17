@@ -62,7 +62,7 @@ class KomSession(object):
     def login(self, pers_no, password, client_name, client_version):
         self.client_name = client_name
         self.client_version = client_version
-        kom.ReqLogin(self.conn, pers_no, password).response()
+        kom.ReqLogin(self.conn, pers_no, password, invisible=0).response()
         kom.ReqSetClientVersion(self.conn, self.client_name, self.client_version)
         self.conn.set_user(pers_no)
         
@@ -71,6 +71,9 @@ class KomSession(object):
     
     def current_user(self):
         return self.conn.get_user()
+    
+    def change_conference(self, conf_no):
+        kom.ReqChangeConference(self.conn, conf_no).response()
     
     def lookup_name(self, name, want_pers, want_confs):
         return self.conn.lookup_name(name, want_pers, want_confs)
