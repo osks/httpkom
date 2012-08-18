@@ -2682,7 +2682,9 @@ class CachedUserConnection(CachedConnection):
             except NoSuchLocalText:
                 # No unread texts
                 more_to_fetch = 0
-        return unread
+        
+        # Remove text that don't exist anymore (text_no == 0)
+        return [ text_no for text_no in unread if text_no != 0]
 
     # Handlers for asynchronous messages (internal use)
     def cah_deleted_text(self, msg, c):
