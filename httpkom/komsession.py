@@ -88,34 +88,43 @@ class KomSession(object):
 
     def get_text_stat(self, text_no):
         return self.conn.textstats[text_no]
+    
+    def get_membership(self, pers_no, conf_no, want_unread):
+        membership = kom.ReqQueryReadTexts11(self.conn, pers_no, conf_no, 1, 0).response()
+        unread_texts = self.conn.get_unread_texts_from_membership(membership)
+        no_of_unread = len(unread_texts)
+        if want_unread:
+            return KomMembership(membership, no_of_unread, unread_texts)
+        else:
+            return KomMembership(membership, no_of_unread, None)
+    
+    def get_memberships(self, pers_no, unread, want_unread):
+        if unread:
+            conf_nos = kom.ReqGetUnreadConfs(self.conn, pers_no).response()
+        else:
+            # http://www.lysator.liu.se/lyskom/protocol/11.1/protocol-a.html#get-membership
+            raise NotImplementedError()
         
+        memberships = [ self.get_membership(pers_no, conf_no, want_unread)
+                        for conf_no in conf_nos ]
+        
+        if unread:
+            # Filter out unread conferences with 0 unread in, can happen
+            # for some conferences, like "Ryd, Bastu" (conf_no: 9700).
+            return [ membership for membership in memberships if membership.no_of_unread > 0 ]
+        else:
+            #return memberships
+            raise NotImplementedError()        
+    
     def get_conf_name(self, conf_no):
         return self.conn.conf_name(conf_no)
     
-    def get_conferences(self, unread=False, micro=True):
-        if unread:
-            conf_nos = kom.ReqGetUnreadConfs(self.conn, self.current_user()).response()
-            return [ self.get_conference(conf_no, micro) for conf_no in conf_nos ]
-        raise NotImplementedError()
-
-    def get_unread_conferences(self):
-        conf_nos = kom.ReqGetUnreadConfs(self.conn, self.current_user()).response()
-        unread_confs = [ KomUnreadConference(self.get_conference(conf_no, micro=True),
-                                             len(self.get_unread_in_conference(conf_no)))
-                         for conf_no in conf_nos ]
-        # Filter out unread conferences with 0 unread in, can happen
-        # for some conferences, like "Ryd, Bastu" (conf_no: 9700).
-        return [ uc for uc in unread_confs if uc.no_of_unread > 0 ]
-        
     def get_conference(self, conf_no, micro=True):
         if micro:
             return KomUConference(conf_no, self.conn.uconferences[conf_no])
         else:
             return KomConference(conf_no, self.conn.conferences[conf_no])
 
-    def get_unread_in_conference(self, conf_no):
-        return self.conn.get_unread_texts(conf_no)
-    
     def get_text(self, text_no):
         text_stat = self.get_text_stat(text_no)
         text = kom.ReqGetText(self.conn, text_no).response()
@@ -186,6 +195,23 @@ class KomSession(object):
         kom.ReqSetUnread(self.conn, conf_no, no_of_unread).response()
 
 
+class KomMembership(object):
+    def __init__(self, membership, no_of_unread, unread_texts=None):
+        self.position = membership.position
+        self.last_time_read = membership.last_time_read
+        self.conference = membership.conference
+        self.priority = membership.priority
+        self.added_by = membership.added_by
+        self.added_at = membership.added_at
+        self.type = membership.type
+        self.no_of_unread = no_of_unread
+        
+        if unread_texts:
+            self.unread_texts = unread_texts
+        else:
+            self.unread_texts = None
+
+
 class KomConference(object):
     def __init__(self, conf_no=None, conf=None):
         self.conf_no = conf_no
@@ -221,13 +247,6 @@ class KomUConference(object):
             self.highest_local_no = uconf.highest_local_no
             self.nice = uconf.nice
 
-
-class KomUnreadConference(object):
-    def __init__(self, uconf=None, no_of_unread=None):
-        self.conf_no = uconf.conf_no
-        self.name = uconf.name
-        self.no_of_unread = no_of_unread
-        
 
 class KomText(object):
     def __init__(self, text_no=None, text=None, text_stat=None):
@@ -302,10 +321,12 @@ def to_dict(obj, lookups=False, session=None):
         return KomConference_to_dict(obj, lookups, session)
     elif isinstance(obj, KomUConference):
         return KomUConference_to_dict(obj, lookups, session)
-    elif isinstance(obj, KomUnreadConference):
-        return KomUnreadConference_to_dict(obj, lookups, session)
     elif isinstance(obj, kom.ConfType):
         return ConfType_to_dict(obj, lookups, session)
+    elif isinstance(obj, KomMembership):
+        return KomMembership_to_dict(obj, lookups, session)
+    elif isinstance(obj, kom.MembershipType):
+        return MembershipType_to_dict(obj, lookups, session)
     else:
         #raise NotImplementedError("to_dict is not implemented for: %s" % type(obj))
         return obj
@@ -339,6 +360,25 @@ def KomSession_to_dict(ksession, lookups, session):
     
     return d
 
+def KomMembership_to_dict(membership, lookups, session):
+    return dict(
+        position=membership.position,
+        last_time_read=membership.last_time_read.to_date_and_time(),
+        conference=conf_to_dict(membership.conference, lookups, session),
+        priority=membership.priority,
+        added_by=pers_to_dict(membership.added_by, lookups, session),
+        added_at=membership.added_at.to_date_and_time(),
+        type=to_dict(membership.type, lookups, session),
+        no_of_unread=membership.no_of_unread,
+        unread_texts=to_dict(membership.unread_texts, lookups, session))
+
+def MembershipType_to_dict(m_type, lookups, session):
+    return dict(
+        invitation=m_type.invitation,
+        passive=m_type.passive,
+        secret=m_type.secret,
+        passive_message_invert=m_type.passive_message_invert)
+
 def ConfType_to_dict(conf_type, lookups, session):
     return dict(
         rd_prot=conf_type.rd_prot,
@@ -354,7 +394,7 @@ def KomConference_to_dict(conf, lookups, session):
     return dict(
         conf_no=conf.conf_no,
         name=conf.name,
-        type=to_dict(conf.type),
+        type=to_dict(conf.type, lookups, session),
         creation_time=conf.creation_time.to_date_and_time(),
         last_written=conf.last_written.to_date_and_time(),
         creator=pers_to_dict(conf.creator, lookups, session),
@@ -376,16 +416,9 @@ def KomUConference_to_dict(conf, lookups, session):
     return dict(
         conf_no=conf.conf_no,
         name=conf.name,
-        type=to_dict(conf.type),
+        type=to_dict(conf.type, lookups, session),
         highest_local_no=conf.highest_local_no,
         nice=conf.nice
-        )
-
-def KomUnreadConference_to_dict(conf, lookups, session):
-    return dict(
-        conf_no=conf.conf_no,
-        name=conf.name,
-        no_of_unread=conf.no_of_unread
         )
 
 def KomText_to_dict(komtext, lookups, session):

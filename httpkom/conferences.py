@@ -27,9 +27,9 @@ def conferences_list():
     Key         Type     Values
     ==========  =======  =================================================================
     name        string   Name to look up according to `KOM conventions <http://www.lysator.liu.se/lyskom/protocol/11.1/protocol-a.html#Name%20Expansion>`_.
-    want_pers   boolean  :true: (Default) Include conferences that are mailboxes.
+    want-pers   boolean  :true: (Default) Include conferences that are mailboxes.
                          :false: Do not include conferences that are mailboxes.
-    want_confs  boolean  :true: (Default) Include conferences that are not mailboxes.
+    want-confs  boolean  :true: (Default) Include conferences that are not mailboxes.
                          :false: Do not include conferences that are not mailboxes.
     ==========  =======  =================================================================
         
@@ -37,7 +37,7 @@ def conferences_list():
     
     ::
     
-      GET /conferences/?name=osk%20t&want_confs=false HTTP/1.0
+      GET /conferences/?name=osk%20t&want-confs=false HTTP/1.0
     
     .. rubric:: Response
     
@@ -46,7 +46,7 @@ def conferences_list():
       HTTP/1.0 200 OK
       
       {
-        "confs": [
+        "conferences": [
           {
             "conf_name": "Oskars tredje person", 
             "conf_no": 13212
@@ -64,12 +64,12 @@ def conferences_list():
     
       curl -b cookies.txt -c cookies.txt -v \\
            -X GET -H "Content-Type: application/json" \\
-           http://localhost:5001/conferences/?name=osk%20t&want_confs=false
+           http://localhost:5001/conferences/?name=osk%20t&want-confs=false
     
     """
     name = request.args['name']
-    want_pers = get_bool_arg_with_default(request.args, 'want_pers', True)
-    want_confs = get_bool_arg_with_default(request.args, 'want_confs', True)
+    want_pers = get_bool_arg_with_default(request.args, 'want-pers', True)
+    want_confs = get_bool_arg_with_default(request.args, 'want-confs', True)
     if g.ksession:
         # Use exising session if we have one
         ksession = g.ksession
@@ -81,7 +81,7 @@ def conferences_list():
     try:
         lookup = ksession.lookup_name(name, want_pers, want_confs)
         confs = [ dict(conf_no=t[0], conf_name=t[1]) for t in lookup ]
-        return jsonify(dict(confs=confs))
+        return jsonify(dict(conferences=confs))
     except kom.Error as ex:
         return error_response(400, kom_error=ex)
     finally:
@@ -90,50 +90,12 @@ def conferences_list():
             ksession.disconnect()
 
 
-@app.route('/conferences/unread/')
-@requires_session
-def conferences_list_unread():
-    """Get list of unread conferences with information about how many
-    unread texts each conference has.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      GET /conferences/unread/ HTTP/1.1
-    
-    .. rubric:: Response
-    
-    ::
-    
-      HTTP/1.1 200 OK
-      
-      {
-        "confs": [
-          {
-            "no_of_unread": 265, 
-            "name": "Oskars Testperson", 
-            "conf_no": 14506
-          }
-        ]
-      }
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X GET http://localhost:5001/conferences/unread/
-    
-    """
-    return jsonify(confs=to_dict(g.ksession.get_unread_conferences(),
-                                 False, g.ksession))
-
-
 @app.route('/conferences/<int:conf_no>')
 @requires_session
 def conferences_get(conf_no):
     """Get information about a specific conference.
+    
+    Query parameters:
     
     =======  =======  =================================================================
     Key      Type     Values
@@ -238,102 +200,6 @@ def conferences_get(conf_no):
         return error_response(404, kom_error=ex)
 
 
-@app.route('/conferences/<int:conf_no>/no-of-unread', methods=['POST'])
-@requires_session
-def conferences_set_unread(conf_no):
-    """Set number of unread texts in the given conference.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      POST /conferences/14506/no-of-unread HTTP/1.1
-      
-      {
-        "no_of_unread": 17
-      }
-    
-    .. rubric:: Response
-    
-    ::
-    
-      HTTP/1.1 204 OK
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X POST -H "Content-Type: application/json" \\
-           -d { "no_of_unread": 17 } \\
-           http://localhost:5001/conferences/14506/no-of-unread
-    
-    """
-    # The property in the JSON object body is just a wrapper because
-    # most (all?) JSON libraries doesn't handle just sending a number
-    # in the body; they expect/require an object or an array.
-    try:
-        no_of_unread = request.json['no_of_unread']
-    except KeyError as ex:
-        return error_response(400, error_msg='Missing "no_of_unread".')
-    
-    g.ksession.set_unread(conf_no, no_of_unread)
-    return empty_response(204)
-
-
-        
-@app.route('/conferences/<int:conf_no>/read-markings/')
-@requires_session
-def conferences_get_read_markings(conf_no):
-    """Return read-markings. Mostly used with *unread=true* to return
-    unread texts in the given conference.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      GET /conferences/14506/read-markings/?unread=true HTTP/1.1
-    
-    .. rubric:: Response
-    
-    ::
-    
-      HTTP/1.1 200 OK
-      
-      {
-        "rms": [
-          {
-            "text_no": 19791715, 
-            "unread": true, 
-            "conf_no": 14506
-          }, 
-          {
-            "text_no": 19791718, 
-            "unread": true, 
-            "conf_no": 14506
-          }
-        ]
-      }
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X GET http://localhost:5001/conferences/14506/read-markings/?unread=true
-    
-    """
-    unread = get_bool_arg_with_default(request.args, 'unread', False)
-    
-    if unread:
-        # TODO: return local_text_no as well
-        return jsonify(rms=[ dict(conf_no=conf_no, text_no=text_no, unread=unread)
-                             for text_no in g.ksession.\
-                                 get_unread_in_conference(conf_no) ])
-    else:
-        raise NotImplementedError()
-
-
 @app.route('/conferences/<int:conf_no>/texts/<int:local_text_no>/read-marking', methods=['PUT'])
 @requires_session
 def conferences_put_text_read_marking(conf_no, local_text_no):
@@ -362,35 +228,3 @@ def conferences_put_text_read_marking(conf_no, local_text_no):
     # TODO: handle conferences/texts that doesn't exist (i.e. return 404).
     g.ksession.mark_as_read_local(local_text_no, conf_no)
     return empty_response(204)
-
-
-@app.route('/conferences/<int:conf_no>/texts/<int:local_text_no>/read-marking',
-           methods=['DELETE'])
-@requires_session
-def conferences_delete_text_read_marking(conf_no, local_text_no):
-    """(*Not implemented*) Mark text as unread in the specified recipient conference (only).
-    
-    .. rubric:: Request
-    
-    ::
-    
-      DELETE /conferences/14506/texts/29/read-marking HTTP/1.1
-    
-    .. rubric:: Response
-    
-    ::
-    
-      HTTP/1.1 204 OK
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X DELETE http://localhost:5001/conferences/14506/texts/29/read-marking
-    
-    """
-    raise NotImplementedError()
-
-
-# TODO: would it be nice with GET for a read markings as well (for a specific text)?

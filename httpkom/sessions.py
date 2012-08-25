@@ -133,7 +133,7 @@ def sessions_create():
     
       curl -b cookies.txt -c cookies.txt -v \\
            -X POST -H "Content-Type: application/json" \\
-           -d '{ "pers_no": 14506, "password": "test123" }' \\
+           -d '{ "person": { "pers_no": 14506 }, "password": "test123" }' \\
             http://localhost:5001/sessions/
     
     """
@@ -260,16 +260,16 @@ def sessions_delete(session_id):
         return empty_response(404)
 
 
-@app.route("/sessions/<string:session_id>/working-conference", methods=['POST'])
+@app.route("/sessions/current/working-conference", methods=['POST'])
 @requires_session
-def sessions_change_working_conference(session_id):
-    """Change current conference of a session.
+def sessions_change_working_conference():
+    """Change current working conference of the current session.
     
     .. rubric:: Request
     
     ::
     
-      POST /sessions/033556ee-3e52-423f-9c9a-d85aed7688a1/working-conference HTTP/1.1
+      POST /sessions/current/working-conference HTTP/1.1
       
       {
         "conf_no": 14506,
@@ -288,7 +288,7 @@ def sessions_change_working_conference(session_id):
       curl -b cookies.txt -c cookies.txt -v \\
            -X POST -H "Content-Type: application/json" \\
            -d '{ "conf_no": 14506 }' \\
-           http://localhost:5001/sessions/033556ee-3e52-423f-9c9a-d85aed7688a1/working-conference
+           http://localhost:5001/sessions/current/working-conference
     
     """
     try:

@@ -1,0 +1,231 @@
+# -*- coding: utf-8 -*-
+# Copyright (C) 2012 Oskar Skoog. Released under GPL.
+
+from flask import g, request, jsonify
+
+import kom
+from komsession import KomSession, KomSessionError, to_dict
+
+from httpkom import app
+from errors import error_response
+from misc import empty_response, get_bool_arg_with_default
+from sessions import requires_session, optional_session
+
+
+# Or should the URL be /persons/current/memberships/<int:conf_no>/no-of-unread ?
+@app.route('/persons/current/memberships/<int:conf_no>', methods=['POST'])
+@requires_session
+def persons_set_unread(conf_no):
+    """Set number of unread texts in current persons membership for
+    the given conference.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      POST /persons/current/memberships/14506 HTTP/1.1
+      
+      {
+        "no_of_unread": 17
+      }
+    
+    .. rubric:: Response
+    
+    ::
+    
+      HTTP/1.1 204 OK
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X POST -H "Content-Type: application/json" \\
+           -d { "no_of_unread": 17 } \\
+           http://localhost:5001/persons/current/memberships/14506
+    
+    """
+    # The property in the JSON object body is just a wrapper because
+    # most (all?) JSON libraries doesn't handle just sending a number
+    # in the body; they expect/require an object or an array.
+    try:
+        no_of_unread = request.json['no_of_unread']
+    except KeyError as ex:
+        return error_response(400, error_msg='Missing "no_of_unread".')
+    
+    g.ksession.set_unread(conf_no, no_of_unread)
+    return empty_response(204)
+
+
+@app.route('/persons/<int:pers_no>/memberships/<int:conf_no>')
+@requires_session
+def persons_get_membership(pers_no, conf_no):
+    """Get a persons membership for a conference.
+    
+    Query parameters:
+    
+    ===========  =======  =================================================================
+    Key          Type     Values
+    ===========  =======  =================================================================
+    want-unread  boolean  :true: Include unread text numbers.
+                          :false: (Default) Do not include unread text numbers.
+    ===========  =======  =================================================================
+    
+    .. rubric:: Request
+    
+    ::
+    
+      GET /persons/14506/memberships/14506 HTTP/1.0
+    
+    .. rubric:: Responses
+    
+    With want-unread=false::
+    
+      HTTP/1.0 200 OK
+      
+      {
+        "conference": {
+          "conf_name": "Oskars Testperson", 
+          "conf_no": 14506
+        }, 
+        "priority": 255, 
+        "added_at": "2012-04-28 19:49:11", 
+        "position": 3, 
+        "type": {
+          "passive": 0, 
+          "secret": 0, 
+          "passive_message_invert": 0, 
+          "invitation": 0
+        }, 
+        "last_time_read": "2012-08-19 17:14:46", 
+        "added_by": {
+          "pers_no": 14506, 
+          "pers_name": "Oskars Testperson"
+        },
+        "no_of_unread": 2,
+        "unread_texts": null
+      }
+    
+    With want-unread=true::
+    
+      HTTP/1.0 200 OK
+      
+      {
+        "conference": {
+          "conf_name": "Oskars Testperson", 
+          "conf_no": 14506
+        }, 
+        "priority": 255, 
+        "added_at": "2012-04-28 19:49:11", 
+        "position": 3, 
+        "type": {
+          "passive": 0, 
+          "secret": 0, 
+          "passive_message_invert": 0, 
+          "invitation": 0
+        }, 
+        "last_time_read": "2012-08-19 17:14:46", 
+        "added_by": {
+          "pers_no": 14506, 
+          "pers_name": "Oskars Testperson"
+        },
+        "no_of_unread": 2,
+        "unread_texts": [
+          19831603,
+          19831620
+        ]
+      }
+    
+    Not a member::
+    
+      HTTP/1.0 404 NOT FOUND
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X GET http://localhost:5001/persons/14506/memberships/14506?want-unread=false
+    
+    """
+    want_unread = get_bool_arg_with_default(request.args, 'want-unread', False)
+    
+    try:
+        return jsonify(to_dict(g.ksession.get_membership(pers_no, conf_no, want_unread),
+                               True, g.ksession))
+    except kom.NotMember as ex:
+        return error_response(404, kom_error=ex)
+
+
+@app.route('/persons/<int:pers_no>/memberships/')
+@requires_session
+def persons_list_memberships(pers_no):
+    """Get list of memberships.
+    
+    Query parameters:
+    
+    ===========  =======  =================================================================
+    Key          Type     Values
+    ===========  =======  =================================================================
+    unread       boolean  :true: Only return memberships with unread texts in.
+                          :false: (Default) (Not implemented) Return all memberships.
+    want-unread  boolean  :true: Include unread text numbers.
+                          :false: (Default) Do not include unread text numbers.
+    ===========  =======  =================================================================
+    
+    .. rubric:: Request
+    
+    ::
+    
+      GET /persons/14506/memberships/ HTTP/1.1
+    
+    .. rubric:: Response
+    
+    ::
+    
+      HTTP/1.1 200 OK
+      
+      {
+        "memberships": [
+          {
+            "conference": {
+              "conf_name": "Oskars Testperson", 
+              "conf_no": 14506
+            }, 
+            "priority": 255, 
+            "added_at": "2012-04-28 19:49:11", 
+            "position": 3, 
+            "type": {
+              "passive": 0, 
+              "secret": 0, 
+              "passive_message_invert": 0, 
+              "invitation": 0
+            }, 
+            "last_time_read": "2012-08-19 17:14:46", 
+            "added_by": {
+              "pers_no": 14506, 
+              "pers_name": "Oskars Testperson"
+            },
+            "no_of_unread": 2,
+            "unread_texts": [
+              19831603,
+              19831620
+            ]
+          },
+          
+          ...
+        ]
+      }
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X GET http://localhost:5001/persons/14506/memberships/?unread=true
+    
+    """
+    unread = get_bool_arg_with_default(request.args, 'unread', False)
+    want_unread = get_bool_arg_with_default(request.args, 'want-unread', False)
+    memberships = g.ksession.get_memberships(pers_no, unread, want_unread)
+    return jsonify(memberships=to_dict(memberships, True, g.ksession))

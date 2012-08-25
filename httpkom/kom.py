@@ -2568,34 +2568,36 @@ class CachedConnection(Connection):
             last = range.last_read + 1
         return gaps, last
 
-    #
-    # Get unread texts for a certain person in a certain conference
-    # Return a list of tuples (local no, global no)
-    #
-#    def get_unread_texts(self, person_no, conf_no):
-#        print('THIS get_unread_texts SHOULD NEVER BE CALLED!')
-#        unread = []
-#        # FIXME: Should use protocol version 11 where applicable
-#        ms = ReqQueryReadTexts11(self, person_no, conf_no).response()
-#
-#        # Start asking for translations
-#        ask_for = ms.last_text_read + 1
-#        more_to_fetch = 1
-#        while more_to_fetch:
-#            try:
-#                mapping = ReqLocalToGlobal(self, conf_no,
-#                                           ask_for, 255).response()
-#                for local_num, global_num in mapping.list:
-#                    if not self.text_in_read_ranges(local_num, ms.read_ranges):
-#                        unread.append(global_num)
-#                        ask_for = mapping.range_end
-#                        more_to_fetch = mapping.later_texts_exists
-#            except NoSuchLocalText:
-#                # No unread texts
-#                more_to_fetch = 0
-#
-#        return unread
-#
+    def get_unread_texts_for_person(self, person_no, conf_no):
+        ms = ReqQueryReadTexts11(self, self._user_no, no, 1, 0).response()
+        return self.get_unread_texts_from_membership(ms)
+    
+    def get_unread_texts_from_membership(self, membership):
+        unread = []
+        
+        gaps, last = self.read_ranges_to_gaps_and_last(membership.read_ranges)
+        for first, gap_len in gaps:
+            while gap_len > 0:
+                if gap_len > 255:
+                    n = 255
+                else:
+                    n = gap_len
+                gap_len -= n
+                mapping = ReqLocalToGlobal(self, membership.conference, first, n).response()
+                unread.extend([e[1] for e in mapping.list])
+        more_to_fetch = 1
+        while more_to_fetch:
+            try:
+                mapping = ReqLocalToGlobal(self, membership.conference, last, 255).response()
+                unread.extend([e[1] for e in mapping.list if e[1] != 0])
+                last = mapping.range_end
+                more_to_fetch = mapping.later_texts_exists
+            except NoSuchLocalText:
+                # No unread texts
+                more_to_fetch = 0
+        
+        # Remove text that don't exist anymore (text_no == 0)
+        return [ text_no for text_no in unread if text_no != 0]
 
 
 class CachedUserConnection(CachedConnection):
@@ -2646,46 +2648,8 @@ class CachedUserConnection(CachedConnection):
         unread = []
         self.memberships.invalidate(conf_no)
         ms = self.memberships[conf_no]
-
-        # Start asking for translations
-#        ask_for = ms.last_text_read + 1
-#        more_to_fetch = 1
-#        while more_to_fetch:
-#            try:
-#                mapping = ReqLocalToGlobal(self, conf_no,
-#                                           ask_for, 255).response()
-#                for (local_num, global_num) in mapping.list:
-#                    if not self.text_in_read_ranges(local_num, ms.read_ranges):
-#                        unread.append(global_num)
-#                        ask_for = mapping.range_end
-#                        more_to_fetch = mapping.later_texts_exists
-#            except NoSuchLocalText:
-#                # No unread texts
-#                more_to_fetch = 0
-        gaps, last = self.read_ranges_to_gaps_and_last(ms.read_ranges)
-        for first, gap_len in gaps:
-            while gap_len > 0:
-                if gap_len > 255:
-                    n = 255
-                else:
-                    n = gap_len
-                gap_len -= n
-                mapping = ReqLocalToGlobal(self, conf_no, first, n).response()
-                unread.extend([e[1] for e in mapping.list])
-        more_to_fetch = 1
-        while more_to_fetch:
-            try:
-                mapping = ReqLocalToGlobal(self, conf_no, last, 255).response()
-                unread.extend([e[1] for e in mapping.list if e[1] != 0])
-                last = mapping.range_end
-                more_to_fetch = mapping.later_texts_exists
-            except NoSuchLocalText:
-                # No unread texts
-                more_to_fetch = 0
-        
-        # Remove text that don't exist anymore (text_no == 0)
-        return [ text_no for text_no in unread if text_no != 0]
-
+        return self._get_unread_texts_from_membership(ms)
+    
     # Handlers for asynchronous messages (internal use)
     def cah_deleted_text(self, msg, c):
         CachedConnection.cah_deleted_text(self, msg, c)
