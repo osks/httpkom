@@ -157,6 +157,91 @@ def persons_get_membership(pers_no, conf_no):
         return error_response(404, kom_error=ex)
 
 
+@app.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['PUT'])
+@requires_session
+def persons_put_membership(pers_no, conf_no):
+    """Add the person as member to the given conference, or update an
+    existing membership.
+    
+    Query parameters:
+    
+    ===========  =======  =================================================================
+    Key          Type     Values
+    ===========  =======  =================================================================
+    priority     int      (Default 100) The priority of the membership.
+    where        int      (Default 0) The position in the membership list.
+    ===========  =======  =================================================================
+    
+    .. rubric:: Request
+    
+    ::
+    
+      PUT /persons/14506/memberships/6 HTTP/1.1
+    
+    .. rubric:: Response
+    
+    Success::
+    
+      HTTP/1.1 204 OK
+    
+    If the person or conference do not exist::
+    
+      HTTP/1.1 404 NOT FOUND
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X PUT http://localhost:5001/persons/14506/memberships/6?priority=150
+    
+    """
+    priority = int(request.args.get('priority', 100))
+    where = int(request.args.get('where', 0))
+    try:
+        g.ksession.add_membership(pers_no, conf_no, priority, where)
+        return empty_response(204)
+    except (kom.UndefinedPerson, kom.UndefinedConference) as ex:
+        return error_response(404, kom_error=ex)
+
+
+@app.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['DELETE'])
+@requires_session
+def persons_delete_membership(pers_no, conf_no):
+    """Remove the persons membership in the given conference.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      DELETE /persons/14506/memberships/6 HTTP/1.1
+    
+    .. rubric:: Response
+    
+    Success::
+    
+      HTTP/1.1 204 OK
+    
+    If the person or conference do not exist, or if the membership do
+    not exist::
+    
+      HTTP/1.1 404 NOT FOUND
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X DELETE http://localhost:5001/persons/14506/memberships/6
+    
+    """
+    try:
+        g.ksession.delete_membership(pers_no, conf_no)
+        return empty_response(204)
+    except (kom.UndefinedPerson, kom.UndefinedConference, kom.NotMember) as ex:
+        return error_response(404, kom_error=ex)
+
+
 @app.route('/persons/<int:pers_no>/memberships/')
 @requires_session
 def persons_list_memberships(pers_no):

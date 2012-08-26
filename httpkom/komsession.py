@@ -89,6 +89,13 @@ class KomSession(object):
     def get_text_stat(self, text_no):
         return self.conn.textstats[text_no]
     
+    def add_membership(self, pers_no, conf_no, priority, where):
+        mtype = kom.MembershipType()
+        kom.ReqAddMember(self.conn, conf_no, pers_no, priority, where, mtype).response()
+    
+    def delete_membership(self, pers_no, conf_no):
+        kom.ReqSubMember(self.conn, conf_no, pers_no).response()
+
     def get_membership(self, pers_no, conf_no, want_unread):
         membership = kom.ReqQueryReadTexts11(self.conn, pers_no, conf_no, 1, 0).response()
         unread_texts = self.conn.get_unread_texts_from_membership(membership)
