@@ -12,6 +12,66 @@ from misc import empty_response, get_bool_arg_with_default
 from sessions import requires_session, optional_session
 
 
+@app.route('/persons/', methods=['POST'])
+@optional_session
+def persons_create():
+    """Create a person
+    
+    .. rubric:: Request
+    
+    ::
+    
+      POST /persons/ HTTP/1.0
+      
+      {
+        "name": "Oskars Testperson",
+        "passwd": "test123",
+      }
+    
+    .. rubric:: Responses
+    
+    Person was created::
+    
+      HTTP/1.0 200 OK
+      
+      {
+        "pers_no": 14506,
+      }
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X POST H "Content-Type: application/json" \\
+           -d '{ "name": "Oskar Testperson", "passwd": "test123" }' \\
+           http://localhost:5001/persons/
+    
+    """
+    if g.ksession:
+        # Use exising session if we have one
+        ksession = g.ksession
+    else:
+        # .. otherwise create a new temporary session
+        ksession = KomSession(app.config['HTTPKOM_LYSKOM_SERVER'])
+        ksession.connect()
+    
+    name = request.json['name']
+    passwd = request.json['passwd']
+    
+    try:
+        #lookup = ksession.lookup_name(name, want_pers, want_confs)
+        #confs = [ dict(conf_no=t[0], conf_name=t[1]) for t in lookup ]
+        pers_no = ksession.create_person(name, passwd)
+        return jsonify(dict(pers_no=pers_no))
+    except kom.Error as ex:
+        return error_response(400, kom_error=ex)
+    finally:
+        # if we created a new session, close it
+        if not g.ksession:
+            ksession.disconnect()
+
+
 # Or should the URL be /persons/current/memberships/<int:conf_no>/no-of-unread ?
 @app.route('/persons/current/memberships/<int:conf_no>', methods=['POST'])
 @requires_session

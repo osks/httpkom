@@ -108,7 +108,7 @@ def sessions_create():
       
       {
         "person": { "pers_no": 14506 },
-        "password": "test123",
+        "passwd": "test123",
         "client": { "name": "jskom", "version": "0.2" }
       }
     
@@ -133,7 +133,7 @@ def sessions_create():
     
       curl -b cookies.txt -c cookies.txt -v \\
            -X POST -H "Content-Type: application/json" \\
-           -d '{ "person": { "pers_no": 14506 }, "password": "test123" }' \\
+           -d '{ "person": { "pers_no": 14506 }, "passwd": "test123" }' \\
             http://localhost:5001/sessions/
     
     """
@@ -158,18 +158,18 @@ def sessions_create():
         return error_response(400, error_msg='Missing "pers_no" in "person".')
 
     try:
-        password = request.json['password']
-        if password is None:
-            return error_response(400, error_msg='"password" is null.')
+        passwd = request.json['passwd']
+        if passwd is None:
+            return error_response(400, error_msg='"passwd" is null.')
     except KeyError as ex:
-        return error_response(400, error_msg='Missing "password".')
+        return error_response(400, error_msg='Missing "passwd".')
     
     try:
         if 'client' in request.json and request.json['client'] is not None:
-            ksession = _login(pers_no, password,
+            ksession = _login(pers_no, passwd,
                               request.json['client']['name'], request.json['client']['version'])
         else:
-            ksession = _login(pers_no, password)
+            ksession = _login(pers_no, passwd)
         
         response = jsonify(to_dict(ksession, True, ksession))
         response.set_cookie('session_id', domain=app.config['HTTPKOM_COOKIE_DOMAIN'],

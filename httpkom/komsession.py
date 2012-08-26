@@ -74,6 +74,12 @@ class KomSession(object):
     
     def change_conference(self, conf_no):
         kom.ReqChangeConference(self.conn, conf_no).response()
+        
+    def create_person(self, name, passwd):
+        flags = kom.PersonalFlags()
+        pers_no = kom.ReqCreatePerson(
+            self.conn, name.encode('latin1'), passwd.encode('latin1'), flags).response()
+        return pers_no
     
     def lookup_name(self, name, want_pers, want_confs):
         return self.conn.lookup_name(name, want_pers, want_confs)
