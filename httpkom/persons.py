@@ -9,11 +9,11 @@ from komsession import KomSession, KomSessionError, to_dict
 from httpkom import app
 from errors import error_response
 from misc import empty_response, get_bool_arg_with_default
-from sessions import requires_session, optional_session
+from sessions import requires_session, requires_login
 
 
 @app.route('/persons/', methods=['POST'])
-@optional_session
+@requires_session
 def persons_create():
     """Create a person
     
@@ -74,7 +74,7 @@ def persons_create():
 
 # Or should the URL be /persons/current/memberships/<int:conf_no>/no-of-unread ?
 @app.route('/persons/current/memberships/<int:conf_no>', methods=['POST'])
-@requires_session
+@requires_login
 def persons_set_unread(conf_no):
     """Set number of unread texts in current persons membership for
     the given conference.
@@ -118,7 +118,7 @@ def persons_set_unread(conf_no):
 
 
 @app.route('/persons/<int:pers_no>/memberships/<int:conf_no>')
-@requires_session
+@requires_login
 def persons_get_membership(pers_no, conf_no):
     """Get a persons membership for a conference.
     
@@ -218,7 +218,7 @@ def persons_get_membership(pers_no, conf_no):
 
 
 @app.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['PUT'])
-@requires_session
+@requires_login
 def persons_put_membership(pers_no, conf_no):
     """Add the person as member to the given conference, or update an
     existing membership.
@@ -266,7 +266,7 @@ def persons_put_membership(pers_no, conf_no):
 
 
 @app.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['DELETE'])
-@requires_session
+@requires_login
 def persons_delete_membership(pers_no, conf_no):
     """Remove the persons membership in the given conference.
     
@@ -303,7 +303,7 @@ def persons_delete_membership(pers_no, conf_no):
 
 
 @app.route('/persons/<int:pers_no>/memberships/')
-@requires_session
+@requires_login
 def persons_list_memberships(pers_no):
     """Get list of memberships.
     

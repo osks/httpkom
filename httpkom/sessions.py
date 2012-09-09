@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
+import uuid
 import json
 import functools
 
@@ -15,90 +16,113 @@ from misc import empty_response
 import version
 
 
-_default_client_name = 'httpkom'
 _kom_server = app.config['HTTPKOM_LYSKOM_SERVER']
 
-kom_sessions = {}
+_cookie_domain = app.config['HTTPKOM_COOKIE_DOMAIN']
+_cookie_name = 'connection_id'
 
+_komsessions = {}
+
+
+# Terminology:
+
+# connection_id - The UUID for our KomSession. The ID is stored in the
+#                 cookie and is considered secret! (You can take over
+#                 some ones session with it.)
+
+# session - an open connection to the LysKOM server. WhoAmI will
+#           return your session number. Does not need to be logged in.
+
+
+# TODO: To better handle multiple sessions, we should use headers for
+# session handling. With that I mean that we should supply all
+# information needed for opening a new session in the headers
+# (basically just client name/version).
+
+
+def requires_login(f):
+    """Check if the request has a LysKOM session (i.e. a cookie
+    specifying a valid connection) and that it's logged in. If there
+    is no session, returns 428 (see requires_session). If the session is not 
+    logged in, returns status code 401.
+    
+    Note: The status code 428 ("Precondition Required") comes from RFC 6585.
+    http://tools.ietf.org/html/rfc6585
+    """
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        g.ksession = _get_komsession(_get_connection_id())
+        # TODO: can we wrap "us" with requires_session instead of
+        # implementing the same behavior?
+        if g.ksession:
+            if g.ksession.is_logged_in():
+                return f(*args, **kwargs)
+            else:
+                return empty_response(401)
+        else:
+            return empty_response(428)
+    return decorated
 
 def requires_session(f):
+    """Check if the request has a LysKOM session (i.e. a cookie
+    specifying a valid connection). If there is no session, returns an
+    empty response with status code 428.
+    
+    Note: The status code 428 ("Precondition Required") comes from RFC 6585.
+    http://tools.ietf.org/html/rfc6585
+    """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        g.ksession = _get_komsession(_get_session_id())
+        g.ksession = _get_komsession(_get_connection_id())
         if g.ksession:
             return f(*args, **kwargs)
-        
-        return empty_response(401)
+        else:
+            return empty_response(428)
     return decorated
 
 
-def optional_session(f):
-    @functools.wraps(f)
-    def decorated(*args, **kwargs):
-        g.ksession = _get_komsession(_get_session_id())
-        return f(*args, **kwargs)
-    return decorated
+# TODO: if we complete the rewrite to only have create/delete sessions
+# for opening/closing lyskom sessions (connections), we don't really
+# need all of these helper methods.
 
+def _new_connection_id():
+    return str(uuid.uuid4())
 
-def _create_komsession(pers_no, password, client_name, client_version):
-    ksession = KomSession(_kom_server)
-    ksession.connect()
-    try:
-        ksession.login(pers_no, password, client_name, client_version)
-        # todo: check for exceptions that we should return 401 for. or
-        # should that be done here? we don't want to return http stuff here
-    except:
-        ksession.disconnect()
-        raise
-    return ksession
+def _save_komsession(ksession):
+    connection_id = _new_connection_id()
+    _komsessions[connection_id] = ksession
+    return connection_id
 
-def _save_komsession(session_id, ksession):
-    kom_sessions[session_id] = ksession
+def _delete_connection():
+    connection_id = request.cookies.get(_cookie_name)
+    if connection_id is not None and connection_id in _komsessions:
+        del _komsessions[connection_id]
 
-def _delete_komsession():
-    if 'session_id' in request.cookies:
-        session_id = request.cookies.get('session_id')
-        if session_id in kom_sessions:
-            del kom_sessions[session_id]
-
-def _get_session_id():
-    if 'session_id' in request.cookies:
-        return request.cookies.get('session_id')
+def _get_connection_id():
+    if _cookie_name in request.cookies:
+        return request.cookies.get(_cookie_name)
     return None
 
-def _get_komsession(session_id):
-    if session_id is not None:
-        if session_id in kom_sessions:
-            return kom_sessions[session_id]
-    
+def _get_komsession(connection_id):
+    if connection_id is not None and connection_id in _komsessions:
+        return _komsessions[connection_id]
     return None
 
-def _login(pers_no,
-           password,
-           client_name=_default_client_name,
-           client_version=version.__version__):
-    #app.logger.debug("Logging in")
-    ksession = _create_komsession(pers_no, password, client_name, client_version)
-    _save_komsession(ksession.id, ksession)
-    return ksession
 
-def _logout(ksession):
-    #app.logger.debug("Logging out")
+@app.route("/sessions/current/who-am-i")
+@requires_session
+def sessions_who_am_i():
+    """
+    """
     try:
-        ksession.logout()
-        ksession.disconnect()
-    finally:
-        _delete_komsession()
+        return jsonify(to_dict(g.ksession, True, g.ksession))
+    except kom.Error as ex:
+        return error_response(400, kom_error=ex)
 
 
 @app.route("/sessions/", methods=['POST'])
 def sessions_create():
-    """Create a new session (i.e. login).
-    
-    Note: If the login is successful, the matched full name will be
-    returned in the response.
-    
-    If no client is specified in the request, "httpkom" will be used.
+    """Create a new session (a connection to the LysKOM server).
     
     .. rubric:: Request
     
@@ -107,9 +131,58 @@ def sessions_create():
       POST /sessions/ HTTP/1.1
       
       {
-        "person": { "pers_no": 14506 },
-        "passwd": "test123",
         "client": { "name": "jskom", "version": "0.2" }
+      }
+    
+    .. rubric:: Responses
+    
+    Successful connect::
+    
+      HTTP/1.0 200 OK
+      Set-Cookie: connection_id=033556ee-3e52-423f-9c9a-d85aed7688a1; expires=Sat, 19-May-2012 12:44:51 GMT; Max-Age=604800; Path=/
+      
+      { "session_no": 12345 }
+    
+    Already connected::
+
+      HTTP/1.0 204 NO CONTENT
+    
+    """
+    try:
+        client_name = request.json['client']['name']
+        client_version = request.json['client']['version']
+        
+        existing_ksession = _get_komsession(_get_connection_id())
+        if existing_ksession is None:
+            ksession = KomSession(_kom_server)
+            ksession.connect(client_name, client_version)
+            response = jsonify(session_no=ksession.who_am_i())
+            connection_id = _save_komsession(ksession)
+            response.set_cookie(_cookie_name, domain=_cookie_domain,
+                                value=connection_id, max_age=7*24*60*60)
+            return response
+        else:
+            return empty_response(204)
+    except kom.Error as ex:
+        return error_response(400, kom_error=ex)
+
+
+@app.route("/sessions/current/login", methods=['POST'])
+@requires_session
+def sessions_login():
+    """Log in with a session.
+    
+    Note: If the login is successful, the matched full name will be
+    returned in the response.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      POST /sessions/ HTTP/1.1
+      
+      {
+        "person": { "pers_no": 14506, "passwd": "test123" }
       }
     
     .. rubric:: Responses
@@ -117,11 +190,11 @@ def sessions_create():
     Successful login::
     
       HTTP/1.0 200 OK
-      Set-Cookie: session_id=033556ee-3e52-423f-9c9a-d85aed7688a1; expires=Sat, 19-May-2012 12:44:51 GMT; Max-Age=604800; Path=/
       
-      { "id": "033556ee-3e52-423f-9c9a-d85aed7688a1",
-        "person": { "pers_no": 14506, "pers_name": "Oskars testperson" },
-        "client": { "name": "jskom", "version": "0.2" } }
+      {
+        "session_no": 12345,
+        "person": { "pers_no": 14506, "pers_name": "Oskars testperson" }
+      }
     
     Failed login::
     
@@ -133,16 +206,10 @@ def sessions_create():
     
       curl -b cookies.txt -c cookies.txt -v \\
            -X POST -H "Content-Type: application/json" \\
-           -d '{ "person": { "pers_no": 14506 }, "passwd": "test123" }' \\
+           -d '{ "person": { "pers_no": 14506, "passwd": "test123" } }' \\
             http://localhost:5001/sessions/
     
     """
-    old_ksession = _get_komsession(_get_session_id())
-    if old_ksession:
-        # already loggedin, logout first, then try to login with the
-        # supplied credentials.
-        _logout(old_ksession)
-    
     try:
         person = request.json['person']
         if person is None:
@@ -156,91 +223,66 @@ def sessions_create():
             return error_response(400, error_msg='"pers_no" in "person" is null.')
     except KeyError as ex:
         return error_response(400, error_msg='Missing "pers_no" in "person".')
-
-    try:
-        passwd = request.json['passwd']
-        if passwd is None:
-            return error_response(400, error_msg='"passwd" is null.')
-    except KeyError as ex:
-        return error_response(400, error_msg='Missing "passwd".')
     
     try:
-        if 'client' in request.json and request.json['client'] is not None:
-            ksession = _login(pers_no, passwd,
-                              request.json['client']['name'], request.json['client']['version'])
-        else:
-            ksession = _login(pers_no, passwd)
-        
-        response = jsonify(to_dict(ksession, True, ksession))
-        response.set_cookie('session_id', domain=app.config['HTTPKOM_COOKIE_DOMAIN'],
-                            value=ksession.id, max_age=7*24*60*60)
-        return response
+        passwd = person['passwd']
+        if passwd is None:
+            return error_response(400, error_msg='"passwd" in "person" is null.')
+    except KeyError as ex:
+        return error_response(400, error_msg='Missing "passwd" in "person".')
+    
+    try:
+        g.ksession.login(pers_no, passwd)
+        return jsonify(to_dict(g.ksession, True, g.ksession))
     except (kom.InvalidPassword, kom.UndefinedPerson, kom.LoginDisallowed,
             kom.ConferenceZero) as ex:
         return error_response(401, kom_error=ex)
+    except kom.Error as ex:
+        return error_response(400, kom_error=ex)
 
 
-@app.route("/sessions/<string:session_id>")
-def sessions_get(session_id):
-    """Get information about a session. Usable for checking if your
-    session is still valid.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      GET /sessions/033556ee-3e52-423f-9c9a-d85aed7688a1 HTTP/1.1
-    
-    .. rubric:: Responses
-    
-    Session exists (i.e. logged in)::
-    
-      HTTP/1.1 200 OK
-      
-      { "id": "033556ee-3e52-423f-9c9a-d85aed7688a1",
-        "person": { "pers_no": 14506, "pers_name": "Oskars testperson" },
-        "client": { "name": "jskom", "version": "0.2" } }
-    
-    Session does not exist (i.e. not logged in)::
-    
-      HTTP/1.1 404 Not Found
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X GET http://localhost:5001/sessions/abc123
-    
+@app.route("/sessions/current/logout", methods=['POST'])
+@requires_login
+def sessions_logout():
+    """Logout in the current session.
     """
-    session_id = _get_session_id()
-    ksession = _get_komsession(session_id)
-    if ksession:
-        return jsonify(to_dict(ksession, True, ksession))
-    else:
-        return empty_response(404)
+    try:
+        g.ksession.logout()
+        return empty_response(204)
+    except kom.Error as ex:
+        return error_response(400, kom_error=ex)
 
 
-@app.route("/sessions/<string:session_id>", methods=['DELETE'])
-def sessions_delete(session_id):
-    """Delete a session (i.e. logout).
+@app.route("/sessions/<int:session_no>", methods=['DELETE'])
+@requires_login
+def sessions_delete(session_no):
+    """Delete a session (disconnect from the LysKOM server).
+    
+    Note (from the protocol A spec): "Session number zero is always
+    interpreted as the session making the call, so the easiest way to
+    disconnect the current session is to disconnect session zero."
     
     .. rubric:: Request
     
     ::
     
-      DELETE /sessions/033556ee-3e52-423f-9c9a-d85aed7688a1 HTTP/1.1
+      DELETE /sessions/12345 HTTP/1.1
     
     .. rubric:: Responses
     
-    Session exist::
+    We disconnected out our own session::
+    
+      HTTP/1.1 204 No Content
+      Set-Cookie: connection_id=; expires=Thu, 01-Jan-1970 00:00:00 GMT; Path=/
+
+    We disconnected another session::
     
       HTTP/1.1 204 No Content
     
     Session does not exist::
     
       HTTP/1.1 404 Not Found
-      Set-Cookie: session_id=; expires=Thu, 01-Jan-1970 00:00:00 GMT; Path=/
+      Set-Cookie: session_no=; expires=Thu, 01-Jan-1970 00:00:00 GMT; Path=/
     
     .. rubric:: Example
     
@@ -250,14 +292,17 @@ def sessions_delete(session_id):
            -X DELETE http://localhost:5001/sessions/abc123
     
     """
-    ksession = _get_komsession(session_id)
-    if ksession:
-        _logout(ksession)
+    try:
+        g.ksession.disconnect(session_no)
         response = empty_response(204)
-        response.set_cookie('session_id', value='', expires=0)
+        if not g.ksession.is_connected():
+            _delete_connection()
+            response.set_cookie(_cookie_name, value='', expires=0)
         return response
-    else:
-        return empty_response(404)
+    except kom.UndefinedSession as ex:
+        return error_response(404, kom_error=ex)
+    except kom.Error as ex:
+        return error_response(400, kom_error=ex)
 
 
 @app.route("/sessions/current/working-conference", methods=['POST'])

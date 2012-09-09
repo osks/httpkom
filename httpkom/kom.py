@@ -2614,7 +2614,7 @@ class CachedUserConnection(CachedConnection):
         self.no_unread = Cache(self.fetch_unread, "Number of unread")
         # FIXME: Add support for aux-items, session-information, textmappings etc.
         
-    def set_user(self, user_no, set_member_confs=1):
+    def set_user(self, user_no, set_member_confs=True):
         self._user_no = user_no
         if set_member_confs:
             self.set_member_confs()

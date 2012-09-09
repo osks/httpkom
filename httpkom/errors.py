@@ -37,10 +37,6 @@ def error_response(status_code, kom_error=None, error_msg=""):
 def badrequest(error):
     return empty_response(400)
 
-@app.errorhandler(500)
-def internalservererror(error):
-    return error_response(500, error_msg=str(error))
-
 @app.errorhandler(404)
 def notfound(error):
     return empty_response(404)
@@ -52,3 +48,12 @@ def kom_error(error):
 @app.errorhandler(KomSessionError)
 def komsession_error(error):
     return error_response(400, error_msg=str(error))
+
+@app.errorhandler(500)
+def internalservererror(error):
+    return error_response(500, error_msg=str(error))
+
+@app.errorhandler(Exception)
+def internalservererror(error):
+    app.logger.exception(error)
+    return error_response(500, error_msg="Unknown error")

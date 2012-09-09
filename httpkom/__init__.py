@@ -60,6 +60,7 @@ import conferences
 import sessions
 import texts
 import persons
+import errors
 
 
 @app.after_request

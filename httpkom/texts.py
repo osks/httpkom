@@ -12,11 +12,11 @@ from komsession import KomSession, KomSessionError, KomText, to_dict, from_dict,
 from httpkom import app
 from errors import error_response
 from misc import empty_response
-from sessions import requires_session
+from sessions import requires_session, requires_login
 
 
 @app.route('/texts/<int:text_no>')
-@requires_session
+@requires_login
 def texts_get(text_no):
     """Get a text.
     
@@ -78,7 +78,7 @@ def texts_get(text_no):
 
 
 @app.route('/texts/<int:text_no>/body')
-@requires_session
+@requires_login
 def texts_get_body(text_no):
     """Get the body of text, with the content type of the body set in the HTTP header.
     Useful for creating img-tags in HTML and specifying this URL as source.
@@ -137,7 +137,7 @@ def texts_get_body(text_no):
 
 
 @app.route('/texts/', methods=['POST'])
-@requires_session
+@requires_login
 def texts_create():
     """Create a text.
     
@@ -185,7 +185,7 @@ def texts_create():
 
 
 @app.route('/texts/<int:text_no>/read-marking', methods=['PUT'])
-@requires_session
+@requires_login
 def texts_put_read_marking(text_no):
     """Mark a text as read in all recipient conferences.
     
@@ -214,7 +214,7 @@ def texts_put_read_marking(text_no):
 
 
 @app.route('/texts/<int:text_no>/read-marking', methods=['DELETE'])
-@requires_session
+@requires_login
 def texts_delete_read_marking(text_no):
     """Mark a text as unread in all recipient conferences.
     

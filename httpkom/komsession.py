@@ -43,32 +43,52 @@ MICommentIn_str_to_type = { 'comment': kom.MIC_COMMENT,
 class KomSession(object):
     """ A LysKom session. """
     def __init__(self, host, port=4894):
-        self.id = str(uuid.uuid4())
         self.host = host
         self.port = port
         self.conn = None
+        self.session_no = None
         self.client_name = None
         self.client_version = None
-        
-    def connect(self):
-        user = "httpkom%" + socket.getfqdn()
-        self.conn = thkom.ThreadedConnection(self.host, self.port, user=user)
     
-    def disconnect(self):
-        self.conn.continue_read_loop = False # stops the async thread in ThreadedConnection
-        self.conn.socket.close()
-        self.conn = None
-    
-    def login(self, pers_no, password, client_name, client_version):
+    def connect(self, client_name, client_version):
+        httpkom_user = "httpkom%" + socket.getfqdn()
+        self.conn = kom.CachedUserConnection(self.host, self.port, user=httpkom_user)
+        kom.ReqSetClientVersion(self.conn, client_name, client_version)
         self.client_name = client_name
         self.client_version = client_version
+        self.session_no = self.who_am_i()
+    
+    def disconnect(self, session_no=0):
+        """Session number 0 means this session (a logged in user can
+        disconnect its other sessions).
+        """
+        kom.ReqDisconnect(self.conn, session_no).response()
+        
+        # Check if we disconnected our own session
+        if session_no == 0 or session_no == self.session_no:
+            self.conn.socket.close()
+            self.conn = None
+            self.client_name = None
+            self.client_version = None
+            self.session_no = None
+    
+    def is_connected(self):
+        return self.conn is None
+    
+    def login(self, pers_no, password):
         kom.ReqLogin(self.conn, pers_no, password, invisible=0).response()
-        kom.ReqSetClientVersion(self.conn, self.client_name, self.client_version)
         self.conn.set_user(pers_no)
         
     def logout(self):
         kom.ReqLogout(self.conn).response()
+        self.conn.set_user(0, set_member_confs=False)
     
+    def who_am_i(self):
+        return kom.ReqWhoAmI(self.conn).response()
+    
+    def is_logged_in(self):
+        return self.current_user() != 0
+
     def current_user(self):
         return self.conn.get_user()
     
@@ -357,21 +377,20 @@ def from_dict(d, cls, lookups=False, session=None):
         raise NotImplementedError("from_dict is not implemented for: %s" % cls)
 
 def KomSession_to_dict(ksession, lookups, session):
-    if lookups:
+    person = None
+    if ksession.is_logged_in():
         pers_no = ksession.current_user()
-        pers_name = ksession.get_conf_name(pers_no)
-    else:
-        pers_no = None
-        pers_name = None
+        if lookups:
+            pers_name = session.get_conf_name(pers_no)
+        else:
+            pers_name = None
+        person = dict(pers_no=pers_no, pers_name=pers_name)
     
-    d= dict(
-        id=ksession.id,
-        person=dict(pers_no=pers_no, pers_name=pers_name),
-        client=dict(name=ksession.client_name,
-                    version=ksession.client_version))
+    session_no = None
+    if lookups:
+        session_no = ksession.who_am_i()
     
-    
-    return d
+    return dict(person=person, session_no=session_no)
 
 def KomMembership_to_dict(membership, lookups, session):
     return dict(

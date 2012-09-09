@@ -9,11 +9,11 @@ from komsession import KomSession, KomSessionError, KomText, to_dict, from_dict
 from httpkom import app
 from errors import error_response
 from misc import empty_response, get_bool_arg_with_default
-from sessions import requires_session, optional_session
+from sessions import requires_session, requires_login
 
 
 @app.route('/conferences/')
-@optional_session
+@requires_session
 def conferences_list():
     """Lookup conference names.
     
@@ -91,7 +91,7 @@ def conferences_list():
 
 
 @app.route('/conferences/<int:conf_no>')
-@requires_session
+@requires_login
 def conferences_get(conf_no):
     """Get information about a specific conference.
     
@@ -201,7 +201,7 @@ def conferences_get(conf_no):
 
 
 @app.route('/conferences/<int:conf_no>/texts/<int:local_text_no>/read-marking', methods=['PUT'])
-@requires_session
+@requires_login
 def conferences_put_text_read_marking(conf_no, local_text_no):
     """Mark text as read in the specified recipient conference (only).
     
