@@ -170,7 +170,7 @@ def sessions_create():
 @app.route("/sessions/current/login", methods=['POST'])
 @requires_session
 def sessions_login():
-    """Log in with a session.
+    """Log in using the current session.
     
     Note: If the login is successful, the matched full name will be
     returned in the response.
@@ -179,7 +179,7 @@ def sessions_login():
     
     ::
     
-      POST /sessions/ HTTP/1.1
+      POST /sessions/current/login HTTP/1.1
       
       {
         "person": { "pers_no": 14506, "passwd": "test123" }
@@ -207,7 +207,7 @@ def sessions_login():
       curl -b cookies.txt -c cookies.txt -v \\
            -X POST -H "Content-Type: application/json" \\
            -d '{ "person": { "pers_no": 14506, "passwd": "test123" } }' \\
-            http://localhost:5001/sessions/
+            http://localhost:5001/sessions/current/login
     
     """
     try:
@@ -244,7 +244,27 @@ def sessions_login():
 @app.route("/sessions/current/logout", methods=['POST'])
 @requires_login
 def sessions_logout():
-    """Logout in the current session.
+    """Log out in the current session.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      POST /sessions/current/logout HTTP/1.1
+      
+    .. rubric:: Responses
+    
+    Successful logout::
+    
+      HTTP/1.0 204 NO CONTENT
+      
+    .. rubric:: Example
+    
+    ::
+    
+      curl -b cookies.txt -c cookies.txt -v \\
+           -X POST http://localhost:5001/sessions/current/logout
+    
     """
     try:
         g.ksession.logout()
