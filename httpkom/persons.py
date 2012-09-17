@@ -6,13 +6,13 @@ from flask import g, request, jsonify
 import kom
 from komsession import KomSession, KomSessionError, to_dict
 
-from httpkom import app
+from httpkom import app, bp
 from errors import error_response
 from misc import empty_response, get_bool_arg_with_default
 from sessions import requires_session, requires_login
 
 
-@app.route('/persons/', methods=['POST'])
+@bp.route('/persons/', methods=['POST'])
 @requires_session
 def persons_create():
     """Create a person
@@ -42,8 +42,7 @@ def persons_create():
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X POST H "Content-Type: application/json" \\
+      curl -v -X POST H "Content-Type: application/json" \\
            -d '{ "name": "Oskar Testperson", "passwd": "test123" }' \\
            http://localhost:5001/persons/
     
@@ -73,7 +72,7 @@ def persons_create():
 
 
 # Or should the URL be /persons/current/memberships/<int:conf_no>/no-of-unread ?
-@app.route('/persons/current/memberships/<int:conf_no>', methods=['POST'])
+@bp.route('/persons/current/memberships/<int:conf_no>', methods=['POST'])
 @requires_login
 def persons_set_unread(conf_no):
     """Set number of unread texts in current persons membership for
@@ -99,8 +98,7 @@ def persons_set_unread(conf_no):
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X POST -H "Content-Type: application/json" \\
+      curl -v -X POST -H "Content-Type: application/json" \\
            -d { "no_of_unread": 17 } \\
            http://localhost:5001/persons/current/memberships/14506
     
@@ -117,7 +115,7 @@ def persons_set_unread(conf_no):
     return empty_response(204)
 
 
-@app.route('/persons/<int:pers_no>/memberships/<int:conf_no>')
+@bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>')
 @requires_login
 def persons_get_membership(pers_no, conf_no):
     """Get a persons membership for a conference.
@@ -204,8 +202,7 @@ def persons_get_membership(pers_no, conf_no):
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X GET http://localhost:5001/persons/14506/memberships/14506?want-unread=false
+      curl -v -X GET http://localhost:5001/persons/14506/memberships/14506?want-unread=false
     
     """
     want_unread = get_bool_arg_with_default(request.args, 'want-unread', False)
@@ -217,7 +214,7 @@ def persons_get_membership(pers_no, conf_no):
         return error_response(404, kom_error=ex)
 
 
-@app.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['PUT'])
+@bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['PUT'])
 @requires_login
 def persons_put_membership(pers_no, conf_no):
     """Add the person as member to the given conference, or update an
@@ -252,8 +249,7 @@ def persons_put_membership(pers_no, conf_no):
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X PUT http://localhost:5001/persons/14506/memberships/6?priority=150
+      curl -v -X PUT http://localhost:5001/persons/14506/memberships/6?priority=150
     
     """
     priority = int(request.args.get('priority', 100))
@@ -265,7 +261,7 @@ def persons_put_membership(pers_no, conf_no):
         return error_response(404, kom_error=ex)
 
 
-@app.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['DELETE'])
+@bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['DELETE'])
 @requires_login
 def persons_delete_membership(pers_no, conf_no):
     """Remove the persons membership in the given conference.
@@ -291,8 +287,7 @@ def persons_delete_membership(pers_no, conf_no):
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X DELETE http://localhost:5001/persons/14506/memberships/6
+      curl -v -X DELETE http://localhost:5001/persons/14506/memberships/6
     
     """
     try:
@@ -302,7 +297,7 @@ def persons_delete_membership(pers_no, conf_no):
         return error_response(404, kom_error=ex)
 
 
-@app.route('/persons/<int:pers_no>/memberships/')
+@bp.route('/persons/<int:pers_no>/memberships/')
 @requires_login
 def persons_list_memberships(pers_no):
     """Get list of memberships.
@@ -366,8 +361,7 @@ def persons_list_memberships(pers_no):
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X GET http://localhost:5001/persons/14506/memberships/?unread=true
+      curl -v -X GET http://localhost:5001/persons/14506/memberships/?unread=true
     
     """
     unread = get_bool_arg_with_default(request.args, 'unread', False)

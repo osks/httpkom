@@ -6,20 +6,16 @@ from flask import g, request, jsonify
 import kom
 from komsession import KomSession, KomSessionError, KomText, to_dict, from_dict
 
-from httpkom import app
+from httpkom import app, bp
 from errors import error_response
 from misc import empty_response, get_bool_arg_with_default
 from sessions import requires_session, requires_login
 
 
-@app.route('/conferences/')
+@bp.route('/conferences/')
 @requires_session
 def conferences_list():
     """Lookup conference names.
-    
-    An existing session is not required, but if one exist (i.e. valid
-    cookie) it will be used. Otherwise a new session will be created
-    temporarily for this request.
     
     Query parameters:
     
@@ -62,8 +58,7 @@ def conferences_list():
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X GET -H "Content-Type: application/json" \\
+      curl -v -X GET -H "Content-Type: application/json" \\
            http://localhost:5001/conferences/?name=osk%20t&want-confs=false
     
     """
@@ -90,7 +85,7 @@ def conferences_list():
             ksession.disconnect()
 
 
-@app.route('/conferences/<int:conf_no>')
+@bp.route('/conferences/<int:conf_no>')
 @requires_login
 def conferences_get(conf_no):
     """Get information about a specific conference.
@@ -188,8 +183,7 @@ def conferences_get(conf_no):
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X GET http://localhost:5001/conferences/14506?micro=true
+      curl -v -X GET http://localhost:5001/conferences/14506?micro=true
     
     """
     try:
@@ -200,7 +194,7 @@ def conferences_get(conf_no):
         return error_response(404, kom_error=ex)
 
 
-@app.route('/conferences/<int:conf_no>/texts/<int:local_text_no>/read-marking', methods=['PUT'])
+@bp.route('/conferences/<int:conf_no>/texts/<int:local_text_no>/read-marking', methods=['PUT'])
 @requires_login
 def conferences_put_text_read_marking(conf_no, local_text_no):
     """Mark text as read in the specified recipient conference (only).
@@ -221,8 +215,7 @@ def conferences_put_text_read_marking(conf_no, local_text_no):
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X PUT http://localhost:5001/conferences/14506/texts/29/read-marking
+      curl -v -X PUT http://localhost:5001/conferences/14506/texts/29/read-marking
     
     """
     # TODO: handle conferences/texts that doesn't exist (i.e. return 404).

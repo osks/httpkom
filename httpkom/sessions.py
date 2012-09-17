@@ -1,6 +1,84 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
+"""
+To be able to handle multiple simultaneously sessions we use a header
+for specifying the connection id::
+
+  Httpkom-Connection: <uuid>
+
+The connection id is mainly to make it very hard ("impossible") to
+intentionally take over someone else connection.
+
+To open a new connection, make a request like this::
+
+  POST /<server_id>/sessions/
+  Content-Type: application/json
+  
+  { "client": { "name": "jskom", "version": "0.6" } }
+
+The response will look like this::
+
+  HTTP/1.0 200 OK
+  Content-Type: application/json
+  Httpkom-Connection: <uuid>
+  
+  { "session_no": 123456 }
+
+This is the only response that will contain the Httpkom-Connection.
+The request must not contain any Httpkom-Connnection header. If the
+request contains a Httpkom-Connection header, the request will fail
+and the response will be::
+
+  HTTP/1.0 409 Conflict
+
+Subsequent request to that server should contain the returned
+Httpkom-Connection header. For example, a login request will look
+like this::
+
+  POST /<server_id>/sessions/login
+  Content-Type: application/json
+  Httpkom-Connection: <uuid>
+  
+  { "person": { "pers_no": 14506, "passwd": "test123" } }
+
+and the response::
+
+  HTTP/1.0 200 OK
+  Content-Type: application/json
+  
+  {
+    "session_no": 1089645, 
+    "person": { "pers_no": 14506, "pers_name": "Oskars Testperson" }
+  }
+
+If a resource requires a logged in session and the request contains a
+valid Httpkom-Connection header which is not logged in, the response
+will be::
+
+  HTTP/1.0 401 Unauthorized
+
+If the Httkom-Connection is missing, or if the connection id specified
+by the Httpkom-Connection header is invalid (for example if the
+connection was to another server than <server_id>, or if there is no
+connection with that id), the response will be::
+
+  HTTP/1.0 403 Forbidden
+
+If you get a 403 response, the used Httpkom-Connection should be
+considered invalid and should not be used again.
+
+It is up to the client to keep track of opened connection and to use
+them with the correct <server_id>. The /<server_id> prefix to all
+resources could be seen as redundant, since the Httpkom-Connection
+also specifies the server, but it makes the API resources
+consistent. Also, the resources on different LysKOM servers has
+nothing to do with each other, so it is a good idea from "REST"
+perspective to have them different resources (i.e. different
+/<server_id> prefixes).
+
+"""
+
 import uuid
 import json
 import functools
@@ -10,66 +88,30 @@ from flask import g, abort, request, jsonify, make_response, Response
 import kom
 from komsession import KomSession, KomSessionError, AmbiguousName, NameNotFound, to_dict
 
-from httpkom import app
+from httpkom import app, bp
 from errors import error_response
 from misc import empty_response
 import version
 
 
-_kom_server = app.config['HTTPKOM_LYSKOM_SERVER']
-
-_cookie_domain = app.config['HTTPKOM_COOKIE_DOMAIN']
-_cookie_name = 'connection_id'
+_CONNECTION_HEADER ='Httpkom-Connection'
 
 _komsessions = {}
 
 
 # Terminology:
-
-# connection_id - The UUID for our KomSession. The ID is stored in the
-#                 cookie and is considered secret! (You can take over
-#                 some ones session with it.)
-
-# session - an open connection to the LysKOM server. WhoAmI will
+# 
+# connection_id - The UUID for our KomSession.
+# 
+# session - An open connection to the LysKOM server. WhoAmI will
 #           return your session number. Does not need to be logged in.
 
 
-# TODO: To better handle multiple sessions, we should use headers for
-# session handling. With that I mean that we should supply all
-# information needed for opening a new session in the headers
-# (basically just client name/version).
-
-
-def requires_login(f):
-    """Check if the request has a LysKOM session (i.e. a cookie
-    specifying a valid connection) and that it's logged in. If there
-    is no session, returns 428 (see requires_session). If the session is not 
-    logged in, returns status code 401.
-    
-    Note: The status code 428 ("Precondition Required") comes from RFC 6585.
-    http://tools.ietf.org/html/rfc6585
-    """
-    @functools.wraps(f)
-    def decorated(*args, **kwargs):
-        g.ksession = _get_komsession(_get_connection_id())
-        # TODO: can we wrap "us" with requires_session instead of
-        # implementing the same behavior?
-        if g.ksession:
-            if g.ksession.is_logged_in():
-                return f(*args, **kwargs)
-            else:
-                return empty_response(401)
-        else:
-            return empty_response(428)
-    return decorated
-
 def requires_session(f):
-    """Check if the request has a LysKOM session (i.e. a cookie
-    specifying a valid connection). If there is no session, returns an
-    empty response with status code 428.
-    
-    Note: The status code 428 ("Precondition Required") comes from RFC 6585.
-    http://tools.ietf.org/html/rfc6585
+    """Check if the request has a Httpkom-Connection header that
+    points out a valid LysKOM session. If the header is missing, or if
+    there is no session for the id, return an empty response with
+    status code 403.
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
@@ -77,8 +119,23 @@ def requires_session(f):
         if g.ksession:
             return f(*args, **kwargs)
         else:
-            return empty_response(428)
+            return empty_response(403)
     return decorated
+
+
+def requires_login(f):
+    """Check if the request points out a logged in LysKOM session. If
+    the session is not logged in, return status code 401.
+    """
+    @functools.wraps(f)
+    @requires_session
+    def decorated(*args, **kwargs):
+        if g.ksession.is_logged_in():
+            return f(*args, **kwargs)
+        else:
+            return empty_response(401)
+    return decorated
+
 
 
 # TODO: if we complete the rewrite to only have create/delete sessions
@@ -93,14 +150,13 @@ def _save_komsession(ksession):
     _komsessions[connection_id] = ksession
     return connection_id
 
-def _delete_connection():
-    connection_id = request.cookies.get(_cookie_name)
+def _delete_connection(connection_id):
     if connection_id is not None and connection_id in _komsessions:
         del _komsessions[connection_id]
 
 def _get_connection_id():
-    if _cookie_name in request.cookies:
-        return request.cookies.get(_cookie_name)
+    if _CONNECTION_HEADER in request.headers:
+        return request.headers[_CONNECTION_HEADER]
     return None
 
 def _get_komsession(connection_id):
@@ -109,7 +165,7 @@ def _get_komsession(connection_id):
     return None
 
 
-@app.route("/sessions/current/who-am-i")
+@bp.route("/sessions/current/who-am-i")
 @requires_session
 def sessions_who_am_i():
     """
@@ -120,7 +176,7 @@ def sessions_who_am_i():
         return error_response(400, kom_error=ex)
 
 
-@app.route("/sessions/", methods=['POST'])
+@bp.route("/sessions/", methods=['POST'])
 def sessions_create():
     """Create a new session (a connection to the LysKOM server).
     
@@ -139,27 +195,29 @@ def sessions_create():
     Successful connect::
     
       HTTP/1.0 200 OK
-      Set-Cookie: connection_id=033556ee-3e52-423f-9c9a-d85aed7688a1; expires=Sat, 19-May-2012 12:44:51 GMT; Max-Age=604800; Path=/
+      Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1
       
       { "session_no": 12345 }
     
-    Already connected::
+    If the request contains a Httpkom-Connection header::
 
-      HTTP/1.0 204 NO CONTENT
+      HTTP/1.0 409 CONFLICT
     
     """
+    if _CONNECTION_HEADER in request.headers:
+        return empty_response(409)
+    
     try:
         client_name = request.json['client']['name']
         client_version = request.json['client']['version']
         
         existing_ksession = _get_komsession(_get_connection_id())
         if existing_ksession is None:
-            ksession = KomSession(_kom_server)
+            ksession = KomSession(g.server.host, g.server.port)
             ksession.connect(client_name, client_version)
             response = jsonify(session_no=ksession.who_am_i())
             connection_id = _save_komsession(ksession)
-            response.set_cookie(_cookie_name, domain=_cookie_domain,
-                                value=connection_id, max_age=7*24*60*60)
+            response.headers[_CONNECTION_HEADER] = connection_id
             return response
         else:
             return empty_response(204)
@@ -167,7 +225,7 @@ def sessions_create():
         return error_response(400, kom_error=ex)
 
 
-@app.route("/sessions/current/login", methods=['POST'])
+@bp.route("/sessions/current/login", methods=['POST'])
 @requires_session
 def sessions_login():
     """Log in using the current session.
@@ -180,6 +238,7 @@ def sessions_login():
     ::
     
       POST /sessions/current/login HTTP/1.1
+      Httpkom-Connection: <id>
       
       {
         "person": { "pers_no": 14506, "passwd": "test123" }
@@ -204,8 +263,8 @@ def sessions_login():
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X POST -H "Content-Type: application/json" \\
+      curl -v -X POST -H "Content-Type: application/json" \\
+           -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
            -d '{ "person": { "pers_no": 14506, "passwd": "test123" } }' \\
             http://localhost:5001/sessions/current/login
     
@@ -241,7 +300,7 @@ def sessions_login():
         return error_response(400, kom_error=ex)
 
 
-@app.route("/sessions/current/logout", methods=['POST'])
+@bp.route("/sessions/current/logout", methods=['POST'])
 @requires_login
 def sessions_logout():
     """Log out in the current session.
@@ -251,6 +310,7 @@ def sessions_logout():
     ::
     
       POST /sessions/current/logout HTTP/1.1
+      Httpkom-Connection: <id>
       
     .. rubric:: Responses
     
@@ -262,7 +322,7 @@ def sessions_logout():
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
+      curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
            -X POST http://localhost:5001/sessions/current/logout
     
     """
@@ -273,10 +333,13 @@ def sessions_logout():
         return error_response(400, kom_error=ex)
 
 
-@app.route("/sessions/<int:session_no>", methods=['DELETE'])
+@bp.route("/sessions/<int:session_no>", methods=['DELETE'])
 @requires_login
 def sessions_delete(session_no):
     """Delete a session (disconnect from the LysKOM server).
+    
+    If the request disconnects the current session, the used
+    Httpkom-Connection id is no longer valid.
     
     Note (from the protocol A spec): "Session number zero is always
     interpreted as the session making the call, so the easiest way to
@@ -287,45 +350,39 @@ def sessions_delete(session_no):
     ::
     
       DELETE /sessions/12345 HTTP/1.1
+      Httpkom-Connection: <id>
     
     .. rubric:: Responses
     
-    We disconnected out our own session::
-    
-      HTTP/1.1 204 No Content
-      Set-Cookie: connection_id=; expires=Thu, 01-Jan-1970 00:00:00 GMT; Path=/
-
-    We disconnected another session::
+    Success::
     
       HTTP/1.1 204 No Content
     
     Session does not exist::
     
       HTTP/1.1 404 Not Found
-      Set-Cookie: session_no=; expires=Thu, 01-Jan-1970 00:00:00 GMT; Path=/
     
     .. rubric:: Example
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
+      curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
            -X DELETE http://localhost:5001/sessions/abc123
     
     """
     try:
+        should_delete_connection = (session_no == 0) or (session_no == g.ksession.session_no)
         g.ksession.disconnect(session_no)
-        response = empty_response(204)
-        if not g.ksession.is_connected():
-            _delete_connection()
-            response.set_cookie(_cookie_name, value='', expires=0)
-        return response
+        if should_delete_connection:
+            _delete_connection(_get_connection_id())
+        return empty_response(204)
     except kom.UndefinedSession as ex:
         return error_response(404, kom_error=ex)
     except kom.Error as ex:
         return error_response(400, kom_error=ex)
 
 
-@app.route("/sessions/current/working-conference", methods=['POST'])
+@bp.route("/sessions/current/working-conference", methods=['POST'])
 @requires_session
 def sessions_change_working_conference():
     """Change current working conference of the current session.
@@ -335,6 +392,7 @@ def sessions_change_working_conference():
     ::
     
       POST /sessions/current/working-conference HTTP/1.1
+      Httpkom-Connection: <id>
       
       {
         "conf_no": 14506,
@@ -350,7 +408,7 @@ def sessions_change_working_conference():
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
+      curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
            -X POST -H "Content-Type: application/json" \\
            -d '{ "conf_no": 14506 }' \\
            http://localhost:5001/sessions/current/working-conference

@@ -9,13 +9,13 @@ import kom
 from komsession import KomSession, KomSessionError, KomText, to_dict, from_dict, \
     parse_content_type, mime_type_tuple_to_str
 
-from httpkom import app
+from httpkom import app, bp
 from errors import error_response
 from misc import empty_response
 from sessions import requires_session, requires_login
 
 
-@app.route('/texts/<int:text_no>')
+@bp.route('/texts/<int:text_no>')
 @requires_login
 def texts_get(text_no):
     """Get a text.
@@ -66,8 +66,7 @@ def texts_get(text_no):
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X GET -H "Content-Type: application/json" \\
+      curl -v -X GET -H "Content-Type: application/json" \\
            http://localhost:5001/texts/19680717
     
     """
@@ -77,7 +76,7 @@ def texts_get(text_no):
         return error_response(404, kom_error=ex)
 
 
-@app.route('/texts/<int:text_no>/body')
+@bp.route('/texts/<int:text_no>/body')
 @requires_login
 def texts_get_body(text_no):
     """Get the body of text, with the content type of the body set in the HTTP header.
@@ -111,8 +110,7 @@ def texts_get_body(text_no):
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X GET -H "Content-Type: application/json" \\
+      curl -v -X GET -H "Content-Type: application/json" \\
            http://localhost:5001/texts/19680717/body
     
     """
@@ -136,7 +134,7 @@ def texts_get_body(text_no):
         return error_response(404, kom_error=ex)
 
 
-@app.route('/texts/', methods=['POST'])
+@bp.route('/texts/', methods=['POST'])
 @requires_login
 def texts_create():
     """Create a text.
@@ -169,8 +167,7 @@ def texts_create():
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X POST H "Content-Type: application/json" \\
+      curl -v -X POST H "Content-Type: application/json" \\
            -d '{ "body": "r\u00e4ksm\u00f6rg\u00e5s", \\
                  "subject": "jaha",
                  "recpipent_list": [ { "conf_name": "oska testp", "type": "to" } ], \\
@@ -184,7 +181,7 @@ def texts_create():
     return jsonify(text_no=text_no)
 
 
-@app.route('/texts/<int:text_no>/read-marking', methods=['PUT'])
+@bp.route('/texts/<int:text_no>/read-marking', methods=['PUT'])
 @requires_login
 def texts_put_read_marking(text_no):
     """Mark a text as read in all recipient conferences.
@@ -205,15 +202,14 @@ def texts_put_read_marking(text_no):
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X PUT http://localhost:5001/texts/19680717/read-marking
+      curl -v -X PUT http://localhost:5001/texts/19680717/read-marking
     
     """
     g.ksession.mark_as_read(text_no)
     return empty_response(204)
 
 
-@app.route('/texts/<int:text_no>/read-marking', methods=['DELETE'])
+@bp.route('/texts/<int:text_no>/read-marking', methods=['DELETE'])
 @requires_login
 def texts_delete_read_marking(text_no):
     """Mark a text as unread in all recipient conferences.
@@ -234,8 +230,7 @@ def texts_delete_read_marking(text_no):
     
     ::
     
-      curl -b cookies.txt -c cookies.txt -v \\
-           -X DELETE http://localhost:5001/texts/19680717/read-marking
+      curl -v DELETE http://localhost:5001/texts/19680717/read-marking
     
     """
     g.ksession.mark_as_unread(text_no)

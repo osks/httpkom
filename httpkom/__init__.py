@@ -5,7 +5,7 @@ import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-from flask import Flask, render_template, request
+from flask import Flask, Blueprint, render_template, request, jsonify, g, abort
 
 from misc import empty_response
 
@@ -13,15 +13,15 @@ from misc import empty_response
 class default_settings:
     DEBUG = False
     
-    HTTPKOM_LYSKOM_SERVER = 'kom.lysator.liu.se'
-    
-    HTTPKOM_COOKIE_DOMAIN = None
+    HTTPKOM_LYSKOM_SERVERS = [
+        ('lyslyskom', 'LysKOM', 'kom.lysator.liu.se', 4894)
+        ]
     
     HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS = '*'
     HTTPKOM_CROSSDOMAIN_MAX_AGE = 0
-    HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS = [ 'Origin', 'Accept', 'Cookie', 'Content-Type',
-                                          'X-Requested-With' ]
-    HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS = [ 'Set-Cookie', 'Cookie' ]
+    HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS = [ 'Origin', 'Accept', 'Httpkom-Connection',
+                                          'Content-Type', 'X-Requested-With' ]
+    HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS = [ 'Httpkom-Connection' ]
     HTTPKOM_CROSSDOMAIN_ALLOW_METHODS = [ 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD' ]
     HTTPKOM_CROSSDOMAIN_ALLOW_CREDENTIALS = 'true'
 
@@ -32,6 +32,34 @@ if 'HTTPKOM_SETTINGS' in os.environ:
     app.config.from_envvar('HTTPKOM_SETTINGS')
 else:
     app.logger.info("No environment variable HTTPKOM_SETTINGS found, using default settings.")
+
+
+class Server(object):
+    def __init__(self, sid, name, host, port=4894):
+        self.id = sid
+        self.name = name
+        self.host = host
+        self.port = port
+    
+    def to_dict(self):
+        return { 'id': self.id, 'name': self.name, 'host': self.host, 'port': self.port }
+
+_servers = dict()
+for server in app.config['HTTPKOM_LYSKOM_SERVERS']:
+    _servers[server[0]] = Server(server[0], server[1], server[2], server[3])
+
+
+bp = Blueprint('frontend', __name__, url_prefix='/<string:server_id>')
+
+# http://flask.pocoo.org/docs/patterns/urlprocessors/
+@bp.url_value_preprocessor
+def pull_server_id(endpoint, values):
+    server_id = values.pop('server_id')
+    if server_id in _servers:
+        g.server = _servers[server_id]
+    else:
+        # No such server
+        abort(404)
 
 
 #if not app.debug:
@@ -54,13 +82,15 @@ else:
 #    app.logger.info("hej");
 
 
-
 # Load app parts
 import conferences
 import sessions
 import texts
 import persons
 import errors
+
+
+app.register_blueprint(bp)
 
 
 @app.after_request
@@ -105,7 +135,9 @@ def allow_crossdomain(resp):
 
 @app.route("/")
 def index():
-    return render_template('index.html')
+    servers = [ s.to_dict() for s in _servers.values() ]
+    return jsonify(servers=servers)
+
 
 @app.route("/status")
 def status():
