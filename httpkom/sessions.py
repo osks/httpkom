@@ -97,7 +97,7 @@ from misc import empty_response
 import version
 
 
-_CONNECTION_HEADER ='Httpkom-Connection'
+_CONNECTION_HEADER = app.config['HTTPKOM_CONNECTION_HEADER']
 
 _komsessions = {}
 
