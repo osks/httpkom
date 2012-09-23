@@ -135,8 +135,8 @@ def allow_crossdomain(resp):
 
 @app.route("/")
 def index():
-    servers = [ s.to_dict() for s in _servers.values() ]
-    return jsonify(servers=servers)
+    servers = dict([ (s.id, s.to_dict()) for s in _servers.values() ])
+    return jsonify(servers)
 
 
 @app.route("/status")

@@ -58,15 +58,18 @@ will be::
 
   HTTP/1.0 401 Unauthorized
 
-If the Httkom-Connection is missing, or if the connection id specified
+If the Httpkom-Connection is missing, or if the connection id specified
 by the Httpkom-Connection header is invalid (for example if the
 connection was to another server than <server_id>, or if there is no
 connection with that id), the response will be::
 
   HTTP/1.0 403 Forbidden
 
-If you get a 403 response, the used Httpkom-Connection should be
-considered invalid and should not be used again.
+When you get a 403 response, the used Httpkom-Connection should be
+considered invalid and should not be used again. If the
+Httpkom-Connection specifies a working connection, but to another
+server than <server_id>, httpkom might close the connection before
+returning 403.
 
 It is up to the client to keep track of opened connection and to use
 them with the correct <server_id>. The /<server_id> prefix to all
@@ -105,6 +108,10 @@ _komsessions = {}
 # 
 # session - An open connection to the LysKOM server. WhoAmI will
 #           return your session number. Does not need to be logged in.
+
+
+# TODO: Validate that the session pointed out by the
+# Httpkom-Connection header is the same as the <server_id>.
 
 
 def requires_session(f):
@@ -334,7 +341,7 @@ def sessions_logout():
 
 
 @bp.route("/sessions/<int:session_no>", methods=['DELETE'])
-@requires_login
+@requires_session
 def sessions_delete(session_no):
     """Delete a session (disconnect from the LysKOM server).
     
@@ -376,6 +383,9 @@ def sessions_delete(session_no):
         if should_delete_connection:
             _delete_connection(_get_connection_id())
         return empty_response(204)
+    except kom.LoginFirst as ex:
+        # If not logged in and not trying to disconnect the current session
+        return empty_response(401)
     except kom.UndefinedSession as ex:
         return error_response(404, kom_error=ex)
     except kom.Error as ex:
