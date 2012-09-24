@@ -59,8 +59,6 @@ def persons_create():
     passwd = request.json['passwd']
     
     try:
-        #lookup = ksession.lookup_name(name, want_pers, want_confs)
-        #confs = [ dict(conf_no=t[0], conf_name=t[1]) for t in lookup ]
         pers_no = ksession.create_person(name, passwd)
         return jsonify(dict(pers_no=pers_no))
     except kom.Error as ex:

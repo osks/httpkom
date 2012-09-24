@@ -187,6 +187,13 @@ def sessions_who_am_i():
 def sessions_create():
     """Create a new session (a connection to the LysKOM server).
     
+    Note: The response body also contains the connection_id (in
+    addition to the response header) to around problems with buggy
+    CORS implementations[1] in combination with certain javascript
+    libraries (AngularJS).
+    
+    [1] https://bugzilla.mozilla.org/show_bug.cgi?id=608735
+    
     .. rubric:: Request
     
     ::
@@ -204,7 +211,10 @@ def sessions_create():
       HTTP/1.0 200 OK
       Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1
       
-      { "session_no": 12345 }
+      {
+        "session_no": 12345,
+        "connection_id": "033556ee-3e52-423f-9c9a-d85aed7688a1"
+      }
     
     If the request contains a Httpkom-Connection header::
 
