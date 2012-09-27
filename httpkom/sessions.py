@@ -82,6 +82,8 @@ perspective to have them different resources (i.e. different
 
 """
 
+import socket
+import errno
 import uuid
 import json
 import functools
@@ -122,9 +124,17 @@ def requires_session(f):
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        g.ksession = _get_komsession(_get_connection_id())
+        connection_id = _get_connection_id()
+        g.ksession = _get_komsession(connection_id)
         if g.ksession:
-            return f(*args, **kwargs)
+            try:
+                return f(*args, **kwargs)
+            except socket.error as (eno, msg):
+                if eno == errno.EPIPE:
+                    _delete_connection(connection_id)
+                    return empty_response(403)
+                else:
+                    raise
         else:
             return empty_response(403)
     return decorated
