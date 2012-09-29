@@ -126,7 +126,9 @@ def requires_session(f):
     def decorated(*args, **kwargs):
         connection_id = _get_connection_id()
         g.ksession = _get_komsession(connection_id)
-        if g.ksession:
+        if g.ksession is None:
+            return empty_response(403)
+        else:
             try:
                 return f(*args, **kwargs)
             except socket.error as (eno, msg):
@@ -135,8 +137,6 @@ def requires_session(f):
                     return empty_response(403)
                 else:
                     raise
-        else:
-            return empty_response(403)
     return decorated
 
 
@@ -174,6 +174,11 @@ def _delete_connection(connection_id):
 def _get_connection_id():
     if _CONNECTION_HEADER in request.headers:
         return request.headers[_CONNECTION_HEADER]
+    else:
+        # Work-around for allowing the connection id to be sent as
+        # query parameter.  This is needed to be able to show images
+        # (text body) by creating an img tag.
+        return request.args.get(_CONNECTION_HEADER, None)
     return None
 
 def _get_komsession(connection_id):
