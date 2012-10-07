@@ -2063,13 +2063,15 @@ class Connection:
 
     # ASYNCHRONOUS MESSAGES HANDLERS
     
-    def add_async_handler(self, msg_no, handler):
+    def add_async_handler(self, msg_no, handler, skip_accept_async=False):
         if msg_no not in async_dict:
             raise UnimplementedAsync
         if msg_no in self.async_handlers:
             self.async_handlers[msg_no].append(handler)
         else:
             self.async_handlers[msg_no] = [handler]
+            if not skip_accept_async:
+                ReqAcceptAsync(self, self.async_handlers.keys())
 
     # REQUEST QUEUE
     
@@ -2373,13 +2375,14 @@ class CachedConnection(Connection):
         self.textstats = Cache(self.fetch_textstat, "TextStat")
         self.subjects = Cache(self.fetch_subject, "Subject")
 
-        # Setup up async handlers for invalidating cache entries.
-        self.add_async_handler(ASYNC_NEW_NAME, self.cah_new_name)
-        self.add_async_handler(ASYNC_LEAVE_CONF, self.cah_leave_conf)
-        self.add_async_handler(ASYNC_DELETED_TEXT, self.cah_deleted_text)
-        self.add_async_handler(ASYNC_NEW_TEXT, self.cah_new_text)
-        self.add_async_handler(ASYNC_NEW_RECIPIENT, self.cah_new_recipient)
-        self.add_async_handler(ASYNC_SUB_RECIPIENT, self.cah_sub_recipient)
+        # Setup up async handlers for invalidating cache entries. Skip
+        # sending accept-async until the last call.
+        self.add_async_handler(ASYNC_NEW_NAME, self.cah_new_name, True)
+        self.add_async_handler(ASYNC_LEAVE_CONF, self.cah_leave_conf, True)
+        self.add_async_handler(ASYNC_DELETED_TEXT, self.cah_deleted_text, True)
+        self.add_async_handler(ASYNC_NEW_TEXT, self.cah_new_text, True)
+        self.add_async_handler(ASYNC_NEW_RECIPIENT, self.cah_new_recipient, True)
+        self.add_async_handler(ASYNC_SUB_RECIPIENT, self.cah_sub_recipient, True)
         self.add_async_handler(ASYNC_NEW_MEMBERSHIP, self.cah_new_membership)
 
     # Fetching functions (internal use)
@@ -2424,10 +2427,13 @@ class CachedConnection(Connection):
             
     def cah_new_text(self, msg, c):
         # A new text. conferences[].no_of_texts and
-        # uconferences[].highest_local_no is invalid.
+        # uconferences[].highest_local_no is invalid. Also invalidates
+        # the textstats for the commented texts.
         for rcpt in msg.text_stat.misc_info.recipient_list:
             self.conferences.invalidate(rcpt.recpt)
             self.uconferences.invalidate(rcpt.recpt)
+        for ct in msg.text_stat.misc_info.comment_to_list:
+            self.textstats.invalidate(ct.text_no)
         # FIXME: A new text makes persons[author].no_of_created_texts invalid
 
     def cah_new_recipient(self, msg, c):
@@ -2648,7 +2654,7 @@ class CachedUserConnection(CachedConnection):
         unread = []
         self.memberships.invalidate(conf_no)
         ms = self.memberships[conf_no]
-        return self._get_unread_texts_from_membership(ms)
+        return self.get_unread_texts_from_membership(ms)
     
     # Handlers for asynchronous messages (internal use)
     def cah_deleted_text(self, msg, c):

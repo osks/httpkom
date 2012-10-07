@@ -51,9 +51,10 @@ def komsession_error(error):
 
 @app.errorhandler(500)
 def internalservererror(error):
+    app.logger.exception(error)
     return error_response(500, error_msg=str(error))
 
 @app.errorhandler(Exception)
-def internalservererror(error):
+def exceptionhandler(error):
     app.logger.exception(error)
     return error_response(500, error_msg="Unknown error")

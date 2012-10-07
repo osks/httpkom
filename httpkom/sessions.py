@@ -104,13 +104,6 @@ _CONNECTION_HEADER = app.config['HTTPKOM_CONNECTION_HEADER']
 _komsessions = {}
 
 
-# Terminology:
-# 
-# connection_id - The UUID for our KomSession.
-# 
-# session - An open connection to the LysKOM server. WhoAmI will
-#           return your session number. Does not need to be logged in.
-
 
 # TODO: Validate that the session pointed out by the
 # Httpkom-Connection header is the same as the <server_id>.

@@ -36,9 +36,9 @@ class ThreadedConnection(kom.CachedUserConnection):
         self.continue_read_loop = True
         thread.start_new_thread(self.read_loop, ())
 
-    def add_async_handler(self, msg_no, handler):
+    def add_async_handler(self, msg_no, handler, skip_accept_async=False):
         self.async_lock.acquire()
-        kom.CachedUserConnection.add_async_handler(self, msg_no, handler)
+        kom.CachedUserConnection.add_async_handler(self, msg_no, handler, skip_accept_async)
         self.async_lock.release()
 
     def register_request(self, req):
