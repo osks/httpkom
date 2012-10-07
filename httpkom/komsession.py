@@ -38,6 +38,9 @@ MICommentIn_type_to_str = { kom.MIC_COMMENT: 'comment',
 MICommentIn_str_to_type = { 'comment': kom.MIC_COMMENT,
                             'footnote': kom.MIC_FOOTNOTE }
 
+_ALLOWED_KOMTEXT_AUXITEMS = [
+    komauxitems.AI_FAST_REPLY
+]
 
 
 class KomSession(object):
@@ -294,6 +297,7 @@ class KomText(object):
             self.comment_in_list = None
             self.subject = None
             self.body = None
+            self.aux_items = None
         else:
             mime_type, encoding = parse_content_type(
                 self._get_content_type_from_text_stat(text_stat))
@@ -304,6 +308,7 @@ class KomText(object):
             self.recipient_list=text_stat.misc_info.recipient_list
             self.comment_to_list=text_stat.misc_info.comment_to_list
             self.comment_in_list=text_stat.misc_info.comment_in_list
+            self.aux_items = text_stat.aux_items
             
             # text_stat is required for this
             if text is not None:
@@ -360,6 +365,8 @@ def to_dict(obj, lookups=False, session=None):
         return KomMembership_to_dict(obj, lookups, session)
     elif isinstance(obj, kom.MembershipType):
         return MembershipType_to_dict(obj, lookups, session)
+    elif isinstance(obj, kom.AuxItem):
+        return AuxItem_to_dict(obj, lookups, session)
     else:
         #raise NotImplementedError("to_dict is not implemented for: %s" % type(obj))
         return obj
@@ -483,11 +490,20 @@ def KomText_to_dict(komtext, lookups, session):
         d['comment_in_list'] = [ to_dict(ci, lookups, session)
                                  for ci in komtext.comment_in_list ]
     
+    if komtext.aux_items is None:
+        d['aux_items'] = None
+    else:
+        aux_items = []
+        for ai in filter(lambda ai: ai.tag in _ALLOWED_KOMTEXT_AUXITEMS,
+                         komtext.aux_items):
+            aux_items.append(to_dict(ai, lookups, session))
+        d['aux_items'] = aux_items
+    
     if komtext.creation_time is None:
         d['creation_time'] = None
     else:
         d['creation_time'] = komtext.creation_time.to_date_and_time()
-        
+    
     return d
 
 def KomText_from_dict(d, lookups, session):
@@ -531,13 +547,19 @@ def KomText_from_dict(d, lookups, session):
     
     return kt
 
-def pers_to_dict(author, lookups, session):
+def pers_to_dict(pers_no, lookups, session):
+    if pers_no is None:
+        return None
+    
     if lookups:
-        return dict(pers_no=author, pers_name=session.get_conf_name(author))
+        return dict(pers_no=pers_no, pers_name=session.get_conf_name(pers_no))
     else:
-        return dict(pers_no=author)
+        return dict(pers_no=pers_no)
 
 def conf_to_dict(conf_no, lookups, session):
+    if conf_no is None:
+        return None
+    
     if lookups:
         return dict(conf_no=conf_no, conf_name=session.get_conf_name(conf_no))
     else:
@@ -547,12 +569,23 @@ def MIRecipient_to_dict(mir, lookups, session):
     if not mir.type in MIRecipient_type_to_str:
         raise KeyError("Unknown MIRecipient type: %s" % mir.type)
     
-    d = dict(type=MIRecipient_type_to_str[mir.type],
-             conf_no=mir.recpt,
-             loc_no=mir.loc_no)
+    if mir.rec_time is None:
+        rec_time = None
+    else:
+        rec_time = mir.rec_time.to_date_and_time()
     
-    if lookups:
-        d['conf_name'] = session.get_conf_name(mir.recpt)
+    
+    if mir.sent_at is None:
+        sent_at = None
+    else:
+        sent_at = mir.sent_at.to_date_and_time()
+    
+    d = dict(type=MIRecipient_type_to_str[mir.type],
+             recpt=conf_to_dict(mir.recpt, lookups, session),
+             loc_no=mir.loc_no,
+             sent_by=pers_to_dict(mir.sent_by, lookups, session),
+             sent_at=sent_at,
+             rec_time=rec_time)
     
     return d
 
@@ -613,6 +646,22 @@ def MICommentIn_from_dict(d, lookups, session):
         raise KeyError("Unknown MICommentIn type str: %s" % d['type'])
     
     return kom.MICommentTo(type=MICommentIn_str_to_type[d['type']], text_no=d['text_no'])
+
+def AuxItem_to_dict(aux_item, lookups, session):
+    return dict(aux_no=aux_item.aux_no,
+                tag=komauxitems.aux_item_number_to_name[aux_item.tag],
+                creator=pers_to_dict(aux_item.creator, lookups, session),
+                created_at=aux_item.created_at.to_date_and_time(),
+                flags=dict(deleted=aux_item.flags.deleted,
+                           inherit=aux_item.flags.inherit,
+                           secret=aux_item.flags.secret,
+                           hide_creator=aux_item.flags.hide_creator,
+                           dont_garb=aux_item.flags.dont_garb),
+                inherit_limit=aux_item.inherit_limit,
+                
+                # aux-items are always latin-1 it seems like, but we
+                # can afford to try with utf-8 first anyway.
+                data=decode_text(aux_item.data, 'utf-8', backup_encoding='latin-1'))
 
 
 # Misc functions
