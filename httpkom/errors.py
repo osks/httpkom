@@ -43,7 +43,10 @@ def notfound(error):
 
 @app.errorhandler(kom.Error)
 def kom_error(error):
-    return error_response(400, kom_error=error)
+    status = 400
+    if isinstance(error, kom.LoginFirst):
+        status = 401
+    return error_response(status, kom_error=error)
 
 @app.errorhandler(KomSessionError)
 def komsession_error(error):

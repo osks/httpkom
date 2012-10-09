@@ -321,8 +321,6 @@ def sessions_login():
     except (kom.InvalidPassword, kom.UndefinedPerson, kom.LoginDisallowed,
             kom.ConferenceZero) as ex:
         return error_response(401, kom_error=ex)
-    except kom.Error as ex:
-        return error_response(400, kom_error=ex)
 
 
 @bp.route("/sessions/current/logout", methods=['POST'])
@@ -351,11 +349,9 @@ def sessions_logout():
            -X POST http://localhost:5001/sessions/current/logout
     
     """
-    try:
-        g.ksession.logout()
-        return empty_response(204)
-    except kom.Error as ex:
-        return error_response(400, kom_error=ex)
+
+    g.ksession.logout()
+    return empty_response(204)
 
 
 @bp.route("/sessions/<int:session_no>", methods=['DELETE'])
@@ -401,17 +397,12 @@ def sessions_delete(session_no):
         if should_delete_connection:
             _delete_connection(_get_connection_id())
         return empty_response(204)
-    except kom.LoginFirst as ex:
-        # If not logged in and not trying to disconnect the current session
-        return empty_response(401)
     except kom.UndefinedSession as ex:
         return error_response(404, kom_error=ex)
-    except kom.Error as ex:
-        return error_response(400, kom_error=ex)
 
 
 @bp.route("/sessions/current/working-conference", methods=['POST'])
-@requires_session
+@requires_login
 def sessions_change_working_conference():
     """Change current working conference of the current session.
     
@@ -449,8 +440,5 @@ def sessions_change_working_conference():
     except KeyError as ex:
         return error_response(400, error_msg='Missing "conf_no".')
     
-    try:
-        g.ksession.change_conference(conf_no)
-        return empty_response(204)
-    except kom.Error as ex:
-        return error_response(400, kom_error=ex)
+    g.ksession.change_conference(conf_no)
+    return empty_response(204)
