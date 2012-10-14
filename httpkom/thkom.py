@@ -26,6 +26,9 @@ import kom
 import thread
 import Queue
 
+from httpkom import app
+
+
 class ThreadedConnection(kom.CachedUserConnection):
     def __init__(self, host, port = 4894, user = ""):
         self.send_lock = thread.allocate_lock()

@@ -11,6 +11,23 @@ httpkom uses python-lyskom, which is also released under GPL. The
 following files belong to python-lyskom: httpkom/kom.py,
 httpkom/thkom.py and httpkom/komauxitems.py.
 
+httpkom also uses gevent, which in its turn uses libevent. If you use
+Homebrew on OS X you can install libevent and gevent like this,
+assuming Homebrew is located in /opt/homebrew:
+
+$ brew install libevent
+
+$ CFLAGS="-I /opt/homebrew/include -L /opt/homebrew/lib" \
+  pip install gevent
+
+
+Dependencies
+------------
+
+For required Python packages, see requirements.txt. Install them with:
+
+  $ pip install -r requirements.txt
+
 
 Authors
 -------
@@ -37,9 +54,3 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA  02110-1301, USA.
-
-
-Dependencies
-------------
- * Flask
- * mimeparse
