@@ -591,18 +591,13 @@ def MIRecipient_to_dict(mir, lookups, session):
     return d
 
 def MIRecipient_from_dict(d, lookups, session):
+    """ Example dict: { "type": "to", "recpt": { "conf_no": 14506 } }
+    """
     if d['type'] not in MIRecipient_str_to_type:
         raise KeyError("Unknown MIRecipient type str: %s" % d['type'])
     
-    if 'conf_no' in d and d['conf_no'] is not None:
-        conf_no = d['conf_no']
-    else:
-        if lookups:
-            conf_no = session.lookup_name_exact(d['conf_name'], True, True)
-        else:
-            conf_no = None
-    
-    return kom.MIRecipient(type=MIRecipient_str_to_type[d['type']], recpt=conf_no)
+    return kom.MIRecipient(type=MIRecipient_str_to_type[d['type']],
+                           recpt=d['recpt']['conf_no'])
 
 def MICommentTo_to_dict(micto, lookups, session):
     if not micto.type in MICommentTo_type_to_str:
