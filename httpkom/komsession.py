@@ -5,7 +5,6 @@ import socket
 import uuid
 import json
 import mimeparse
-import gevent
 
 import kom
 import komauxitems
