@@ -8,7 +8,7 @@ from httpkom import app
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(port=5001)
     #address = 'localhost', 5001
     #http_server = WSGIServer(address, app)
     #try:

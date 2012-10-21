@@ -12,6 +12,8 @@ from misc import empty_response
 
 class default_settings:
     DEBUG = False
+    LOG_FILE = None
+    LOG_LEVEL = logging.WARNING
     
     HTTPKOM_LYSKOM_SERVERS = [
         ('lyslyskom', 'LysKOM', 'kom.lysator.liu.se', 4894)
@@ -65,24 +67,22 @@ def pull_server_id(endpoint, values):
         abort(404)
 
 
-#if not app.debug:
-#    #file_handler = logging.FileHandler("httpkom.log")
-#    
-#    # keep 7 days of logs, rotated every midnight
-#    file_handler = TimedRotatingFileHandler(
-#        "log.txt", when='midnight', interval=1, backupCount=7)
-#    
-#    file_handler.setFormatter(logging.Formatter(
-#           '%(asctime)s %(levelname)s: %(message)s '
-#            '[in %(pathname)s:%(lineno)d]'
-#            ))
-#    
-#    #file_handler.setLevel(logging.WARNING)
-#    file_handler.setLevel(logging.DEBUG)
-#    
-#    app.logger.addHandler(file_handler)
-#    app.logger.setLevel(logging.DEBUG)
-#    app.logger.info("hej");
+if not app.debug and app.config['LOG_FILE'] is not None:
+    # keep 7 days of logs, rotated every midnight
+    file_handler = TimedRotatingFileHandler(
+        app.config['LOG_FILE'], when='midnight', interval=1, backupCount=7)
+    
+    file_handler.setFormatter(logging.Formatter(
+           '%(asctime)s %(levelname)s: %(message)s '
+            '[in %(pathname)s:%(lineno)d]'
+            ))
+    
+    file_handler.setLevel(app.config['LOG_LEVEL'])
+    
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(app.config['LOG_LEVEL'])
+    app.logger.info("Finished setting up file logger.");
+
 
 
 # Load app parts
