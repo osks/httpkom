@@ -17,7 +17,7 @@ Dependencies
 
 For required Python packages, see requirements.txt. Install them with:
 
-  $ pip install -r requirements.txt
+    $ pip install -r requirements.txt
 
 
 Authors
