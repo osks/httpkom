@@ -10,7 +10,8 @@ from httpkom import app
 from misc import empty_response
 
 
-_kom_error_code_dict = dict([v,k] for k,v in kom.error_dict.items())
+# Only kom.ServerErrors in this dict (i.e. errors defined by Protocol A).
+_kom_servererror_code_dict = dict([v,k] for k,v in kom.error_dict.items())
 
 
 def _kom_error_to_error_code(ex):
@@ -21,7 +22,8 @@ def error_response(status_code, kom_error=None, error_msg=""):
     # easier. Perhaps use protocol a error codes as they are, and
     # add our own httpkom error codes on 1000 and above?
     if kom_error is not None:
-        response = jsonify(error_code=_kom_error_to_error_code(kom_error),
+        # The error should exist in the dictionary, but we use .get() to be safe
+        response = jsonify(error_code=_kom_error_to_error_code.get(kom_error),
                            error_status=str(kom_error),
                            error_type="protocol-a",
                            error_msg=str(kom_error.__class__.__name__))
@@ -41,12 +43,17 @@ def badrequest(error):
 def notfound(error):
     return empty_response(404)
 
-@app.errorhandler(kom.Error)
-def kom_error(error):
+@app.errorhandler(kom.ServerError)
+def kom_server_error(error):
     status = 400
     if isinstance(error, kom.LoginFirst):
         status = 401
     return error_response(status, kom_error=error)
+
+@app.errorhandler(kom.LocalError)
+def kom_local_error(error):
+    app.logger.exception(error)
+    return error_response(500, error_msg=str(error))
 
 @app.errorhandler(KomSessionError)
 def komsession_error(error):
