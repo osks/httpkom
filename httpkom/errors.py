@@ -14,8 +14,11 @@ from misc import empty_response
 _kom_servererror_code_dict = dict([v,k] for k,v in kom.error_dict.items())
 
 
-def _kom_error_to_error_code(ex):
-    return _kom_error_code_dict[ex.__class__]
+def _kom_servererror_to_error_code(ex):
+    if ex.__class__ in _kom_servererror_code_dict:
+        return _kom_servererror_code_dict[ex.__class__]
+    else:
+        return None
 
 def error_response(status_code, kom_error=None, error_msg=""):
     # TODO: I think we need to unify these error types to make the API
@@ -23,7 +26,7 @@ def error_response(status_code, kom_error=None, error_msg=""):
     # add our own httpkom error codes on 1000 and above?
     if kom_error is not None:
         # The error should exist in the dictionary, but we use .get() to be safe
-        response = jsonify(error_code=_kom_error_to_error_code.get(kom_error),
+        response = jsonify(error_code=_kom_servererror_to_error_code(kom_error),
                            error_status=str(kom_error),
                            error_type="protocol-a",
                            error_msg=str(kom_error.__class__.__name__))
