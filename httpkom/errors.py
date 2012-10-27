@@ -40,6 +40,7 @@ def error_response(status_code, kom_error=None, error_msg=""):
 
 @app.errorhandler(400)
 def badrequest(error):
+    app.logger.exception(error)
     return empty_response(400)
 
 @app.errorhandler(404)
@@ -60,6 +61,7 @@ def kom_local_error(error):
 
 @app.errorhandler(KomSessionError)
 def komsession_error(error):
+    app.logger.exception(error)
     return error_response(400, error_msg=str(error))
 
 @app.errorhandler(500)
