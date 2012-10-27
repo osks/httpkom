@@ -33,7 +33,7 @@ def conferences_list():
     
     ::
     
-      GET /conferences/?name=osk%20t&want-confs=false HTTP/1.0
+      GET /<server_id>/conferences/?name=osk%20t&want-confs=false HTTP/1.0
     
     .. rubric:: Response
     
@@ -59,7 +59,7 @@ def conferences_list():
     ::
     
       curl -v -X GET -H "Content-Type: application/json" \\
-           http://localhost:5001/conferences/?name=osk%20t&want-confs=false
+           "http://localhost:5001/lyskom/conferences/?name=osk%20t&want-confs=false"
     
     """
     name = request.args['name']
@@ -103,7 +103,7 @@ def conferences_get(conf_no):
     
     ::
     
-      GET /conferences/14506 HTTP/1.1
+      GET /<server_id>/conferences/14506 HTTP/1.1
     
     .. rubric:: Responses
     
@@ -183,7 +183,7 @@ def conferences_get(conf_no):
     
     ::
     
-      curl -v -X GET http://localhost:5001/conferences/14506?micro=true
+      curl -v -X GET "http://localhost:5001/lyskom/conferences/14506?micro=true"
     
     """
     try:
@@ -203,7 +203,7 @@ def conferences_put_text_read_marking(conf_no, local_text_no):
     
     ::
     
-      PUT /conferences/14506/texts/29/read-marking HTTP/1.1
+      PUT /<server_id>/conferences/14506/texts/29/read-marking HTTP/1.1
     
     .. rubric:: Response
     
@@ -215,7 +215,7 @@ def conferences_put_text_read_marking(conf_no, local_text_no):
     
     ::
     
-      curl -v -X PUT http://localhost:5001/conferences/14506/texts/29/read-marking
+      curl -v -X PUT "http://localhost:5001/lyskom/conferences/14506/texts/29/read-marking"
     
     """
     # TODO: handle conferences/texts that doesn't exist (i.e. return 404).

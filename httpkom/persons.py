@@ -21,7 +21,7 @@ def persons_create():
     
     ::
     
-      POST /persons/ HTTP/1.0
+      POST /<server_id>/persons/ HTTP/1.0
       
       {
         "name": "Oskars Testperson",
@@ -44,7 +44,7 @@ def persons_create():
     
       curl -v -X POST H "Content-Type: application/json" \\
            -d '{ "name": "Oskar Testperson", "passwd": "test123" }' \\
-           http://localhost:5001/persons/
+           http://localhost:5001/lyskom/persons/
     
     """
     if g.ksession:
@@ -80,7 +80,7 @@ def persons_set_unread(conf_no):
     
     ::
     
-      POST /persons/current/memberships/14506 HTTP/1.1
+      POST /<server_id>/persons/current/memberships/14506 HTTP/1.1
       
       {
         "no_of_unread": 17
@@ -98,7 +98,7 @@ def persons_set_unread(conf_no):
     
       curl -v -X POST -H "Content-Type: application/json" \\
            -d { "no_of_unread": 17 } \\
-           http://localhost:5001/persons/current/memberships/14506
+           http://localhost:5001/lyskom/persons/current/memberships/14506
     
     """
     # The property in the JSON object body is just a wrapper because
@@ -131,7 +131,7 @@ def persons_get_membership(pers_no, conf_no):
     
     ::
     
-      GET /persons/14506/memberships/14506 HTTP/1.0
+      GET /<server_id>/persons/14506/memberships/14506 HTTP/1.0
     
     .. rubric:: Responses
     
@@ -200,7 +200,7 @@ def persons_get_membership(pers_no, conf_no):
     
     ::
     
-      curl -v -X GET http://localhost:5001/persons/14506/memberships/14506?want-unread=false
+      curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/14506?want-unread=false"
     
     """
     want_unread = get_bool_arg_with_default(request.args, 'want-unread', False)
@@ -231,7 +231,7 @@ def persons_put_membership(pers_no, conf_no):
     
     ::
     
-      PUT /persons/14506/memberships/6 HTTP/1.1
+      PUT /<server_id>/persons/14506/memberships/6 HTTP/1.1
     
     .. rubric:: Response
     
@@ -247,7 +247,7 @@ def persons_put_membership(pers_no, conf_no):
     
     ::
     
-      curl -v -X PUT http://localhost:5001/persons/14506/memberships/6?priority=150
+      curl -v -X PUT "http://localhost:5001/lyskom/persons/14506/memberships/6?priority=150"
     
     """
     priority = int(request.args.get('priority', 100))
@@ -268,7 +268,7 @@ def persons_delete_membership(pers_no, conf_no):
     
     ::
     
-      DELETE /persons/14506/memberships/6 HTTP/1.1
+      DELETE /<server_id>/persons/14506/memberships/6 HTTP/1.1
     
     .. rubric:: Response
     
@@ -285,7 +285,7 @@ def persons_delete_membership(pers_no, conf_no):
     
     ::
     
-      curl -v -X DELETE http://localhost:5001/persons/14506/memberships/6
+      curl -v -X DELETE "http://localhost:5001/lyskom/persons/14506/memberships/6"
     
     """
     try:
@@ -315,7 +315,7 @@ def persons_list_memberships(pers_no):
     
     ::
     
-      GET /persons/14506/memberships/ HTTP/1.1
+      GET /<server_id>/persons/14506/memberships/ HTTP/1.1
     
     .. rubric:: Response
     
@@ -359,7 +359,7 @@ def persons_list_memberships(pers_no):
     
     ::
     
-      curl -v -X GET http://localhost:5001/persons/14506/memberships/?unread=true
+      curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/?unread=true"
     
     """
     unread = get_bool_arg_with_default(request.args, 'unread', False)

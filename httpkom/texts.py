@@ -26,7 +26,7 @@ def texts_get(text_no):
     
     ::
     
-      GET /texts/19680717 HTTP/1.0
+      GET /<server_id>/texts/19680717 HTTP/1.0
     
     .. rubric:: Responses
     
@@ -67,7 +67,7 @@ def texts_get(text_no):
     ::
     
       curl -v -X GET -H "Content-Type: application/json" \\
-           http://localhost:5001/texts/19680717
+           "http://localhost:5001/lyskom/texts/19680717"
     
     """
     try:
@@ -89,7 +89,7 @@ def texts_get_body(text_no):
     
     ::
     
-      GET /texts/19680717/body HTTP/1.0
+      GET /<server_id>/texts/19680717/body HTTP/1.0
     
     .. rubric:: Responses
     
@@ -111,7 +111,7 @@ def texts_get_body(text_no):
     ::
     
       curl -v -X GET -H "Content-Type: application/json" \\
-           http://localhost:5001/texts/19680717/body
+           "http://localhost:5001/lyskom/texts/19680717/body"
     
     """
     try:
@@ -143,7 +143,7 @@ def texts_create():
     
     ::
     
-      POST /texts/ HTTP/1.0
+      POST /<server_id>/texts/ HTTP/1.0
       
       {
         "body": "r\u00e4ksm\u00f6rg\u00e5s",
@@ -173,7 +173,7 @@ def texts_create():
                  "recpipent_list": [ { recpt: { "conf_no": 14506 }, "type": "to" } ], \\
                  "content_type": "text/x-kom-basic", \\
                  "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \\
-           http://localhost:5001/texts/
+           "http://localhost:5001/lyskom/texts/"
     
     """
     komtext = from_dict(request.json, KomText, True, g.ksession)
@@ -190,7 +190,7 @@ def texts_put_read_marking(text_no):
     
     ::
     
-      PUT /texts/<int:text_no>/read-marking HTTP/1.0
+      PUT /<server_id>/texts/<int:text_no>/read-marking HTTP/1.0
     
     .. rubric:: Responses
     
@@ -202,7 +202,7 @@ def texts_put_read_marking(text_no):
     
     ::
     
-      curl -v -X PUT http://localhost:5001/texts/19680717/read-marking
+      curl -v -X PUT "http://localhost:5001/lyskom/texts/19680717/read-marking"
     
     """
     g.ksession.mark_as_read(text_no)
@@ -218,7 +218,7 @@ def texts_delete_read_marking(text_no):
     
     ::
     
-      DELETE /texts/<int:text_no>/read-marking HTTP/1.0
+      DELETE /<server_id>/texts/<int:text_no>/read-marking HTTP/1.0
     
     .. rubric:: Responses
     
@@ -230,7 +230,7 @@ def texts_delete_read_marking(text_no):
     
     ::
     
-      curl -v DELETE http://localhost:5001/texts/19680717/read-marking
+      curl -v DELETE "http://localhost:5001/lyskom/texts/19680717/read-marking"
     
     """
     g.ksession.mark_as_unread(text_no)

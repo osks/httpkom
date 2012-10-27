@@ -206,7 +206,7 @@ def sessions_create():
     
     ::
     
-      POST /sessions/ HTTP/1.1
+      POST /<server_id>/sessions/ HTTP/1.1
       
       {
         "client": { "name": "jskom", "version": "0.2" }
@@ -262,7 +262,7 @@ def sessions_login():
     
     ::
     
-      POST /sessions/current/login HTTP/1.1
+      POST /<server_id>/sessions/current/login HTTP/1.1
       Httpkom-Connection: <id>
       
       {
@@ -291,7 +291,7 @@ def sessions_login():
       curl -v -X POST -H "Content-Type: application/json" \\
            -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
            -d '{ "person": { "pers_no": 14506, "passwd": "test123" } }' \\
-            http://localhost:5001/sessions/current/login
+            "http://localhost:5001/lyskom/sessions/current/login"
     
     """
     try:
@@ -332,7 +332,7 @@ def sessions_logout():
     
     ::
     
-      POST /sessions/current/logout HTTP/1.1
+      POST /<server_id>/sessions/current/logout HTTP/1.1
       Httpkom-Connection: <id>
       
     .. rubric:: Responses
@@ -346,7 +346,7 @@ def sessions_logout():
     ::
     
       curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
-           -X POST http://localhost:5001/sessions/current/logout
+           -X POST "http://localhost:5001/lyskom/sessions/current/logout"
     
     """
 
@@ -370,7 +370,7 @@ def sessions_delete(session_no):
     
     ::
     
-      DELETE /sessions/12345 HTTP/1.1
+      DELETE /<server_id>/sessions/12345 HTTP/1.1
       Httpkom-Connection: <id>
     
     .. rubric:: Responses
@@ -388,7 +388,7 @@ def sessions_delete(session_no):
     ::
     
       curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
-           -X DELETE http://localhost:5001/sessions/abc123
+           -X DELETE "http://localhost:5001/lyskom/sessions/abc123"
     
     """
     try:
@@ -410,7 +410,7 @@ def sessions_change_working_conference():
     
     ::
     
-      POST /sessions/current/working-conference HTTP/1.1
+      POST /<server_id>/sessions/current/working-conference HTTP/1.1
       Httpkom-Connection: <id>
       
       {
@@ -430,7 +430,7 @@ def sessions_change_working_conference():
       curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
            -X POST -H "Content-Type: application/json" \\
            -d '{ "conf_no": 14506 }' \\
-           http://localhost:5001/sessions/current/working-conference
+           "http://localhost:5001/lyskom/sessions/current/working-conference"
     
     """
     try:

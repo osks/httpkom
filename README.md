@@ -20,6 +20,17 @@ For required Python packages, see requirements.txt. Install them with:
     $ pip install -r requirements.txt
 
 
+Documentation
+-------------
+
+Some API documentation is available and the HTML version can be built
+with:
+
+    $ make docs
+
+The resulting docs will be located in `docs/_build/html/`.
+
+
 Authors
 -------
 
