@@ -23,8 +23,9 @@ class default_settings:
 
     HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS = '*'
     HTTPKOM_CROSSDOMAIN_MAX_AGE = 0
-    HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS = [ 'Origin', 'Accept', 'Content-Type', 'X-Requested-With' ]
-    HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS = []
+    HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS = [ 'Origin', 'Accept', 'Content-Type', 'X-Requested-With',
+                                          'Cache-Control' ]
+    HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS = [ 'Cache-Control' ]
     HTTPKOM_CROSSDOMAIN_ALLOW_METHODS = [ 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD' ]
 
 
@@ -132,6 +133,15 @@ def allow_crossdomain(resp):
     
     return resp
 
+@app.after_request
+def ios6_cache_fix(resp):
+    # Safari in iOS 6 has excessive caching, so this is to stop it
+    # from caching our POST requests. We also add Cache-Control:
+    # no-cache to any request that doesn't already have a
+    # Cache-Control header.
+    if request.method == 'POST' or 'Cache-Control' not in resp.headers:
+        resp.headers['Cache-Control'] = 'no-cache'
+    return resp
 
 @app.route("/")
 def index():
