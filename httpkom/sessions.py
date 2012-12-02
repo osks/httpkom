@@ -191,6 +191,15 @@ def sessions_who_am_i():
         return error_response(400, kom_error=ex)
 
 
+@bp.route("/sessions/current/active", methods=['POST'])
+@requires_session
+def sessions_current_active():
+    """
+    """
+    g.ksession.user_is_active()
+    return empty_response(204)
+
+
 @bp.route("/sessions/", methods=['POST'])
 def sessions_create():
     """Create a new session (a connection to the LysKOM server).

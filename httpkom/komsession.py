@@ -89,7 +89,10 @@ class KomSession(object):
     
     def who_am_i(self):
         return kom.ReqWhoAmI(self.conn).response()
-    
+
+    def user_is_active(self):
+        kom.ReqUserActive(self.conn).response()
+
     def is_logged_in(self):
         return self.current_user() != 0
 
