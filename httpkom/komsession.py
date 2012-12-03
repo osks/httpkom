@@ -52,11 +52,12 @@ class KomSession(object):
         self.session_no = None
         self.client_name = None
         self.client_version = None
+        self.pers_no = 0
     
     def connect(self, client_name, client_version):
         httpkom_user = "httpkom%" + socket.getfqdn()
         #self.conn = thkom.ThreadedConnection(self.host, self.port, user=httpkom_user)
-        self.conn = kom.CachedUserConnection(self.host, self.port, user=httpkom_user)
+        self.conn = kom.CachedConnection(self.host, self.port, user=httpkom_user)
         kom.ReqSetClientVersion(self.conn, client_name, client_version)
         self.client_name = client_name
         self.client_version = client_version
@@ -81,11 +82,11 @@ class KomSession(object):
     
     def login(self, pers_no, password):
         kom.ReqLogin(self.conn, pers_no, password, invisible=0).response()
-        self.conn.set_user(pers_no)
+        self.pers_no = pers_no
         
     def logout(self):
         kom.ReqLogout(self.conn).response()
-        self.conn.set_user(0, set_member_confs=False)
+        self.pers_no = 0
     
     def who_am_i(self):
         return kom.ReqWhoAmI(self.conn).response()
@@ -94,10 +95,8 @@ class KomSession(object):
         kom.ReqUserActive(self.conn).response()
 
     def is_logged_in(self):
-        return self.current_user() != 0
+        return self.pers_no != 0
 
-    def current_user(self):
-        return self.conn.get_user()
     
     def change_conference(self, conf_no):
         kom.ReqChangeConference(self.conn, conf_no).response()
@@ -390,7 +389,7 @@ def from_dict(d, cls, lookups=False, session=None):
 def KomSession_to_dict(ksession, lookups, session):
     person = None
     if ksession.is_logged_in():
-        pers_no = ksession.current_user()
+        pers_no = ksession.pers_no
         if lookups:
             pers_name = session.get_conf_name(pers_no)
         else:
