@@ -97,7 +97,6 @@ class KomSession(object):
     def is_logged_in(self):
         return self.pers_no != 0
 
-    
     def change_conference(self, conf_no):
         kom.ReqChangeConference(self.conn, conf_no).response()
         
@@ -129,13 +128,15 @@ class KomSession(object):
         kom.ReqSubMember(self.conn, conf_no, pers_no).response()
 
     def get_membership(self, pers_no, conf_no, want_unread):
-        membership = kom.ReqQueryReadTexts11(self.conn, pers_no, conf_no, 1, 0).response()
-        unread_texts = self.conn.get_unread_texts_from_membership(membership)
-        no_of_unread = len(unread_texts)
+        want_read_ranges = 1 if want_unread else 0
+        membership = kom.ReqQueryReadTexts11(
+            self.conn, pers_no, conf_no, want_read_ranges, 0).response()
         if want_unread:
+            unread_texts = self.conn.get_unread_texts_from_membership(membership)
+            no_of_unread = len(unread_texts)
             return KomMembership(membership, no_of_unread, unread_texts)
         else:
-            return KomMembership(membership, no_of_unread, None)
+            return KomMembership(membership, None, None)
     
     def get_memberships(self, pers_no, unread, want_unread):
         if unread:
@@ -150,7 +151,8 @@ class KomSession(object):
         if unread:
             # Filter out unread conferences with 0 unread in, can happen
             # for some conferences, like "Ryd, Bastu" (conf_no: 9700).
-            return [ membership for membership in memberships if membership.no_of_unread > 0 ]
+            return [ membership for membership in memberships
+                     if membership.no_of_unread is None or membership.no_of_unread > 0 ]
         else:
             #return memberships
             raise NotImplementedError()        

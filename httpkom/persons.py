@@ -158,7 +158,7 @@ def persons_get_membership(pers_no, conf_no):
           "pers_no": 14506, 
           "pers_name": "Oskars Testperson"
         },
-        "no_of_unread": 2,
+        "no_of_unread": null,
         "unread_texts": null
       }
     
@@ -319,7 +319,41 @@ def persons_list_memberships(pers_no):
     
     .. rubric:: Response
     
-    ::
+    With want-unread=false::
+    
+      HTTP/1.1 200 OK
+      
+      {
+        "memberships": [
+          {
+            "conference": {
+              "conf_name": "Oskars Testperson", 
+              "conf_no": 14506
+            }, 
+            "priority": 255, 
+            "added_at": "2012-04-28 19:49:11", 
+            "position": 3, 
+            "type": {
+              "passive": 0, 
+              "secret": 0, 
+              "passive_message_invert": 0, 
+              "invitation": 0
+            }, 
+            "last_time_read": "2012-08-19 17:14:46", 
+            "added_by": {
+              "pers_no": 14506, 
+              "pers_name": "Oskars Testperson"
+            },
+            
+            "no_of_unread": null,
+            "unread_texts": null
+          },
+          
+          ...
+        ]
+      }
+    
+    With want-unread=true::
     
       HTTP/1.1 200 OK
       
