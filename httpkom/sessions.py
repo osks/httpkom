@@ -125,7 +125,7 @@ def requires_session(f):
             try:
                 return f(*args, **kwargs)
             except socket.error as (eno, msg):
-                if eno == errno.EPIPE:
+                if eno in (errno.EPIPE, errno.ECONNRESET):
                     _delete_connection(connection_id)
                     return empty_response(403)
                 else:
