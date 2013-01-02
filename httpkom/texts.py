@@ -181,6 +181,114 @@ def texts_create():
     return jsonify(text_no=text_no)
 
 
+@bp.route('/texts/marks/')
+@requires_login
+def texts_get_marks():
+    """Get the list of marked texts.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      GET /<server_id>/texts/marks/ HTTP/1.1
+    
+    .. rubric:: Response
+    
+    ::
+    
+      HTTP/1.1 200 OK
+      
+      {
+        "marks": [
+          { "text_no": 4711, "type": 100 },
+          { "text_no": 4999999, "type": 101 },
+        ]
+      }
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -v -X GET -H "Content-Type: application/json" \\
+           "http://localhost:5001/lyskom/texts/marks/"
+    
+    """
+    return jsonify(dict(marks=to_dict(g.ksession.get_marks(), True, g.ksession)))
+
+
+@bp.route('/texts/<int:text_no>/mark', methods=['PUT'])
+@requires_login
+def texts_put_mark(text_no):
+    """Mark a text.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      PUT /<server_id>/texts/<text_no>/mark HTTP/1.1
+      
+      {
+        "type": 100
+      }
+    
+    .. rubric:: Response
+    
+    Success::
+    
+      HTTP/1.1 204 OK
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -v -X PUT -H "Content-Type: application/json" \\
+           -d { "type": 100 } \\
+           "http://localhost:5001/lyskom/texts/4711/mark"
+    
+    """
+    try:
+        mark_type = request.json['type']
+    except KeyError as ex:
+        return error_response(400, error_msg='Missing "type".')
+    
+    try:
+        g.ksession.mark_text(text_no, mark_type)
+        return empty_response(204)
+    except kom.NoSuchText as ex:
+        return error_response(404, kom_error=ex)
+
+
+@bp.route('/texts/<int:text_no>/mark', methods=['DELETE'])
+@requires_login
+def texts_delete_mark(text_no):
+    """Unmark a text.
+    
+    .. rubric:: Request
+    
+    ::
+    
+      DELETE /<server_id>/texts/<text_no>/mark HTTP/1.1
+    
+    .. rubric:: Response
+    
+    Success::
+    
+      HTTP/1.1 204 OK
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -v -X DELETE "http://localhost:5001/lyskom/texts/4711/mark"
+    
+    """
+    try:
+        g.ksession.unmark_text(text_no)
+        return empty_response(204)
+    except kom.NoSuchText as ex:
+        return error_response(404, kom_error=ex)
+
+
 @bp.route('/texts/<int:text_no>/read-marking', methods=['PUT'])
 @requires_login
 def texts_put_read_marking(text_no):

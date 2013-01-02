@@ -235,6 +235,16 @@ class KomSession(object):
     def set_unread(self, conf_no, no_of_unread):
         kom.ReqSetUnread(self.conn, conf_no, no_of_unread).response()
 
+    def get_marks(self):
+        return kom.ReqGetMarks(self.conn).response()
+
+    def mark_text(self, text_no, mark_type):
+        kom.ReqMarkText(self.conn, text_no, mark_type).response()
+
+    def unmark_text(self, text_no):
+        kom.ReqUnmarkText(self.conn, text_no).response()
+
+
 
 class KomMembership(object):
     def __init__(self, membership, no_of_unread, unread_texts=None):
@@ -297,6 +307,7 @@ class KomText(object):
             self.content_type = None
             self.creation_time = None
             self.author = None
+            self.no_of_marks = 0
             self.recipient_list = None
             self.comment_to_list = None
             self.comment_in_list = None
@@ -306,13 +317,14 @@ class KomText(object):
         else:
             mime_type, encoding = parse_content_type(
                 self._get_content_type_from_text_stat(text_stat))
-            self.content_type=mime_type_tuple_to_str(mime_type)
+            self.content_type = mime_type_tuple_to_str(mime_type)
             
-            self.creation_time=text_stat.creation_time if text_stat else None
-            self.author=text_stat.author if text_stat else None
-            self.recipient_list=text_stat.misc_info.recipient_list
-            self.comment_to_list=text_stat.misc_info.comment_to_list
-            self.comment_in_list=text_stat.misc_info.comment_in_list
+            self.creation_time = text_stat.creation_time
+            self.author = text_stat.author
+            self.no_of_marks = text_stat.no_of_marks
+            self.recipient_list = text_stat.misc_info.recipient_list
+            self.comment_to_list = text_stat.misc_info.comment_to_list
+            self.comment_in_list = text_stat.misc_info.comment_in_list
             self.aux_items = text_stat.aux_items
             
             # text_stat is required for this
@@ -372,6 +384,8 @@ def to_dict(obj, lookups=False, session=None):
         return MembershipType_to_dict(obj, lookups, session)
     elif isinstance(obj, kom.AuxItem):
         return AuxItem_to_dict(obj, lookups, session)
+    elif isinstance(obj, kom.Mark):
+        return Mark_to_dict(obj, lookups, session)
     else:
         #raise NotImplementedError("to_dict is not implemented for: %s" % type(obj))
         return obj
@@ -469,6 +483,7 @@ def KomText_to_dict(komtext, lookups, session):
     d = dict(
         text_no=komtext.text_no,
         author=pers_to_dict(komtext.author, lookups, session),
+        no_of_marks=komtext.no_of_marks,
         content_type=komtext.content_type,
         subject=komtext.subject)
     
@@ -662,6 +677,9 @@ def AuxItem_to_dict(aux_item, lookups, session):
                 # aux-items are always latin-1 it seems like, but we
                 # can afford to try with utf-8 first anyway.
                 data=decode_text(aux_item.data, 'utf-8', backup_encoding='latin-1'))
+
+def Mark_to_dict(mark, lookups, session):
+    return dict(text_no=mark.text_no, type=mark.type)
 
 
 # Misc functions
