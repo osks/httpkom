@@ -239,10 +239,10 @@ class KomSession(object):
         return kom.ReqGetMarks(self.conn).response()
 
     def mark_text(self, text_no, mark_type):
-        kom.ReqMarkText(self.conn, text_no, mark_type).response()
+        self.conn.mark_text(text_no, mark_type)
 
     def unmark_text(self, text_no):
-        kom.ReqUnmarkText(self.conn, text_no).response()
+        self.conn.unmark_text(text_no)
 
 
 

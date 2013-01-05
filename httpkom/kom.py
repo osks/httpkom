@@ -2605,6 +2605,16 @@ class CachedConnection(Connection):
         # Remove text that don't exist anymore (text_no == 0)
         return [ text_no for text_no in unread if text_no != 0]
 
+    def mark_text(self, text_no, mark_type):
+        ReqMarkText(self, text_no, mark_type).response()
+        # textstat.misc_info.no_of_marks is now invalid
+        self.textstats.invalidate(text_no)
+
+    def unmark_text(self, text_no):
+        ReqUnmarkText(self, text_no).response()
+        # textstat.misc_info.no_of_marks is now invalid
+        self.textstats.invalidate(text_no)
+
 
 class CachedUserConnection(CachedConnection):
     def __init__(self, host, port = 4894, user = "", localbind=None):
