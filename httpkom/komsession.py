@@ -57,7 +57,8 @@ class KomSession(object):
     def connect(self, client_name, client_version):
         httpkom_user = "httpkom%" + socket.getfqdn()
         #self.conn = thkom.ThreadedConnection(self.host, self.port, user=httpkom_user)
-        self.conn = kom.CachedConnection(self.host, self.port, user=httpkom_user)
+        self.conn = kom.CachedConnection()
+        self.conn.connect(self.host, self.port, user=httpkom_user)
         kom.ReqSetClientVersion(self.conn, client_name, client_version)
         self.client_name = client_name
         self.client_version = client_version

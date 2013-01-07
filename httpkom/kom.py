@@ -2020,31 +2020,41 @@ class Stats:
                                          self.ascent_rate,
                                          self.descent_rate)
 
+
+
+kom_request_to_class = {
+    "local-to-global": ReqLocalToGlobal,
+}
+
+class RequestFactory(object):
+    def __init__(self, mapping):
+        self.mapping = mapping
+
+    def new(self, request):
+        assert request in self.mapping
+        return self.mapping[request]
+
+default_request_factory = RequestFactory(kom_request_to_class)
+
+
+
 #
 # CLASS for a connection
 #
 
-class Connection:
+class Connection(object):
     # INITIALIZATION ETC.
 
-    def __init__(self, host, port = 4894, user = "", localbind=None):
-        # Create socket and connect
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if None != localbind:
-            self.socket.bind(localbind)
-        self.socket.connect((host, port))
-
-        # Remember the host and port for later identification of sessions
-        self.host = host
-        self.port = port
-
+    def __init__(self, request_factory=default_request_factory):
+        self.rfactory = request_factory
+        
         # Requests
         self.req_id = 0      # Last used ID (i.e. increment before use)
         self.req_queue = {}  # Requests sent to server, waiting for answers
         self.resp_queue = {} # Answers received from the server
         self.error_queue = {} # Errors received from the server
         self.req_histo = None # Histogram of request types
-
+        
         # Receive buffer
         self.rb = ""    # Buffer for data received from socket
         self.rb_len = 0 # Length of the buffer
@@ -2053,6 +2063,18 @@ class Connection:
         # Asynchronous message handlers
         self.async_handlers = {}
         
+    
+    def connect(self, host, port = 4894, user = "", localbind=None):
+        # Remember the host and port for later identification of sessions
+        self.host = host
+        self.port = port
+        
+        # Create socket and connect
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if None != localbind:
+            self.socket.bind(localbind)
+        self.socket.connect((self.host, self.port))
+
         # Send initial string 
         self.send_string(("A%dH%s\n" % (len(user), user)).encode('latin1'))
 
@@ -2349,6 +2371,7 @@ class Connection:
         self.rb_pos = self.rb_pos + 1
         return res
 
+
 #
 # CLASS for a connection with...
 # * Caches for:
@@ -2365,9 +2388,12 @@ class Connection:
 #   numbers of all unread text in a conference for a person
 
 class CachedConnection(Connection):
-    def __init__(self, host, port = 4894, user = "", localbind=None):
-        Connection.__init__(self, host, port, user, localbind)
+    def __init__(self, request_factory=default_request_factory):
+        Connection.__init__(self, request_factory)
 
+    def connect(self, host, port = 4894, user = "", localbind=None):
+        Connection.connect(self, host, port, user, localbind)
+        
         # Caches
         self.uconferences = Cache(self.fetch_uconference, "UConference")
         self.conferences = Cache(self.fetch_conference, "Conference")
@@ -2629,8 +2655,8 @@ class CachedConnection(Connection):
 
 
 class CachedUserConnection(CachedConnection):
-    def __init__(self, host, port = 4894, user = "", localbind=None):
-        CachedConnection.__init__(self, host, port, user, localbind)
+    def __init__(self, request_factory=default_request_factory):
+        CachedConnection.__init__(self, request_factory)
 
         # User number
         self._user_no = 0
@@ -2641,7 +2667,7 @@ class CachedUserConnection(CachedConnection):
         self.memberships = Cache(self.fetch_membership, "Membership")
         self.no_unread = Cache(self.fetch_unread, "Number of unread")
         # FIXME: Add support for aux-items, session-information, textmappings etc.
-        
+
     def set_user(self, user_no, set_member_confs=True):
         self._user_no = user_no
         if set_member_confs:
