@@ -2558,26 +2558,30 @@ class CachedConnection(Connection):
 
     # Check if text_no is included in any read_range
     def text_in_read_ranges(self, text_no, read_ranges):
-        for range in read_ranges:
-            if range.first_read <= text_no <= range.last_read:
+        for read_range in read_ranges:
+            if read_range.first_read <= text_no <= read_range.last_read:
                 return True
         return False
     
-    # return all texts excluded from read_ranges
     def read_ranges_to_gaps_and_last(self, read_ranges):
+        """Return all texts excluded from read_ranges.
+        
+        @return: Returns a 2-tuple of a list and the first possibly
+        unread text number after the last read range. The text number
+        could be larger than the highest local number, if we have read
+        everything in the conference. The list contains a 2-tuples for
+        each gap in the read ranges, where each tuple is the first
+        unread text in the gap and the length of the gap.
+        """
         gaps = []
         last = 1
-        for range in read_ranges:
-            gap = range.first_read - last
+        for read_range in read_ranges:
+            gap = read_range.first_read - last
             if gap > 0:
                 gaps.append((last, gap))
-            last = range.last_read + 1
+            last = read_range.last_read + 1
         return gaps, last
 
-    def get_unread_texts_for_person(self, person_no, conf_no):
-        ms = ReqQueryReadTexts11(self, self._user_no, no, 1, 0).response()
-        return self.get_unread_texts_from_membership(ms)
-    
     def get_unread_texts_from_membership(self, membership):
         unread = []
         
