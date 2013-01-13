@@ -2399,7 +2399,6 @@ class CachedConnection(Connection):
         self.conferences = Cache(self.fetch_conference, "Conference")
         self.persons = Cache(self.fetch_person, "Person")
         self.textstats = Cache(self.fetch_textstat, "TextStat")
-        self.subjects = Cache(self.fetch_subject, "Subject")
 
         # Setup up async handlers for invalidating cache entries. Skip
         # sending accept-async until the last call.
@@ -2423,14 +2422,6 @@ class CachedConnection(Connection):
 
     def fetch_textstat(self, no):
         return ReqGetTextStat(self, no).response()
-
-    def fetch_subject(self, no):
-        # FIXME: we assume that the subject is not longer than 200 chars.
-        subject = ReqGetText(self, no, 0, 200).response()
-        pos = subject.find("\n")
-        if pos != -1:
-            subject = subject[:pos]
-        return subject
 
     # Handlers for asynchronous messages (internal use)
     # FIXME: Most of these handlers should do more clever things than just
@@ -2486,7 +2477,6 @@ class CachedConnection(Connection):
         self.conferences.report()
         self.persons.report()
         self.textstats.report()
-        self.subjects.report()
 
     # Common operation: get name of conference (via uconference)
     def conf_name(self, conf_no, default = "", include_no = 0):
