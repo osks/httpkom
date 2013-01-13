@@ -40,17 +40,14 @@ like this::
   Content-Type: application/json
   Httpkom-Connection: <uuid>
   
-  { "person": { "pers_no": 14506, "passwd": "test123" } }
+  { "pers_no": 14506, "passwd": "test123" }
 
 and the response::
 
   HTTP/1.0 200 OK
   Content-Type: application/json
   
-  {
-    "session_no": 1089645, 
-    "person": { "pers_no": 14506, "pers_name": "Oskars Testperson" }
-  }
+  { "pers_no": 14506, "pers_name": "Oskars Testperson" }
 
 If a resource requires a logged in session and the request contains a
 valid Httpkom-Connection header which is not logged in, the response
@@ -183,7 +180,7 @@ def _get_komsession(connection_id):
 @bp.route("/sessions/current/who-am-i")
 @requires_session
 def sessions_who_am_i():
-    """
+    """TODO
     """
     try:
         return jsonify(to_dict(g.ksession, True, g.ksession))
@@ -275,7 +272,8 @@ def sessions_login():
       Httpkom-Connection: <id>
       
       {
-        "person": { "pers_no": 14506, "passwd": "test123" }
+        "pers_no": 14506,
+        "passwd": "test123"
       }
     
     .. rubric:: Responses
@@ -285,8 +283,8 @@ def sessions_login():
       HTTP/1.0 200 OK
       
       {
-        "session_no": 12345,
-        "person": { "pers_no": 14506, "pers_name": "Oskars testperson" }
+        "pers_no": 14506,
+        "pers_name": "Oskars testperson"
       }
     
     Failed login::
@@ -299,34 +297,27 @@ def sessions_login():
     
       curl -v -X POST -H "Content-Type: application/json" \\
            -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
-           -d '{ "person": { "pers_no": 14506, "passwd": "test123" } }' \\
+           -d '{ "pers_no": 14506, "passwd": "test123" }' \\
             "http://localhost:5001/lyskom/sessions/current/login"
     
     """
     try:
-        person = request.json['person']
-        if person is None:
-            return error_response(400, error_msg='"person" is null.')
-    except KeyError as ex:
-        return error_response(400, error_msg='Missing "person".')
-    
-    try:
-        pers_no = person['pers_no']
+        pers_no = request.json['pers_no']
         if pers_no is None:
-            return error_response(400, error_msg='"pers_no" in "person" is null.')
+            return error_response(400, error_msg='"pers_no" is null.')
     except KeyError as ex:
-        return error_response(400, error_msg='Missing "pers_no" in "person".')
+        return error_response(400, error_msg='Missing "pers_no".')
     
     try:
-        passwd = person['passwd']
+        passwd = request.json['passwd']
         if passwd is None:
-            return error_response(400, error_msg='"passwd" in "person" is null.')
+            return error_response(400, error_msg='"passwd" is null.')
     except KeyError as ex:
-        return error_response(400, error_msg='Missing "passwd" in "person".')
+        return error_response(400, error_msg='Missing "passwd".')
     
     try:
-        g.ksession.login(pers_no, passwd)
-        return jsonify(to_dict(g.ksession, True, g.ksession))
+        kom_person = g.ksession.login(pers_no, passwd)
+        return jsonify(to_dict(kom_person, True, g.ksession))
     except (kom.InvalidPassword, kom.UndefinedPerson, kom.LoginDisallowed,
             kom.ConferenceZero) as ex:
         return error_response(401, kom_error=ex)

@@ -36,6 +36,7 @@ def persons_create():
       
       {
         "pers_no": 14506,
+        "pers_name": "Oskars Testperson"
       }
     
     .. rubric:: Example
@@ -59,8 +60,8 @@ def persons_create():
     passwd = request.json['passwd']
     
     try:
-        pers_no = ksession.create_person(name, passwd)
-        return jsonify(dict(pers_no=pers_no))
+        kom_person = ksession.create_person(name, passwd)
+        return jsonify(to_dict(kom_person, True, g.ksession))
     except kom.Error as ex:
         return error_response(400, kom_error=ex)
     finally:

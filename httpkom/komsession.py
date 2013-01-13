@@ -81,6 +81,7 @@ class KomSession(object):
     def login(self, pers_no, password):
         kom.ReqLogin(self.conn, pers_no, password, invisible=0).response()
         self.pers_no = pers_no
+        return KomPerson(pers_no)
         
     def logout(self):
         kom.ReqLogout(self.conn).response()
@@ -102,7 +103,7 @@ class KomSession(object):
         flags = kom.PersonalFlags()
         pers_no = kom.ReqCreatePerson(
             self.conn, name.encode('latin1'), passwd.encode('latin1'), flags).response()
-        return pers_no
+        return KomPerson(pers_no)
     
     def lookup_name(self, name, want_pers, want_confs):
         return self.conn.lookup_name(name, want_pers, want_confs)
@@ -182,8 +183,6 @@ class KomSession(object):
                 if ct is not None:
                     misc_info.comment_to_list.append(ct)
         
-        #print misc_info.to_string()
-        
         mime_type = mimeparse.parse_mime_type(komtext.content_type)
         # Because a text consists of both a subject and body, and you
         # can have a text subject in combination with an image, a
@@ -242,6 +241,11 @@ class KomSession(object):
     def unmark_text(self, text_no):
         self.conn.unmark_text(text_no)
 
+
+
+class KomPerson(object):
+    def __init__(self, pers_no):
+        self.pers_no = pers_no
 
 
 class KomMembership(object):
@@ -362,6 +366,8 @@ def to_dict(obj, lookups=False, session=None):
         return [ to_dict(el, lookups, session) for el in obj ]
     elif isinstance(obj, KomSession):
         return KomSession_to_dict(obj, lookups, session)
+    elif isinstance(obj, KomPerson):
+        return KomPerson_to_dict(obj, lookups, session)
     elif isinstance(obj, KomText):
         return KomText_to_dict(obj, lookups, session)
     elif isinstance(obj, kom.MIRecipient):
@@ -403,18 +409,20 @@ def from_dict(d, cls, lookups=False, session=None):
 def KomSession_to_dict(ksession, lookups, session):
     person = None
     if ksession.is_logged_in():
-        pers_no = ksession.pers_no
-        if lookups:
-            pers_name = session.get_conf_name(pers_no)
-        else:
-            pers_name = None
-        person = dict(pers_no=pers_no, pers_name=pers_name)
+        pers_no = ksession.get_person_no()
+        person = KomPerson_to_dict(KomPerson(pers_no), lookups, sesssion)
     
     session_no = None
     if lookups:
         session_no = ksession.who_am_i()
     
     return dict(person=person, session_no=session_no)
+
+def KomPerson_to_dict(kom_person, lookups, session):
+    pers_name = None
+    if lookups:
+        pers_name = session.get_conf_name(kom_person.pers_no)
+    return dict(pers_no=kom_person.pers_no, pers_name=pers_name)
 
 def KomMembership_to_dict(membership, lookups, session):
     return dict(
