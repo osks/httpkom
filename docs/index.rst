@@ -14,6 +14,7 @@ Contents:
    intro
    conferences
    persons
+   memberships
    sessions
    texts
 

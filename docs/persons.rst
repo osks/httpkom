@@ -1,5 +1,5 @@
-Persons and memberships
-=======================
+Persons
+=======
 
 .. automodule:: httpkom.persons
    :members:

@@ -50,11 +50,10 @@ class KomSession(object):
         self.session_no = None
         self.client_name = None
         self.client_version = None
-        self.pers_no = 0
     
     def connect(self, client_name, client_version):
         httpkom_user = "httpkom%" + socket.getfqdn()
-        self.conn = kom.CachedConnection()
+        self.conn = kom.CachedPersonConnection()
         self.conn.connect(self.host, self.port, user=httpkom_user)
         kom.ReqSetClientVersion(self.conn, client_name, client_version)
         self.client_name = client_name
@@ -79,14 +78,15 @@ class KomSession(object):
         return self.conn is None
     
     def login(self, pers_no, password):
-        kom.ReqLogin(self.conn, pers_no, password, invisible=0).response()
-        self.pers_no = pers_no
+        self.conn.login(pers_no, password)
         return KomPerson(pers_no)
         
     def logout(self):
-        kom.ReqLogout(self.conn).response()
-        self.pers_no = 0
-    
+        self.conn.logout()
+
+    def get_person_no(self):
+        return self.conn.get_person_no()
+
     def who_am_i(self):
         return kom.ReqWhoAmI(self.conn).response()
 
@@ -94,7 +94,7 @@ class KomSession(object):
         kom.ReqUserActive(self.conn).response()
 
     def is_logged_in(self):
-        return self.pers_no != 0
+        return self.conn.is_logged_in()
 
     def change_conference(self, conf_no):
         kom.ReqChangeConference(self.conn, conf_no).response()
@@ -126,35 +126,44 @@ class KomSession(object):
     def delete_membership(self, pers_no, conf_no):
         kom.ReqSubMember(self.conn, conf_no, pers_no).response()
 
-    def get_membership(self, pers_no, conf_no, want_unread):
-        want_read_ranges = 1 if want_unread else 0
-        membership = kom.ReqQueryReadTexts11(
-            self.conn, pers_no, conf_no, want_read_ranges, 0).response()
-        if want_unread:
-            unread_texts = self.conn.get_unread_texts_from_membership(membership)
-            no_of_unread = len(unread_texts)
-            return KomMembership(membership, no_of_unread, unread_texts)
-        else:
-            return KomMembership(membership, None, None)
-    
-    def get_memberships(self, pers_no, unread, want_unread):
+    def get_membership(self, pers_no, conf_no):
+        membership = self.conn.get_membership(pers_no, conf_no, want_read_ranges=False)
+        return KomMembership(pers_no, membership)
+
+    def get_membership_unread(self, pers_no, conf_no):
+        membership = self.conn.get_membership(pers_no, conf_no, want_read_ranges=True)
+        unread_texts = self.conn.get_unread_texts_from_membership(membership)
+        return KomMembershipUnread(pers_no, conf_no, len(unread_texts), unread_texts)
+
+    def get_memberships(self, pers_no, unread=False, passive=False):
         if unread:
+            # RegGetUnreadConfs never returns passive memberships so
+            # that combination is not valid.
+            assert passive == False
             conf_nos = kom.ReqGetUnreadConfs(self.conn, pers_no).response()
+            # This may return conferences that don't have any unread
+            # texts in them. We have to live with this, because we
+            # don't want to get the unread texts in this case. It's
+            # possible that we need to change this, which means that
+            # unread=True may be a slower call.
+            memberships = [ self.get_membership(pers_no, conf_no) for conf_no in conf_nos ]
         else:
-            # http://www.lysator.liu.se/lyskom/protocol/11.1/protocol-a.html#get-membership
-            raise NotImplementedError()
+            ms_list = self.conn.get_all_memberships(pers_no, want_read_ranges=False)
+            
+            memberships = []
+            for membership in ms_list:
+                if (not passive) and membership.type.passive:
+                    continue
+                
+                memberships.append(KomMembership(pers_no, membership))
         
-        memberships = [ self.get_membership(pers_no, conf_no, want_unread)
+        return memberships
+
+    def get_membership_unreads(self, pers_no):
+        conf_nos = kom.ReqGetUnreadConfs(self.conn, pers_no).response()
+        memberships = [ self.get_membership_unread(pers_no, conf_no)
                         for conf_no in conf_nos ]
-        
-        if unread:
-            # Filter out unread conferences with 0 unread in, can happen
-            # for some conferences, like "Ryd, Bastu" (conf_no: 9700).
-            return [ membership for membership in memberships
-                     if membership.no_of_unread is None or membership.no_of_unread > 0 ]
-        else:
-            #return memberships
-            raise NotImplementedError()        
+        return [ m for m in memberships if m.no_of_unread > 0 ]
     
     def get_conf_name(self, conf_no):
         return self.conn.conf_name(conf_no)
@@ -169,7 +178,18 @@ class KomSession(object):
         text_stat = self.get_text_stat(text_no)
         text = kom.ReqGetText(self.conn, text_no).response()
         return KomText(text_no=text_no, text=text, text_stat=text_stat)
-    
+
+    # TODO: offset/start number, so we can paginate. we probably need
+    # to return the local text number for that.
+    def get_last_texts(self, conf_no, no_of_texts):
+        """Get the {no_of_texts} last texts in conference {conf_no}.
+        """
+        local_no_ceiling = 0 # means the higest numbered texts (i.e. the last)
+        text_mapping = kom.ReqLocalToGlobalReverse(self.conn, conf_no, 0, no_of_texts).response()
+        texts = [ KomText(text_no=m[1], text=None, text_stat=self.get_text_stat(m[1]))
+                  for m in text_mapping.list if m[1] != 0 ]
+        return texts
+
     def create_text(self, komtext):
         misc_info = kom.CookedMiscInfo()
         
@@ -249,7 +269,8 @@ class KomPerson(object):
 
 
 class KomMembership(object):
-    def __init__(self, membership, no_of_unread, unread_texts=None):
+    def __init__(self, pers_no, membership):
+        self.pers_no = pers_no
         self.position = membership.position
         self.last_time_read = membership.last_time_read
         self.conference = membership.conference
@@ -257,12 +278,14 @@ class KomMembership(object):
         self.added_by = membership.added_by
         self.added_at = membership.added_at
         self.type = membership.type
+
+
+class KomMembershipUnread(object):
+    def __init__(self, pers_no, conf_no, no_of_unread, unread_texts):
+        self.pers_no = pers_no
+        self.conf_no = conf_no
         self.no_of_unread = no_of_unread
-        
-        if unread_texts:
-            self.unread_texts = unread_texts
-        else:
-            self.unread_texts = None
+        self.unread_texts = unread_texts
 
 
 class KomConference(object):
@@ -350,6 +373,10 @@ class KomText(object):
                     self.body = decode_text(rawbody, encoding)
                 else:
                     self.body = rawbody
+            else:
+                self.subject = None
+                self.body = None
+
     
     def _get_content_type_from_text_stat(self, text_stat):
         try:
@@ -384,6 +411,8 @@ def to_dict(obj, lookups=False, session=None):
         return ConfType_to_dict(obj, lookups, session)
     elif isinstance(obj, KomMembership):
         return KomMembership_to_dict(obj, lookups, session)
+    elif isinstance(obj, KomMembershipUnread):
+        return KomMembershipUnread_to_dict(obj, lookups, session)
     elif isinstance(obj, kom.MembershipType):
         return MembershipType_to_dict(obj, lookups, session)
     elif isinstance(obj, kom.AuxItem):
@@ -426,15 +455,21 @@ def KomPerson_to_dict(kom_person, lookups, session):
 
 def KomMembership_to_dict(membership, lookups, session):
     return dict(
+        pers_no=membership.pers_no,
         position=membership.position,
         last_time_read=membership.last_time_read.to_date_and_time(),
         conference=conf_to_dict(membership.conference, lookups, session),
         priority=membership.priority,
         added_by=pers_to_dict(membership.added_by, lookups, session),
         added_at=membership.added_at.to_date_and_time(),
-        type=to_dict(membership.type, lookups, session),
-        no_of_unread=membership.no_of_unread,
-        unread_texts=to_dict(membership.unread_texts, lookups, session))
+        type=to_dict(membership.type, lookups, session))
+
+def KomMembershipUnread_to_dict(membership_unread, lookups, session):
+    return dict(
+        pers_no=membership_unread.pers_no,
+        conf_no=membership_unread.conf_no,
+        no_of_unread=membership_unread.no_of_unread,
+        unread_texts=to_dict(membership_unread.unread_texts, lookups, session))
 
 def MembershipType_to_dict(m_type, lookups, session):
     return dict(

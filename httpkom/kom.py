@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-1 -*-
 # LysKOM Protocol A version 10/11 client interface for Python
-# $Id: kom.py,v 1.40 2004-07-18 19:58:24 astrand Exp $
 # (C) 1999-2002 Kent Engström. Released under GPL.
+# (C) 2012-2013 Oskar Skoog. Released under GPL.
 
 import socket
 import time
@@ -2470,7 +2470,7 @@ class CachedConnection(Connection):
     def cah_new_membership(self, msg, c):
         # Joining a conference makes conferences[].no_of_members invalid
         self.conferences.invalidate(msg.conf_no)
-    
+
     # Report cache usage
     def report_cache_usage(self):
         self.uconferences.report()
@@ -2572,13 +2572,6 @@ class CachedConnection(Connection):
 
         return result
 
-    # Check if text_no is included in any read_range
-    def text_in_read_ranges(self, text_no, read_ranges):
-        for read_range in read_ranges:
-            if read_range.first_read <= text_no <= read_range.last_read:
-                return True
-        return False
-    
     def read_ranges_to_gaps_and_last(self, read_ranges):
         """Return all texts excluded from read_ranges.
         
@@ -2644,100 +2637,95 @@ class CachedConnection(Connection):
         self.textstats.invalidate(text_no)
 
 
-class CachedUserConnection(CachedConnection):
+class CachedPersonConnection(CachedConnection):
     def __init__(self, request_factory=default_request_factory):
         CachedConnection.__init__(self, request_factory)
 
-        # User number
-        self._user_no = 0
-        # List with those conferences the user is member of
-        self.member_confs = []
-
-        # Caches
-        self.memberships = Cache(self.fetch_membership, "Membership")
-        self.no_unread = Cache(self.fetch_unread, "Number of unread")
-        # FIXME: Add support for aux-items, session-information, textmappings etc.
-
-    def set_user(self, user_no, set_member_confs=True):
-        self._user_no = user_no
-        if set_member_confs:
-            self.set_member_confs()
-
-    def set_member_confs(self):
-        self.member_confs = self.get_member_confs()
-
-    def get_user(self):
-        return self._user_no
-
-    def get_member_confs(self):
-        result = []
-        ms_list = ReqGetMembership11(self, self._user_no, 0, 10000, 0, 0).response()
-        for ms in ms_list:
-            if not ms.type.passive:
-                result.append(ms.conference)
-        return result
-
-    def is_unread(self, conf_no, local_no):
-        return not self.text_in_read_ranges(local_no,
-                                            self.memberships[conf_no]\
-                                                .read_ranges)
+        # Current person number
+        self._pers_no = 0
         
-    def fetch_membership(self, no):
-        return ReqQueryReadTexts11(self, self._user_no, no, 1, 0).response()
-    
-    def fetch_unread(self, conf_no):
-        return len(self.get_unread_texts(conf_no))
+        # Caches
+        self._all_memberships = None
+        self._memberships = Cache(self.fetch_membership, "Membership")
 
-    def get_unread_texts(self, conf_no):
-        unread = []
-        self.memberships.invalidate(conf_no)
-        ms = self.memberships[conf_no]
-        return self.get_unread_texts_from_membership(ms)
+    def login(self, pers_no, password):
+        ReqLogin(self, pers_no, password, invisible=0).response()
+        self._pers_no = pers_no
+
+    def logout(self):
+        ReqLogout(self).response()
+        # Invalidate caches that are/were for the current person
+        self._pers_no = 0
+        self._all_memberships = None
+        self._memberships.invalidate_all()
+
+    def get_person_no(self):
+        return self._pers_no
+
+    def is_logged_in(self):
+        return self._pers_no != 0
+
+    def get_all_memberships(self, pers_no, want_read_ranges=False):
+        """Get all memberships (at most 1000) for a person.
+        """
+        no_of_confs = 1000
+        if want_read_ranges:
+            return ReqGetMembership11(self, pers_no, 0, no_of_confs, 1, 0).response()
+        else:
+            if pers_no == self._pers_no:
+                # We cache the result for the current person and without
+                # read ranges, because that is what we can invalidate
+                # correctly.
+                if self._all_memberships is None:
+                    self._all_memberships = \
+                        ReqGetMembership11(self, self._pers_no, 0, no_of_confs, 0, 0).response()
+                return self._all_memberships
+            else:
+                return ReqGetMembership11(self, pers_no, 0, no_of_confs, 0, 0).response()
+
+    def get_membership(self, pers_no, conf_no, want_read_ranges=False):
+        """Get a membership for a person
+        """
+        if want_read_ranges:
+            return ReqQueryReadTexts(self, pers_no, conf_no, 1, 0).response()
+        else:
+            if pers_no == self._pers_no:
+                # If it's a membership for the current person and
+                # without read ranges, use the cache.
+                return self._memberships[conf_no]
+            else:
+                return ReqQueryReadTexts(self, pers_no, conf_no, 0, 0).response()
+
+    def fetch_membership(self, conf_no):
+        """Fetch the membership for a conf the current person. Does not
+        include read ranges.
+        """
+        # We can only cache memberships for the currently logged in
+        # person, because we don't receive async leave/join messages
+        # for other persons. We also only cache memberships without
+        # read ranges, because it is easier to invalidate correctly.
+        return ReqQueryReadTexts11(self, self._pers_no, conf_no, 0, 0).response()
     
     # Handlers for asynchronous messages (internal use)
-    def cah_deleted_text(self, msg, c):
-        CachedConnection.cah_deleted_text(self, msg, c)
-        ts = msg.text_stat
-        for rcpt in ts.misc_info.recipient_list:
-            if rcpt.recpt in self.member_confs:
-                if self.is_unread(rcpt.recpt, rcpt.loc_no):
-                    self.no_unread[rcpt.recpt] = self.no_unread[rcpt.recpt] - 1
-            
-    def cah_new_text(self, msg, c):
-        CachedConnection.cah_new_text(self, msg, c)
-        for rcpt in msg.text_stat.misc_info.recipient_list:
-            if rcpt.recpt in self.member_confs:
-                self.no_unread[rcpt.recpt] = self.no_unread[rcpt.recpt] + 1
-
     def cah_leave_conf(self, msg, c):
         CachedConnection.cah_leave_conf(self, msg, c)
-        if msg.conf_no in self.member_confs:
-            self.member_confs.remove(msg.conf_no)
-        
-    def cah_new_recipient(self, msg, c):
-        CachedConnection.cah_new_recipient(self, msg, c)
-        if msg.conf_no in self.member_confs:
-            self.no_unread[msg.conf_no] = self.no_unread[msg.conf_no] + 1
-        
-    def cah_sub_recipient(self, msg, c):
-        CachedConnection.cah_sub_recipient(self, msg, c)
-        if msg.conf_no in self.member_confs:
-            # To be able to update the cache correct locally, we would
-            # need the texts local number. The only way to get it is
-            # to implement a local-to-global cache and use it
-            # backwards. So, for now, invalidate the cache totally.
-            self.no_unread.invalidate(msg.conf_no)
+        # Invalidates cached membership
+        self._memberships.invalidate(msg.conf_no)
+        # Invalidates self._all_memberships
+        self._all_memberships = None
 
     def cah_new_membership(self, msg, c):
         CachedConnection.cah_new_membership(self, msg, c)
-        if msg.person_no == self._user_no:
-            self.member_confs.append(msg.conf_no)
+        # Invalidates self._all_memberships
+        self._all_memberships = None
+        # The self.memberships cache can only cache actual
+        # memberships, and because we get this async messages, we know
+        # the current person was not a member before.
 
     # Report cache usage
     def report_cache_usage(self):
         CachedConnection.report_cache_usage(self)
-        self.memberships.report()
-        self.no_unread.report()
+        self._memberships.report()
         
 
 # Cache class for use internally by CachedConnection
@@ -2752,9 +2740,11 @@ class Cache:
     def __getitem__(self, no):
         #print('%s[%d]' % (self.name, no))
         if no in self.dict:
+            #print('%s[%d] - cached' % (self.name, no))
             self.cached = self.cached + 1
             return self.dict[no]
         else:
+            #print('%s[%d] - not cached' % (self.name, no))
             self.uncached = self.uncached + 1
             self.dict[no] = self.fetcher(no)
             return self.dict[no]
@@ -2765,6 +2755,9 @@ class Cache:
     def invalidate(self, no):
         if no in self.dict:
             del self.dict[no]
+    
+    def invalidate_all(self):
+        self.dict = dict()
 
     def report(self):
         print("Cache %s: %d cached, %d uncached" % (self.name,

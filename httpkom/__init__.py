@@ -91,6 +91,7 @@ import conferences
 import sessions
 import texts
 import persons
+import memberships
 import errors
 
 
