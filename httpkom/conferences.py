@@ -221,3 +221,12 @@ def conferences_put_text_read_marking(conf_no, local_text_no):
     # TODO: handle conferences/texts that doesn't exist (i.e. return 404).
     g.ksession.mark_as_read_local(local_text_no, conf_no)
     return empty_response(204)
+
+
+@bp.route('/conferences/<int:conf_no>/texts/')
+@requires_session
+def conferences_get_texts(conf_no):
+    """
+    """
+    texts = g.ksession.get_last_texts(conf_no, 10)
+    return jsonify(texts=to_dict(texts, True, g.ksession))
