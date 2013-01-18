@@ -2022,6 +2022,8 @@ class Stats:
 
 
 
+# TODO: We don't want to use strings. If we use declared constants we
+# can get pyflakes to check things for us.
 kom_request_to_class = {
     "local-to-global": ReqLocalToGlobal,
 }
@@ -2677,7 +2679,15 @@ class CachedPersonConnection(CachedConnection):
         prev_conf_no = self._current_conference_no
         ReqChangeConference(self, conf_no).response()
         self._current_conference_no = conf_no
-        self._memberships.invalidate(prev_conf_no)
+        if prev_conf_no != 0:
+            self._memberships.invalidate(prev_conf_no)
+            # Unfortunately we would also need to invalidate the all
+            # memberships storage, which is not good at all. We can't
+            # do that, because it means that we would invalidate it
+            # every time we switch conference - which is pretty much
+            # always. So for now we don't.
+            # 
+            #self._all_memberships = None
 
     def mark_as_read_local(self, conf_no, local_text_no):
         try:
