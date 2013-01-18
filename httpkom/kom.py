@@ -2644,6 +2644,9 @@ class CachedPersonConnection(CachedConnection):
         # Current person number
         self._pers_no = 0
         
+        # Current conference (change-conference)
+        self._current_conference_no = 0
+        
         # Caches
         self._all_memberships = None
         self._memberships = Cache(self.fetch_membership, "Membership")
@@ -2666,23 +2669,25 @@ class CachedPersonConnection(CachedConnection):
         return self._pers_no != 0
 
     def change_conference(self, conf_no):
+        # When changing conference, the lyskom server will update
+        # last-time-read for the membership of the *previous*
+        # conference. This means that we need to keep track of the
+        # current conference to be able to invalidate the membership
+        # correctly.
+        prev_conf_no = self._current_conference_no
         ReqChangeConference(self, conf_no).response()
-        # Change conference updates last-time-read for the membership
-        self._memberships.invalidate(conf_no)
+        self._current_conference_no = conf_no
+        self._memberships.invalidate(prev_conf_no)
 
     def mark_as_read_local(self, conf_no, local_text_no):
         try:
             ReqMarkAsRead(self, conf_no, [local_text_no]).response()
-            # Mark as read updates last-time-read for the membership
-            self._memberships.invalidate(conf_no)
         except NotMember:
             pass
 
     def mark_as_unread_local(self, conf_no, local_text_no):
         try:
             ReqMarkAsUnread(self, conf_no, local_text_no).response()
-            # Mark as read updates last-time-read for the membership
-            self._memberships.invalidate(conf_no)
         except NotMember:
             pass
 
@@ -2725,9 +2730,7 @@ class CachedPersonConnection(CachedConnection):
         # person, because we don't receive async leave/join messages
         # for other persons. We also only cache memberships without
         # read ranges, because it is easier to invalidate correctly.
-        m = ReqQueryReadTexts11(self, self._pers_no, conf_no, 0, 0).response()
-        print "last time read: %s" % (m.last_time_read,)
-        return m
+        return ReqQueryReadTexts11(self, self._pers_no, conf_no, 0, 0).response()
     
     # Handlers for asynchronous messages (internal use)
     def cah_leave_conf(self, msg, c):
