@@ -23,8 +23,8 @@ def persons_put_membership(pers_no, conf_no):
     ===========  =======  =================================================================
     Key          Type     Values
     ===========  =======  =================================================================
-    priority     int      (Default 100) The priority of the membership.
-    where        int      (Default 0) The position in the membership list.
+    priority     integer  (Default 100) The priority of the membership.
+    where        integer  (Default 0) The position in the membership list.
     ===========  =======  =================================================================
     
     .. rubric:: Request
@@ -252,19 +252,23 @@ def persons_list_memberships(pers_no):
     
     Query parameters:
     
-    ===============  =======  =================================================================
-    Key              Type     Values
-    ===============  =======  =================================================================
-    unread           boolean  :true: Return memberships with unread texts in. The protocol A
-                                     spec says: "The result is guaranteed to include all
-                                     conferences where pers-no has unread texts. It may also
-                                     return some extra conferences. Passive memberships are
-                                     never returned." See persons_list_membership_unreads() if
-                                     you want the exact list of conferences with unread.
-                              :false: (Default) Return all memberships.
-    passive          boolean  :true: Include passive memberships.
-                              :false: (Default) Do not include passive memberships.
-    ===============  =======  =================================================================
+    =================  =======  =================================================================
+    Key                Type     Values
+    =================  =======  =================================================================
+    unread             boolean  :true: Return memberships with unread texts in. The protocol A
+                                       spec says: "The result is guaranteed to include all
+                                       conferences where pers-no has unread texts. It may also
+                                       return some extra conferences. Passive memberships are
+                                       never returned." See persons_list_membership_unreads() if
+                                       you want the exact list of conferences with unread.
+                                :false: (Default) Return all memberships.
+    passive            boolean  :true: Include passive memberships.
+                                :false: (Default) Do not include passive memberships.
+    first              integer  The first position in the membership list to retrieve, numbered
+                                from 0 and up. Not possible with unread=true. Default: 0.
+    no-of-memberships  integer  The number of memberships to retrieve. Not possible with
+                                unread=true. Default: 100.
+    =================  =======  =================================================================
     
     .. rubric:: Request
     
@@ -279,7 +283,8 @@ def persons_list_memberships(pers_no):
       HTTP/1.1 200 OK
       
       {
-        "list": [
+        "has_more": true,
+        "memberships": [
           {
             "pers_no": <pers_no>,
             "conference": {
@@ -318,8 +323,11 @@ def persons_list_memberships(pers_no):
     """
     unread = get_bool_arg_with_default(request.args, 'unread', False)
     passive = get_bool_arg_with_default(request.args, 'passive', False)
-    memberships = g.ksession.get_memberships(pers_no, unread, passive)
-    return jsonify(list=to_dict(memberships, True, g.ksession))
+    first = int(request.args.get('first', 0))
+    no_of_memberships = int(request.args.get('no-of-memberships', 100))
+    memberships, has_more = g.ksession.get_memberships(
+        pers_no, first, no_of_memberships, unread, passive)
+    return jsonify(has_more=has_more, memberships=to_dict(memberships, True, g.ksession))
 
 
 @bp.route('/persons/<int:pers_no>/memberships/unread/')

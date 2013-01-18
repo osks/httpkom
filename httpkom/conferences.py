@@ -226,7 +226,65 @@ def conferences_put_text_read_marking(conf_no, local_text_no):
 @bp.route('/conferences/<int:conf_no>/texts/')
 @requires_session
 def conferences_get_texts(conf_no):
+    """Get the last created texts in the conference. Returns all text
+    stats, but not the subject or body.
+    
+    TODO: Query parameters for pagination.
+    
+    Query parameters:
+    
+    ===========  =======  =================================================================
+    Key          Type     Values
+    ===========  =======  =================================================================
+    no_of_texts  integer  Number of text numbers to return. Default: 10
+    ===========  =======  =================================================================
+    
+    .. rubric:: Request
+    
+    ::
+    
+      GET /<server_id>/conferences/texts/ HTTP/1.0
+    
+    .. rubric:: Response
+    
+    ::
+    
+      HTTP/1.0 200 OK
+      
+      {
+        "texts": [
+          {
+            "recipient_list": [
+              {
+                "conf_name": "Oskars Testperson",
+                "type": "to",
+                "loc_no": 29,
+                "conf_no": 14506
+              }
+            ], 
+            "author": {
+              "pers_no": 14506,
+              "pers_name": "Oskars Testperson"
+            }, 
+            "creation_time": "2012-05-08 18:36:17",
+            "comment_in_list": [],
+            "content_type": "text/x-kom-basic",
+            "text_no": 19680717,
+            "comment_to_list": [],
+          },
+          
+          ...
+        ]
+      }
+    
+    .. rubric:: Example
+    
+    ::
+    
+      curl -v -X GET -H "Content-Type: application/json" \\
+           "http://localhost:5001/lyskom/conferences/texts/?no-of-unread=3"
+    
     """
-    """
-    texts = g.ksession.get_last_texts(conf_no, 10)
+    no_of_texts = int(request.args.get('no-of-texts', 10))
+    texts = g.ksession.get_last_texts(conf_no, no_of_texts)
     return jsonify(texts=to_dict(texts, True, g.ksession))

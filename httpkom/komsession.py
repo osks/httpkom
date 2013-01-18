@@ -135,7 +135,7 @@ class KomSession(object):
         unread_texts = self.conn.get_unread_texts_from_membership(membership)
         return KomMembershipUnread(pers_no, conf_no, len(unread_texts), unread_texts)
 
-    def get_memberships(self, pers_no, unread=False, passive=False):
+    def get_memberships(self, pers_no, first, no_of_confs, unread=False, passive=False):
         if unread:
             # RegGetUnreadConfs never returns passive memberships so
             # that combination is not valid.
@@ -147,17 +147,25 @@ class KomSession(object):
             # possible that we need to change this, which means that
             # unread=True may be a slower call.
             memberships = [ self.get_membership(pers_no, conf_no) for conf_no in conf_nos ]
+            has_more = False
         else:
-            ms_list = self.conn.get_all_memberships(pers_no, want_read_ranges=False)
+            ms_list = self.conn.get_memberships(pers_no, first, no_of_confs,
+                                                want_read_ranges=False)
+            
+            # We need to check if there are more memberships to get
+            # before we filter out the passive memberships.
+            if len(ms_list) < no_of_confs:
+                has_more = False
+            else:
+                has_more = True
             
             memberships = []
             for membership in ms_list:
                 if (not passive) and membership.type.passive:
                     continue
-                
                 memberships.append(KomMembership(pers_no, membership))
         
-        return memberships
+        return memberships, has_more
 
     def get_membership_unreads(self, pers_no):
         conf_nos = kom.ReqGetUnreadConfs(self.conn, pers_no).response()
@@ -182,7 +190,8 @@ class KomSession(object):
     # TODO: offset/start number, so we can paginate. we probably need
     # to return the local text number for that.
     def get_last_texts(self, conf_no, no_of_texts):
-        """Get the {no_of_texts} last texts in conference {conf_no}.
+        """Get the {no_of_texts} last texts in conference {conf_no},
+        but do not include the body or subject.
         """
         local_no_ceiling = 0 # means the higest numbered texts (i.e. the last)
         text_mapping = kom.ReqLocalToGlobalReverse(self.conn, conf_no, 0, no_of_texts).response()

@@ -2650,8 +2650,14 @@ class CachedPersonConnection(CachedConnection):
         self._current_conference_no = 0
         
         # Caches
-        self._all_memberships = None
         self._memberships = Cache(self.fetch_membership, "Membership")
+        
+        # Specific membership cache where the keys are the positions
+        # in the membership list for the membership, and the values
+        # are the memberships. There is a risk with having this cache
+        # - you can modify positions and we currently have no way of
+        # detecting that (no async messages).
+        self._memberships_by_position = dict()
 
     def login(self, pers_no, password):
         ReqLogin(self, pers_no, password, invisible=0).response()
@@ -2661,7 +2667,7 @@ class CachedPersonConnection(CachedConnection):
         ReqLogout(self).response()
         # Invalidate caches that are/were for the current person
         self._pers_no = 0
-        self._all_memberships = None
+        self._memberships_by_position = dict()
         self._memberships.invalidate_all()
 
     def get_person_no(self):
@@ -2680,14 +2686,7 @@ class CachedPersonConnection(CachedConnection):
         ReqChangeConference(self, conf_no).response()
         self._current_conference_no = conf_no
         if prev_conf_no != 0:
-            self._memberships.invalidate(prev_conf_no)
-            # Unfortunately we would also need to invalidate the all
-            # memberships storage, which is not good at all. We can't
-            # do that, because it means that we would invalidate it
-            # every time we switch conference - which is pretty much
-            # always. So for now we don't.
-            # 
-            #self._all_memberships = None
+            self._invalidate_membership(prev_conf_no)
 
     def mark_as_read_local(self, conf_no, local_text_no):
         try:
@@ -2701,10 +2700,37 @@ class CachedPersonConnection(CachedConnection):
         except NotMember:
             pass
 
-    def get_all_memberships(self, pers_no, want_read_ranges=False):
-        """Get all memberships (at most 1000) for a person.
+    def _get_cached_memberships_by_position(self, first, no_of_confs):
+        # Return a list of the cached memberships if we have all of
+        # them, otherwise return None. We only return memberships if
+        # we had all of them.
+        memberships = []
+        for pos in range(first, first + no_of_confs):
+            if pos not in self._memberships_by_position:
+                return None
+            memberships.append(self._memberships_by_position[pos])
+        return memberships
+
+    def _update_cached_memberships_by_position(self, memberships):
+        for m in memberships:
+            self._memberships_by_position[m.position] = m
+    
+    def _invalidate_membership(self, conf_no):
+        self._memberships.invalidate(conf_no)
+        # Since we only return anything from memberships_by_position
+        # if all memberships are found, it means that we can make
+        # partial invalidations.
+        found_at = None
+        for pos in self._memberships_by_position:
+            if self._memberships_by_position[pos].conference == conf_no:
+                found_at = pos
+                break
+        if found_at is not None:
+            del self._memberships_by_position[found_at]
+    
+    def get_memberships(self, pers_no, first, no_of_confs, want_read_ranges=False):
+        """Get memberships for a person.
         """
-        no_of_confs = 1000
         if want_read_ranges:
             return ReqGetMembership11(self, pers_no, 0, no_of_confs, 1, 0).response()
         else:
@@ -2712,10 +2738,12 @@ class CachedPersonConnection(CachedConnection):
                 # We cache the result for the current person and without
                 # read ranges, because that is what we can invalidate
                 # correctly.
-                if self._all_memberships is None:
-                    self._all_memberships = \
-                        ReqGetMembership11(self, self._pers_no, 0, no_of_confs, 0, 0).response()
-                return self._all_memberships
+                memberships = self._get_cached_memberships_by_position(first, no_of_confs)
+                if memberships is None:
+                    memberships = ReqGetMembership11(
+                        self, self._pers_no, first, no_of_confs, 0, 0).response()
+                    self._update_cached_memberships_by_position(memberships)
+                return memberships
             else:
                 return ReqGetMembership11(self, pers_no, 0, no_of_confs, 0, 0).response()
 
@@ -2747,13 +2775,14 @@ class CachedPersonConnection(CachedConnection):
         CachedConnection.cah_leave_conf(self, msg, c)
         # Invalidates cached membership
         self._memberships.invalidate(msg.conf_no)
-        # Invalidates self._all_memberships
-        self._all_memberships = None
+        # We invalidate the entire memberships_by_position because you
+        # can change position of memberships.
+        self._memberships_by_position = dict()
 
     def cah_new_membership(self, msg, c):
         CachedConnection.cah_new_membership(self, msg, c)
-        # Invalidates self._all_memberships
-        self._all_memberships = None
+        # Invalidates self._memberships_by_position
+        self._memberships_by_position = dict()
         # The self.memberships cache can only cache actual
         # memberships, and because we get this async messages, we know
         # the current person was not a member before.
