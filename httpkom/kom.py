@@ -2665,6 +2665,27 @@ class CachedPersonConnection(CachedConnection):
     def is_logged_in(self):
         return self._pers_no != 0
 
+    def change_conference(self, conf_no):
+        ReqChangeConference(self, conf_no).response()
+        # Change conference updates last-time-read for the membership
+        self._memberships.invalidate(conf_no)
+
+    def mark_as_read_local(self, conf_no, local_text_no):
+        try:
+            ReqMarkAsRead(self, conf_no, [local_text_no]).response()
+            # Mark as read updates last-time-read for the membership
+            self._memberships.invalidate(conf_no)
+        except NotMember:
+            pass
+
+    def mark_as_unread_local(self, conf_no, local_text_no):
+        try:
+            ReqMarkAsUnread(self, conf_no, local_text_no).response()
+            # Mark as read updates last-time-read for the membership
+            self._memberships.invalidate(conf_no)
+        except NotMember:
+            pass
+
     def get_all_memberships(self, pers_no, want_read_ranges=False):
         """Get all memberships (at most 1000) for a person.
         """
@@ -2704,7 +2725,9 @@ class CachedPersonConnection(CachedConnection):
         # person, because we don't receive async leave/join messages
         # for other persons. We also only cache memberships without
         # read ranges, because it is easier to invalidate correctly.
-        return ReqQueryReadTexts11(self, self._pers_no, conf_no, 0, 0).response()
+        m = ReqQueryReadTexts11(self, self._pers_no, conf_no, 0, 0).response()
+        print "last time read: %s" % (m.last_time_read,)
+        return m
     
     # Handlers for asynchronous messages (internal use)
     def cah_leave_conf(self, msg, c):
