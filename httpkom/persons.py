@@ -32,7 +32,7 @@ def persons_create():
     
     Person was created::
     
-      HTTP/1.0 200 OK
+      HTTP/1.0 201 Created
       
       {
         "pers_no": 14506,
@@ -61,7 +61,7 @@ def persons_create():
     
     try:
         kom_person = ksession.create_person(name, passwd)
-        return jsonify(to_dict(kom_person, True, g.ksession))
+        return jsonify(to_dict(kom_person, True, g.ksession)), 201
     except kom.Error as ex:
         return error_response(400, kom_error=ex)
     finally:

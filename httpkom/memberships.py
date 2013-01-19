@@ -42,7 +42,7 @@ def persons_put_membership(pers_no, conf_no):
     
     Success::
     
-      HTTP/1.1 204 OK
+      HTTP/1.1 201 Created
     
     If the person or conference do not exist::
     
@@ -60,7 +60,7 @@ def persons_put_membership(pers_no, conf_no):
     where = int(request.json.get('where', 0))
     try:
         g.ksession.add_membership(pers_no, conf_no, priority, where)
-        return empty_response(204)
+        return empty_response(201)
     except (kom.UndefinedPerson, kom.UndefinedConference) as ex:
         return error_response(404, kom_error=ex)
 

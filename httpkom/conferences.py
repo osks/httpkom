@@ -209,7 +209,7 @@ def conferences_put_text_read_marking(conf_no, local_text_no):
     
     ::
     
-      HTTP/1.1 204 OK
+      HTTP/1.1 201 Created
     
     .. rubric:: Example
     
@@ -220,7 +220,7 @@ def conferences_put_text_read_marking(conf_no, local_text_no):
     """
     # TODO: handle conferences/texts that doesn't exist (i.e. return 404).
     g.ksession.mark_as_read_local(local_text_no, conf_no)
-    return empty_response(204)
+    return empty_response(201)
 
 
 @bp.route('/conferences/<int:conf_no>/texts/')

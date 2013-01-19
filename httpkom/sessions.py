@@ -19,7 +19,7 @@ To open a new connection, make a request like this::
 
 The response will look like this::
 
-  HTTP/1.0 200 OK
+  HTTP/1.0 201 Created
   Content-Type: application/json
   Httpkom-Connection: <uuid>
   
@@ -44,7 +44,7 @@ like this::
 
 and the response::
 
-  HTTP/1.0 200 OK
+  HTTP/1.0 201 Created
   Content-Type: application/json
   
   { "pers_no": 14506, "pers_name": "Oskars Testperson" }
@@ -222,7 +222,7 @@ def sessions_create():
     
     Successful connect::
     
-      HTTP/1.0 200 OK
+      HTTP/1.0 201 Created
       Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1
       
       {
@@ -249,7 +249,7 @@ def sessions_create():
             connection_id = _save_komsession(ksession)
             response = jsonify(session_no=ksession.who_am_i(), connection_id=connection_id)
             response.headers[_CONNECTION_HEADER] = connection_id
-            return response
+            return response, 201
         else:
             return empty_response(204)
     except kom.Error as ex:
@@ -280,7 +280,7 @@ def sessions_login():
     
     Successful login::
     
-      HTTP/1.0 200 OK
+      HTTP/1.0 201 Created
       
       {
         "pers_no": 14506,
@@ -317,7 +317,7 @@ def sessions_login():
     
     try:
         kom_person = g.ksession.login(pers_no, passwd)
-        return jsonify(to_dict(kom_person, True, g.ksession))
+        return jsonify(to_dict(kom_person, True, g.ksession)), 201
     except (kom.InvalidPassword, kom.UndefinedPerson, kom.LoginDisallowed,
             kom.ConferenceZero) as ex:
         return error_response(401, kom_error=ex)

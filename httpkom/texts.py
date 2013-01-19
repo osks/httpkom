@@ -3,7 +3,7 @@
 
 import StringIO
 
-from flask import g, request, jsonify, send_file, Response
+from flask import g, request, jsonify, send_file, Response, url_for
 
 import kom
 from komsession import KomSession, KomSessionError, KomText, to_dict, from_dict, \
@@ -157,10 +157,11 @@ def texts_create():
     
     Text was created::
     
-      HTTP/1.0 200 OK
+      HTTP/1.0 201 Created
+      Location: http://localhost:5001/<server_id>/texts/19724960
       
       {
-        "text_no": 19724960, 
+        "text_no": 19724960,
       }
     
     .. rubric:: Example
@@ -178,7 +179,8 @@ def texts_create():
     """
     komtext = from_dict(request.json, KomText, True, g.ksession)
     text_no = g.ksession.create_text(komtext)
-    return jsonify(text_no=text_no)
+    headers = { "Location": url_for(".texts_get", server_id=g.server.id, text_no=text_no) }
+    return jsonify(text_no=text_no), 201, headers
 
 
 @bp.route('/texts/marks/')
@@ -235,7 +237,7 @@ def texts_put_mark(text_no):
     
     Success::
     
-      HTTP/1.1 204 OK
+      HTTP/1.1 201 Created
     
     .. rubric:: Example
     
@@ -253,7 +255,7 @@ def texts_put_mark(text_no):
     
     try:
         g.ksession.mark_text(text_no, mark_type)
-        return empty_response(204)
+        return empty_response(201)
     except kom.NoSuchText as ex:
         return error_response(404, kom_error=ex)
 
@@ -304,7 +306,7 @@ def texts_put_read_marking(text_no):
     
     Text was marked as read::
     
-      HTTP/1.0 204 NO CONTENT
+      HTTP/1.0 201 Created
     
     .. rubric:: Example
     
@@ -314,7 +316,7 @@ def texts_put_read_marking(text_no):
     
     """
     g.ksession.mark_as_read(text_no)
-    return empty_response(204)
+    return empty_response(201)
 
 
 @bp.route('/texts/<int:text_no>/read-marking', methods=['DELETE'])
