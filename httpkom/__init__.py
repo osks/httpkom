@@ -148,13 +148,3 @@ def ios6_cache_fix(resp):
 def index():
     servers = dict([ (s.id, s.to_dict()) for s in _servers.values() ])
     return jsonify(servers)
-
-
-@app.route("/status")
-def status():
-    # Only enable status page in debug mode. It's not public information!
-    # IMPORTANT: the kom_session.id is VERY secret! You can take over a session with it.
-    if app.config['DEBUG']:
-        return render_template('status.html', kom_sessions=sessions.kom_sessions)
-    else:
-        return empty_response(404)
