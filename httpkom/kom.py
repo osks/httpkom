@@ -2606,10 +2606,14 @@ class CachedConnection(Connection):
                 else:
                     n = gap_len
                 gap_len -= n
-                mapping = ReqLocalToGlobal(self, membership.conference, first_local, n).response()
-                unread.extend([e[1] for e in mapping.list if e[1] != 0])
-                first_local = mapping.range_end
-                more_to_fetch = mapping.later_texts_exists
+                try:
+                    mapping = ReqLocalToGlobal(
+                        self, membership.conference, first_local, n).response()
+                    unread.extend([e[1] for e in mapping.list if e[1] != 0])
+                    first_local = mapping.range_end
+                    more_to_fetch = mapping.later_texts_exists
+                except NoSuchLocalText:
+                    more_to_fetch = 0
         
         # If there are more than 255 after the last read range, we
         # need to continue mapping (the last, if any, previous call
@@ -2617,7 +2621,8 @@ class CachedConnection(Connection):
         first_local = last
         while more_to_fetch:
             try:
-                mapping = ReqLocalToGlobal(self, membership.conference, first_local, 255).response()
+                mapping = ReqLocalToGlobal(
+                    self, membership.conference, first_local, 255).response()
                 unread.extend([e[1] for e in mapping.list if e[1] != 0])
                 first_local = mapping.range_end
                 more_to_fetch = mapping.later_texts_exists
