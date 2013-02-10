@@ -197,6 +197,7 @@ class KomSession(object):
         text_mapping = kom.ReqLocalToGlobalReverse(self.conn, conf_no, 0, no_of_texts).response()
         texts = [ KomText(text_no=m[1], text=None, text_stat=self.get_text_stat(m[1]))
                   for m in text_mapping.list if m[1] != 0 ]
+        texts.reverse()
         return texts
 
     def create_text(self, komtext):
