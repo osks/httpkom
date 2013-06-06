@@ -37,7 +37,9 @@ MICommentIn_str_to_type = { 'comment': kom.MIC_COMMENT,
                             'footnote': kom.MIC_FOOTNOTE }
 
 _ALLOWED_KOMTEXT_AUXITEMS = [
-    komauxitems.AI_FAST_REPLY
+    komauxitems.AI_FAST_REPLY,
+    komauxitems.AI_MX_DATE,
+    komauxitems.AI_MX_AUTHOR
 ]
 
 
@@ -228,7 +230,11 @@ class KomSession(object):
         else:
             fulltext += komtext.body
         
-        aux_items = []
+        if komtext.aux_items is None:
+            aux_items = []
+        else:
+            aux_items = komtext.aux_items
+        
         aux_items.append(kom.AuxItem(kom.AI_CREATING_SOFTWARE,
                                      data="%s %s" % (self.client_name, self.client_version)))
         aux_items.append(kom.AuxItem(kom.AI_CONTENT_TYPE,
