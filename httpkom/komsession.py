@@ -106,6 +106,13 @@ class KomSession(object):
         pers_no = kom.ReqCreatePerson(
             self.conn, name.encode('latin1'), passwd.encode('latin1'), flags).response()
         return KomPerson(pers_no)
+
+    def create_conf(self, name):
+        conf_type = kom.ConfType()
+        aux_items = []
+        conf_no = kom.ReqCreateConf(
+            self.conn, name.encode('latin1'), conf_type, aux_items).response()
+        return conf_no
     
     def lookup_name(self, name, want_pers, want_confs):
         return self.conn.lookup_name(name, want_pers, want_confs)
