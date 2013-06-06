@@ -417,6 +417,8 @@ def to_dict(obj, lookups=False, session=None):
         return AuxItem_to_dict(obj, lookups, session)
     elif isinstance(obj, kom.Mark):
         return Mark_to_dict(obj, lookups, session)
+    elif isinstance(obj, kom.Time):
+        return Time_to_dict(obj, lookups, session)
     else:
         #raise NotImplementedError("to_dict is not implemented for: %s" % type(obj))
         return obj
@@ -455,11 +457,11 @@ def KomMembership_to_dict(membership, lookups, session):
     return dict(
         pers_no=membership.pers_no,
         position=membership.position,
-        last_time_read=membership.last_time_read.to_date_and_time(),
+        last_time_read=Time_to_dict(membership.last_time_read, lookups, session),
         conference=conf_to_dict(membership.conference, lookups, session),
         priority=membership.priority,
         added_by=pers_to_dict(membership.added_by, lookups, session),
-        added_at=membership.added_at.to_date_and_time(),
+        added_at=Time_to_dict(membership.added_at, lookups, session),
         type=to_dict(membership.type, lookups, session))
 
 def KomMembershipUnread_to_dict(membership_unread, lookups, session):
@@ -492,8 +494,8 @@ def KomConference_to_dict(conf, lookups, session):
         conf_no=conf.conf_no,
         name=conf.name,
         type=to_dict(conf.type, lookups, session),
-        creation_time=conf.creation_time.to_date_and_time(),
-        last_written=conf.last_written.to_date_and_time(),
+        creation_time=Time_to_dict(conf.creation_time, lookups, session),
+        last_written=Time_to_dict(conf.last_written, lookups, session),
         creator=pers_to_dict(conf.creator, lookups, session),
         presentation=conf.presentation,
         supervisor=conf_to_dict(conf.supervisor, lookups, session),
@@ -561,7 +563,7 @@ def KomText_to_dict(komtext, lookups, session):
     if komtext.creation_time is None:
         d['creation_time'] = None
     else:
-        d['creation_time'] = komtext.creation_time.to_date_and_time()
+        d['creation_time'] = Time_to_dict(komtext.creation_time, lookups, session)
     
     return d
 
@@ -631,13 +633,13 @@ def MIRecipient_to_dict(mir, lookups, session):
     if mir.rec_time is None:
         rec_time = None
     else:
-        rec_time = mir.rec_time.to_date_and_time()
+        rec_time = Time_to_dict(mir.rec_time, lookups, session)
     
     
     if mir.sent_at is None:
         sent_at = None
     else:
-        sent_at = mir.sent_at.to_date_and_time()
+        sent_at = Time_to_dict(mir.sent_at, lookups, session)
     
     d = dict(type=MIRecipient_type_to_str[mir.type],
              recpt=conf_to_dict(mir.recpt, lookups, session),
@@ -705,7 +707,7 @@ def AuxItem_to_dict(aux_item, lookups, session):
     return dict(aux_no=aux_item.aux_no,
                 tag=komauxitems.aux_item_number_to_name[aux_item.tag],
                 creator=pers_to_dict(aux_item.creator, lookups, session),
-                created_at=aux_item.created_at.to_date_and_time(),
+                created_at=Time_to_dict(aux_item.created_at, lookups, session),
                 flags=dict(deleted=aux_item.flags.deleted,
                            inherit=aux_item.flags.inherit,
                            secret=aux_item.flags.secret,
@@ -719,6 +721,9 @@ def AuxItem_to_dict(aux_item, lookups, session):
 
 def Mark_to_dict(mark, lookups, session):
     return dict(text_no=mark.text_no, type=mark.type)
+
+def Time_to_dict(time, lookups, session):
+    return int(time.to_python_time())
 
 
 # Misc functions
