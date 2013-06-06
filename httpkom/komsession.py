@@ -119,10 +119,23 @@ class KomSession(object):
 
     def lookup_name_exact(self, name, want_pers, want_confs):
         matches = self.lookup_name(name, want_pers, want_confs)
+        return self._exact_lookup_match(name, matches)
+
+    def re_lookup_name(self, regexp, want_pers, want_confs):
+        # The LysKOM server is always case sensitive, and it's kom.py
+        # that tries to create a case-insensitive regexp. Doesn't seem
+        # to work that well.
+        return self.conn.regexp_lookup(regexp, want_pers, want_confs, case_sensitive=1)
+
+    def re_lookup_name_exact(self, regexp, want_pers, want_confs):
+        matches = self.re_lookup_name(regexp, want_pers, want_confs)
+        return self._exact_lookup_match(regexp, matches)
+
+    def _exact_lookup_match(self, lookup, matches):
         if len(matches) == 0:
-            raise NameNotFound("recipient not found: %s" % name)
+            raise NameNotFound("recipient not found: %s" % lookup)
         elif len(matches) <> 1:
-            raise AmbiguousName("ambiguous recipient: %s" % name)
+            raise AmbiguousName("ambiguous recipient: %s" % lookup)
         return matches[0][0]
 
     def get_text_stat(self, text_no):
