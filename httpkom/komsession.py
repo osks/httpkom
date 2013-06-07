@@ -253,9 +253,9 @@ class KomSession(object):
         else:
             aux_items = komtext.aux_items
         
-        aux_items.append(kom.AuxItem(kom.AI_CREATING_SOFTWARE,
+        aux_items.append(kom.AuxItem(komauxitems.AI_CREATING_SOFTWARE,
                                      data="%s %s" % (self.client_name, self.client_version)))
-        aux_items.append(kom.AuxItem(kom.AI_CONTENT_TYPE,
+        aux_items.append(kom.AuxItem(komauxitems.AI_CONTENT_TYPE,
                                      data=content_type))
         
         text_no = kom.ReqCreateText(self.conn, fulltext, misc_info, aux_items).response()
