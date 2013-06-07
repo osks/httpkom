@@ -8,7 +8,10 @@ docs: docs-html
 docs-html:
 	make -C docs html
 
-test:
-	py.test ./tests
+pyflakes:
+	pyflakes ./httpkom
 
-.PHONY: all run-debug-server docs docs-html test
+#test: pyflakes
+#	py.test ./tests
+
+.PHONY: all run-debug-server docs docs-html pyflakes

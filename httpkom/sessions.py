@@ -82,18 +82,17 @@ perspective to have them different resources (i.e. different
 import socket
 import errno
 import uuid
-import json
 import functools
 
-from flask import g, abort, request, jsonify, make_response, Response
+from flask import g, request, jsonify
 
-import kom
-from komsession import KomSession, KomSessionError, AmbiguousName, NameNotFound, to_dict
+from pylyskom import kom
+
+from komsession import KomSession, to_dict
 
 from httpkom import app, bp
 from errors import error_response
 from misc import empty_response
-import version
 
 
 _CONNECTION_HEADER = app.config['HTTPKOM_CONNECTION_HEADER']
@@ -437,7 +436,7 @@ def sessions_change_working_conference():
         conf_no = request.json['conf_no']
         if conf_no is None:
             return error_response(400, error_msg='"conf_no" is null.')
-    except KeyError as ex:
+    except KeyError:
         return error_response(400, error_msg='Missing "conf_no".')
     
     g.ksession.change_conference(conf_no)

@@ -10,5 +10,5 @@ setup(
     packages=['httpkom'],
     include_package_data=True,
     zip_safe=False,
-    install_requires=['Flask', 'mimeparse', 'Sphinx']
+    install_requires=['Flask', 'mimeparse', 'Sphinx', 'pylyskom']
 )

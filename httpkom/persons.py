@@ -3,13 +3,13 @@
 
 from flask import g, request, jsonify
 
-import kom
-from komsession import KomSession, KomSessionError, to_dict
+from pylyskom import kom
+
+from komsession import KomSession, to_dict
 
 from httpkom import app, bp
 from errors import error_response
-from misc import empty_response, get_bool_arg_with_default
-from sessions import requires_session, requires_login
+from sessions import requires_session
 
 
 @bp.route('/persons/', methods=['POST'])

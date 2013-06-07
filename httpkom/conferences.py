@@ -3,8 +3,9 @@
 
 from flask import g, request, jsonify
 
-import kom
-from komsession import KomSession, KomSessionError, KomText, to_dict, from_dict
+from pylyskom import kom
+
+from komsession import KomSession, to_dict
 
 from httpkom import app, bp
 from errors import error_response

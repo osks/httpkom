@@ -5,9 +5,7 @@ import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-from flask import Flask, Blueprint, render_template, request, jsonify, g, abort
-
-from misc import empty_response
+from flask import Flask, Blueprint, request, jsonify, g, abort
 
 
 class default_settings:
@@ -87,12 +85,14 @@ if not app.debug and app.config['LOG_FILE'] is not None:
 
 
 # Load app parts
-import conferences
-import sessions
-import texts
-import persons
-import memberships
-import errors
+def _import_app_parts_while_avoiding_pyflakes_errors():
+    import conferences
+    import sessions
+    import texts
+    import persons
+    import memberships
+    import errors
+_import_app_parts_while_avoiding_pyflakes_errors()
 
 
 app.register_blueprint(bp)

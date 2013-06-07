@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
-from flask import jsonify, make_response, Response
+from flask import jsonify
 
-import kom
+from pylyskom import kom
+
 from komsession import KomSessionError
 
 from httpkom import app

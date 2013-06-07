@@ -2,13 +2,11 @@
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
 import socket
-import uuid
-import json
 import mimeparse
 
-import kom
-import komauxitems
-import version
+from pylyskom import kom, komauxitems
+from pylyskom.connection import CachedPersonConnection
+
 
 class KomSessionError(Exception): pass
 class AmbiguousName(KomSessionError): pass
@@ -55,7 +53,7 @@ class KomSession(object):
     
     def connect(self, client_name, client_version):
         httpkom_user = "httpkom%" + socket.getfqdn()
-        self.conn = kom.CachedPersonConnection()
+        self.conn = CachedPersonConnection()
         self.conn.connect(self.host, self.port, user=httpkom_user)
         kom.ReqSetClientVersion(self.conn, client_name, client_version)
         self.client_name = client_name
@@ -215,7 +213,7 @@ class KomSession(object):
         """Get the {no_of_texts} last texts in conference {conf_no},
         but do not include the body or subject.
         """
-        local_no_ceiling = 0 # means the higest numbered texts (i.e. the last)
+        #local_no_ceiling = 0 # means the higest numbered texts (i.e. the last)
         text_mapping = kom.ReqLocalToGlobalReverse(self.conn, conf_no, 0, no_of_texts).response()
         texts = [ KomText(text_no=m[1], text=None, text_stat=self.get_text_stat(m[1]))
                   for m in text_mapping.list if m[1] != 0 ]
@@ -465,7 +463,7 @@ def KomSession_to_dict(ksession, lookups, session):
     person = None
     if ksession.is_logged_in():
         pers_no = ksession.get_person_no()
-        person = KomPerson_to_dict(KomPerson(pers_no), lookups, sesssion)
+        person = KomPerson_to_dict(KomPerson(pers_no), lookups, session)
     
     session_no = None
     if lookups:

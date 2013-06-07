@@ -3,13 +3,14 @@
 
 from flask import g, request, jsonify
 
-import kom
-from komsession import KomSession, KomSessionError, to_dict
+from pylyskom import kom
 
-from httpkom import app, bp
+from komsession import to_dict
+
+from httpkom import bp
 from errors import error_response
 from misc import empty_response, get_bool_arg_with_default
-from sessions import requires_session, requires_login
+from sessions import requires_login
 
 
 @bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['PUT'])
@@ -137,7 +138,7 @@ def persons_set_unread(conf_no):
     # in the body; they expect/require an object or an array.
     try:
         no_of_unread = int(request.json['no_of_unread'])
-    except KeyError as ex:
+    except KeyError:
         return error_response(400, error_msg='Missing "no_of_unread".')
     
     g.ksession.set_unread(conf_no, no_of_unread)

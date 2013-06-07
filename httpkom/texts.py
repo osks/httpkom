@@ -3,16 +3,17 @@
 
 import StringIO
 
-from flask import g, request, jsonify, send_file, Response, url_for
+from flask import g, request, jsonify, send_file, url_for
 
-import kom
-from komsession import KomSession, KomSessionError, KomText, to_dict, from_dict, \
-    parse_content_type, mime_type_tuple_to_str
+from pylyskom import kom
 
-from httpkom import app, bp
+from komsession import KomText, to_dict, from_dict, \
+    parse_content_type
+
+from httpkom import bp
 from errors import error_response
 from misc import empty_response
-from sessions import requires_session, requires_login
+from sessions import requires_login
 
 
 @bp.route('/texts/<int:text_no>')
