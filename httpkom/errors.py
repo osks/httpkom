@@ -4,8 +4,7 @@
 from flask import jsonify
 
 from pylyskom import kom
-
-from komsession import KomSessionError
+from pylyskom.komsession import KomSessionError
 
 from httpkom import app
 from misc import empty_response

@@ -6,9 +6,10 @@ import StringIO
 from flask import g, request, jsonify, send_file, url_for
 
 from pylyskom import kom
+from pylyskom.komsession import KomText
+from pylyskom.utils import parse_content_type
 
-from komsession import KomText, to_dict, from_dict, \
-    parse_content_type
+from komserialization import to_dict, from_dict
 
 from httpkom import bp
 from errors import error_response

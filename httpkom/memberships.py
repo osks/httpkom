@@ -5,7 +5,7 @@ from flask import g, request, jsonify
 
 from pylyskom import kom
 
-from komsession import to_dict
+from komserialization import to_dict
 
 from httpkom import bp
 from errors import error_response

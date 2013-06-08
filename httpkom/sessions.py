@@ -87,8 +87,9 @@ import functools
 from flask import g, request, jsonify
 
 from pylyskom import kom
+from pylyskom.komsession import KomSession
 
-from komsession import KomSession, to_dict
+from komserialization import to_dict
 
 from httpkom import app, bp
 from errors import error_response

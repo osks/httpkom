@@ -85,14 +85,12 @@ if not app.debug and app.config['LOG_FILE'] is not None:
 
 
 # Load app parts
-def _import_app_parts_while_avoiding_pyflakes_errors():
-    import conferences
-    import sessions
-    import texts
-    import persons
-    import memberships
-    import errors
-_import_app_parts_while_avoiding_pyflakes_errors()
+import conferences
+import sessions
+import texts
+import persons
+import memberships
+import errors
 
 
 app.register_blueprint(bp)
