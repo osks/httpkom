@@ -10,7 +10,12 @@ from pylyskom.komsession import (KomSession, KomPerson, KomText, KomConference, 
 _ALLOWED_KOMTEXT_AUXITEMS = [
     komauxitems.AI_FAST_REPLY,
     komauxitems.AI_MX_DATE,
-    komauxitems.AI_MX_AUTHOR
+    komauxitems.AI_MX_AUTHOR,
+    
+    komauxitems.AI_KOMFEEDER_URL,
+    komauxitems.AI_KOMFEEDER_TITLE,
+    komauxitems.AI_KOMFEEDER_AUTHOR,
+    komauxitems.AI_KOMFEEDER_DATE,
 ]
 
 
@@ -140,7 +145,7 @@ def ConfType_to_dict(conf_type, lookups, session):
         reserved3=conf_type.reserved3)
 
 def KomConference_to_dict(conf, lookups, session):
-    return dict(
+    d = dict(
         conf_no=conf.conf_no,
         name=conf.name,
         type=to_dict(conf.type, lookups, session),
@@ -158,8 +163,17 @@ def KomConference_to_dict(conf, lookups, session):
         first_local_no=conf.first_local_no,
         no_of_texts=conf.no_of_texts,
         expire=conf.expire
-        #aux-items
         )
+
+    if conf.aux_items is None:
+        d['aux_items'] = None
+    else:
+        aux_items = []
+        for ai in filter(lambda ai: ai.tag in _ALLOWED_KOMTEXT_AUXITEMS, conf.aux_items):
+            aux_items.append(to_dict(ai, lookups, session))
+        d['aux_items'] = aux_items
+
+    return d
 
 def KomUConference_to_dict(conf, lookups, session):
     return dict(
