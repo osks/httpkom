@@ -49,23 +49,11 @@ def persons_create():
            http://localhost:5001/lyskom/persons/
     
     """
-    if g.ksession:
-        # Use exising session if we have one
-        ksession = g.ksession
-    else:
-        # .. otherwise create a new temporary session
-        ksession = KomSession(app.config['HTTPKOM_LYSKOM_SERVER'])
-        ksession.connect()
-    
     name = request.json['name']
     passwd = request.json['passwd']
     
     try:
-        kom_person = ksession.create_person(name, passwd)
+        kom_person = g.ksession.create_person(name, passwd)
         return jsonify(to_dict(kom_person, True, g.ksession)), 201
     except kom.Error as ex:
         return error_response(400, kom_error=ex)
-    finally:
-        # if we created a new session, close it
-        if not g.ksession:
-            ksession.disconnect()

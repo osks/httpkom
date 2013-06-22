@@ -67,24 +67,13 @@ def conferences_list():
     name = request.args['name']
     want_pers = get_bool_arg_with_default(request.args, 'want-pers', True)
     want_confs = get_bool_arg_with_default(request.args, 'want-confs', True)
-    if g.ksession:
-        # Use exising session if we have one
-        ksession = g.ksession
-    else:
-        # .. otherwise create a new temporary session
-        ksession = KomSession(app.config['HTTPKOM_LYSKOM_SERVER'])
-        ksession.connect()
         
     try:
-        lookup = ksession.lookup_name(name, want_pers, want_confs)
+        lookup = g.ksession.lookup_name(name, want_pers, want_confs)
         confs = [ dict(conf_no=t[0], conf_name=t[1]) for t in lookup ]
         return jsonify(dict(conferences=confs))
     except kom.Error as ex:
         return error_response(400, kom_error=ex)
-    finally:
-        # if we created a new session, close it
-        if not g.ksession:
-            ksession.disconnect()
 
 
 @bp.route('/conferences/<int:conf_no>')
