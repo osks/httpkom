@@ -245,7 +245,7 @@ def sessions_create():
         existing_ksession = _get_komsession(_get_connection_id())
         if existing_ksession is None:
             ksession = KomSession(g.server.host, g.server.port)
-            ksession.connect(client_name, client_version)
+            ksession.connect("httpkom", socket.getfqdn(), client_name, client_version)
             connection_id = _save_komsession(ksession)
             response = jsonify(session_no=ksession.who_am_i(), connection_id=connection_id)
             response.headers[_CONNECTION_HEADER] = connection_id
