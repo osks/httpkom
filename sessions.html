@@ -1,0 +1,342 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Sessions &mdash; httpkom 0.10 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.10',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="httpkom 0.10 documentation" href="index.html" />
+    <link rel="next" title="Texts" href="texts.html" />
+    <link rel="prev" title="Memberships" href="memberships.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="texts.html" title="Texts"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="memberships.html" title="Memberships"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">httpkom 0.10 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-httpkom.sessions">
+<span id="sessions"></span><h1>Sessions<a class="headerlink" href="#module-httpkom.sessions" title="Permalink to this headline">¶</a></h1>
+<p>To be able to handle multiple simultaneously sessions we use a header
+for specifying the connection id:</p>
+<div class="highlight-python"><pre>Httpkom-Connection: &lt;uuid&gt;</pre>
+</div>
+<p>The connection id is mainly to make it very hard (&#8220;impossible&#8221;) to
+intentionally take over someone else connection.</p>
+<p>To open a new connection, make a request like this:</p>
+<div class="highlight-python"><pre>POST /&lt;server_id&gt;/sessions/
+Content-Type: application/json
+
+{ "client": { "name": "jskom", "version": "0.6" } }</pre>
+</div>
+<p>The response will look like this:</p>
+<div class="highlight-python"><pre>HTTP/1.0 201 Created
+Content-Type: application/json
+Httpkom-Connection: &lt;uuid&gt;
+
+{ "session_no": 123456 }</pre>
+</div>
+<p>This is the only response that will contain the Httpkom-Connection.
+The request must not contain any Httpkom-Connnection header. If the
+request contains a Httpkom-Connection header, the request will fail
+and the response will be:</p>
+<div class="highlight-python"><pre>HTTP/1.0 409 Conflict</pre>
+</div>
+<p>Subsequent request to that server should contain the returned
+Httpkom-Connection header. For example, a login request will look
+like this:</p>
+<div class="highlight-python"><pre>POST /&lt;server_id&gt;/sessions/login
+Content-Type: application/json
+Httpkom-Connection: &lt;uuid&gt;
+
+{ "pers_no": 14506, "passwd": "test123" }</pre>
+</div>
+<p>and the response:</p>
+<div class="highlight-python"><pre>HTTP/1.0 201 Created
+Content-Type: application/json
+
+{ "pers_no": 14506, "pers_name": "Oskars Testperson" }</pre>
+</div>
+<p>If a resource requires a logged in session and the request contains a
+valid Httpkom-Connection header which is not logged in, the response
+will be:</p>
+<div class="highlight-python"><pre>HTTP/1.0 401 Unauthorized</pre>
+</div>
+<p>If the Httpkom-Connection is missing, or if the connection id specified
+by the Httpkom-Connection header is invalid (for example if the
+connection was to another server than &lt;server_id&gt;, or if there is no
+connection with that id), the response will be:</p>
+<div class="highlight-python"><pre>HTTP/1.0 403 Forbidden</pre>
+</div>
+<p>When you get a 403 response, the used Httpkom-Connection should be
+considered invalid and should not be used again. If the
+Httpkom-Connection specifies a working connection, but to another
+server than &lt;server_id&gt;, httpkom might close the connection before
+returning 403.</p>
+<p>It is up to the client to keep track of opened connection and to use
+them with the correct &lt;server_id&gt;. The /&lt;server_id&gt; prefix to all
+resources could be seen as redundant, since the Httpkom-Connection
+also specifies the server, but it makes the API resources
+consistent. Also, the resources on different LysKOM servers has
+nothing to do with each other, so it is a good idea from &#8220;REST&#8221;
+perspective to have them different resources (i.e. different
+/&lt;server_id&gt; prefixes).</p>
+<dl class="function">
+<dt id="httpkom.sessions.requires_login">
+<tt class="descclassname">httpkom.sessions.</tt><tt class="descname">requires_login</tt><big>(</big><em>f</em><big>)</big><a class="headerlink" href="#httpkom.sessions.requires_login" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the request points out a logged in LysKOM session. If
+the session is not logged in, return status code 401.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="httpkom.sessions.requires_session">
+<tt class="descclassname">httpkom.sessions.</tt><tt class="descname">requires_session</tt><big>(</big><em>f</em><big>)</big><a class="headerlink" href="#httpkom.sessions.requires_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the request has a Httpkom-Connection header that
+points out a valid LysKOM session. If the header is missing, or if
+there is no session for the id, return an empty response with
+status code 403.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="httpkom.sessions.sessions_change_working_conference">
+<tt class="descclassname">httpkom.sessions.</tt><tt class="descname">sessions_change_working_conference</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.sessions.sessions_change_working_conference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change current working conference of the current session.</p>
+<p class="rubric">Request</p>
+<div class="highlight-python"><pre>POST /&lt;server_id&gt;/sessions/current/working-conference HTTP/1.1
+Httpkom-Connection: &lt;id&gt;
+
+{
+  "conf_no": 14506,
+}</pre>
+</div>
+<p class="rubric">Responses</p>
+<div class="highlight-python"><pre>HTTP/1.1 204 No Content</pre>
+</div>
+<p class="rubric">Example</p>
+<div class="highlight-python"><pre>curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \
+     -X POST -H "Content-Type: application/json" \
+     -d '{ "conf_no": 14506 }' \
+     "http://localhost:5001/lyskom/sessions/current/working-conference"</pre>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="httpkom.sessions.sessions_create">
+<tt class="descclassname">httpkom.sessions.</tt><tt class="descname">sessions_create</tt><big>(</big><big>)</big><a class="headerlink" href="#httpkom.sessions.sessions_create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new session (a connection to the LysKOM server).</p>
+<p>Note: The response body also contains the connection_id (in
+addition to the response header) to around problems with buggy
+CORS implementations[1] in combination with certain javascript
+libraries (AngularJS).</p>
+<p>[1] <a class="reference external" href="https://bugzilla.mozilla.org/show_bug.cgi?id=608735">https://bugzilla.mozilla.org/show_bug.cgi?id=608735</a></p>
+<p class="rubric">Request</p>
+<div class="highlight-python"><pre>POST /&lt;server_id&gt;/sessions/ HTTP/1.1
+
+{
+  "client": { "name": "jskom", "version": "0.2" }
+}</pre>
+</div>
+<p class="rubric">Responses</p>
+<p>Successful connect:</p>
+<div class="highlight-python"><pre>HTTP/1.0 201 Created
+Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1
+
+{
+  "session_no": 12345,
+  "connection_id": "033556ee-3e52-423f-9c9a-d85aed7688a1"
+}</pre>
+</div>
+<p>If the request contains a Httpkom-Connection header:</p>
+<div class="highlight-python"><pre>HTTP/1.0 409 CONFLICT</pre>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="httpkom.sessions.sessions_current_active">
+<tt class="descclassname">httpkom.sessions.</tt><tt class="descname">sessions_current_active</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.sessions.sessions_current_active" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="httpkom.sessions.sessions_delete">
+<tt class="descclassname">httpkom.sessions.</tt><tt class="descname">sessions_delete</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.sessions.sessions_delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a session (disconnect from the LysKOM server).</p>
+<p>If the request disconnects the current session, the used
+Httpkom-Connection id is no longer valid.</p>
+<p>Note (from the protocol A spec): &#8220;Session number zero is always
+interpreted as the session making the call, so the easiest way to
+disconnect the current session is to disconnect session zero.&#8221;</p>
+<p class="rubric">Request</p>
+<div class="highlight-python"><pre>DELETE /&lt;server_id&gt;/sessions/12345 HTTP/1.1
+Httpkom-Connection: &lt;id&gt;</pre>
+</div>
+<p class="rubric">Responses</p>
+<p>Success:</p>
+<div class="highlight-python"><pre>HTTP/1.1 204 No Content</pre>
+</div>
+<p>Session does not exist:</p>
+<div class="highlight-python"><pre>HTTP/1.1 404 Not Found</pre>
+</div>
+<p class="rubric">Example</p>
+<div class="highlight-python"><pre>curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \
+     -X DELETE "http://localhost:5001/lyskom/sessions/abc123"</pre>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="httpkom.sessions.sessions_login">
+<tt class="descclassname">httpkom.sessions.</tt><tt class="descname">sessions_login</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.sessions.sessions_login" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log in using the current session.</p>
+<p>Note: If the login is successful, the matched full name will be
+returned in the response.</p>
+<p class="rubric">Request</p>
+<div class="highlight-python"><pre>POST /&lt;server_id&gt;/sessions/current/login HTTP/1.1
+Httpkom-Connection: &lt;id&gt;
+
+{
+  "pers_no": 14506,
+  "passwd": "test123"
+}</pre>
+</div>
+<p class="rubric">Responses</p>
+<p>Successful login:</p>
+<div class="highlight-python"><pre>HTTP/1.0 201 Created
+
+{
+  "pers_no": 14506,
+  "pers_name": "Oskars testperson"
+}</pre>
+</div>
+<p>Failed login:</p>
+<div class="highlight-python"><pre>HTTP/1.1 401 Unauthorized</pre>
+</div>
+<p class="rubric">Example</p>
+<div class="highlight-python"><pre>curl -v -X POST -H "Content-Type: application/json" \
+     -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \
+     -d '{ "pers_no": 14506, "passwd": "test123" }' \
+      "http://localhost:5001/lyskom/sessions/current/login"</pre>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="httpkom.sessions.sessions_logout">
+<tt class="descclassname">httpkom.sessions.</tt><tt class="descname">sessions_logout</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.sessions.sessions_logout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log out in the current session.</p>
+<p class="rubric">Request</p>
+<div class="highlight-python"><pre>POST /&lt;server_id&gt;/sessions/current/logout HTTP/1.1
+Httpkom-Connection: &lt;id&gt;</pre>
+</div>
+<p class="rubric">Responses</p>
+<p>Successful logout:</p>
+<div class="highlight-python"><pre>HTTP/1.0 204 NO CONTENT</pre>
+</div>
+<p class="rubric">Example</p>
+<div class="highlight-python"><pre>curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \
+     -X POST "http://localhost:5001/lyskom/sessions/current/logout"</pre>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="httpkom.sessions.sessions_who_am_i">
+<tt class="descclassname">httpkom.sessions.</tt><tt class="descname">sessions_who_am_i</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.sessions.sessions_who_am_i" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="memberships.html"
+                        title="previous chapter">Memberships</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="texts.html"
+                        title="next chapter">Texts</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/sessions.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="texts.html" title="Texts"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="memberships.html" title="Memberships"
+             >previous</a> |</li>
+        <li><a href="index.html">httpkom 0.10 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Oskar Skoog.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
