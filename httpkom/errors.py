@@ -49,6 +49,7 @@ def notfound(error):
 
 @app.errorhandler(kom.ServerError)
 def kom_server_error(error):
+    app.logger.exception(error)
     status = 400
     if isinstance(error, kom.LoginFirst):
         status = 401

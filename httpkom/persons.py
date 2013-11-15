@@ -10,7 +10,20 @@ from komserialization import to_dict
 
 from httpkom import app, bp
 from errors import error_response
-from sessions import requires_session
+from sessions import requires_session, requires_login
+from misc import empty_response
+
+
+@bp.route('/persons/<int:pers_no>/user-area/<string:block_name>', methods=['GET'])
+@requires_login
+def persons_get_user_area_block(pers_no, block_name):
+    """Get a user area block
+    """
+    block = g.ksession.get_user_area_block(pers_no, block_name)
+    print block
+    if block is None:
+        return empty_response(404)
+    return jsonify(block)
 
 
 @bp.route('/persons/', methods=['POST'])

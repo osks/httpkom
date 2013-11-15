@@ -196,6 +196,8 @@ def KomText_to_dict(komtext, lookups, session):
     # Only add body if text
     if mime_type[0] == 'text':
         d['body'] = komtext.body
+    elif mime_type[0] == 'x-kom' and mime_type[1] == 'user-area':
+        d['body'] = komtext.body
     
     if komtext.recipient_list is None:
         d['recipient_list'] = None
