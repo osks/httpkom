@@ -7,6 +7,7 @@ docs: docs-html
 
 docs-html:
 	make -C docs html
+	cp -r ./docs/_build/html/* ./gh-pages/html/
 
 pyflakes:
 	pyflakes ./httpkom

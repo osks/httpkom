@@ -6,6 +6,7 @@
 dist
 build
 eggs
+gh-pages
 
 # Installer logs
 pip-log.txt
