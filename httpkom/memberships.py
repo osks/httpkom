@@ -301,7 +301,7 @@ def persons_list_memberships(pers_no):
               "passive_message_invert": 0, 
               "invitation": 0
             }, 
-            "last_time_read": "2012-08-19 17:14:46", 
+            "last_time_read": 1385753347,
             "added_by": {
               "pers_no": 14506, 
               "pers_name": "Oskars Testperson"

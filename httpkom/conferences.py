@@ -134,13 +134,13 @@ def conferences_get(conf_no):
         }, 
         "no_of_texts": 1977, 
         "no_of_members": 1, 
-        "creation_time": "2012-04-28 19:49:11", 
+        "creation_time": 1385753347,
         "permitted_submitters": {
           "conf_name": "", 
           "conf_no": 0
         }, 
         "conf_no": 14506, 
-        "last_written": "2012-07-31 00:00:11", 
+        "last_written": 1385753347,
         "keep_commented": 77, 
         "name": "Oskars Testperson", 
         "type": {
@@ -257,7 +257,7 @@ def conferences_get_texts(conf_no):
               "pers_no": 14506,
               "pers_name": "Oskars Testperson"
             }, 
-            "creation_time": "2012-05-08 18:36:17",
+            "creation_time": 1385753347,
             "comment_in_list": [],
             "content_type": "text/x-kom-basic",
             "text_no": 19680717,

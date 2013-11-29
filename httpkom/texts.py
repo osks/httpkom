@@ -50,7 +50,7 @@ def texts_get(text_no):
           "pers_no": 14506,
           "pers_name": "Oskars Testperson"
         }, 
-        "creation_time": "2012-05-08 18:36:17",
+        "creation_time": 1385753347,
         "comment_in_list": [],
         "content_type": "text/x-kom-basic",
         "text_no": 19680717,
