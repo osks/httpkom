@@ -188,7 +188,7 @@ def persons_get_membership(pers_no, conf_no):
           "conf_no": <conf_no>
         }, 
         "priority": 255, 
-        "added_at": "2012-04-28 19:49:11", 
+        "added_at": "2013-11-30T15:58:06Z",
         "position": 3, 
         "type": {
           "passive": 0, 
@@ -196,7 +196,7 @@ def persons_get_membership(pers_no, conf_no):
           "passive_message_invert": 0, 
           "invitation": 0
         }, 
-        "last_time_read": 1385753347,
+        "last_time_read": "2013-11-30T15:58:06Z",
         "added_by": {
           "pers_no": 14506, 
           "pers_name": "Oskars Testperson"
@@ -320,7 +320,7 @@ def persons_list_memberships(pers_no):
               "conf_no": 14506
             }, 
             "priority": 255, 
-            "added_at": "2012-04-28 19:49:11", 
+            "added_at": "2013-11-30T15:58:06Z",
             "position": 3, 
             "type": {
               "passive": 0, 
@@ -328,7 +328,7 @@ def persons_list_memberships(pers_no):
               "passive_message_invert": 0, 
               "invitation": 0
             }, 
-            "last_time_read": 1385753347,
+            "last_time_read": "2013-11-30T15:58:06Z",
             "added_by": {
               "pers_no": 14506, 
               "pers_name": "Oskars Testperson"

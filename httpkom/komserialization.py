@@ -387,4 +387,4 @@ def Mark_to_dict(mark, lookups, session):
     return dict(text_no=mark.text_no, type=mark.type)
 
 def Time_to_dict(time, lookups, session):
-    return int(time.to_python_time())
+    return time.to_iso_8601()
