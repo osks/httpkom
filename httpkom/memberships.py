@@ -16,8 +16,14 @@ from sessions import requires_login
 @bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['PUT'])
 @requires_login
 def persons_put_membership(pers_no, conf_no):
-    """Add the person as member to the given conference, or update an
+    """
+    Add the person as member to the given conference, or update an
     existing membership.
+
+    :param pers_no: Person number
+    :type pers_no: int
+    :param conf_no: Conference number
+    :type conf_no: int
     
     Optional parameters in the body:
     
@@ -71,6 +77,11 @@ def persons_put_membership(pers_no, conf_no):
 def persons_delete_membership(pers_no, conf_no):
     """Remove the person's membership in the given conference.
     
+    :param pers_no: Person number
+    :type pers_no: int
+    :param conf_no: Conference number
+    :type conf_no: int
+
     .. rubric:: Request
     
     ::
@@ -108,6 +119,9 @@ def persons_set_unread(conf_no):
     """Set number of unread texts in current person's membership for
     the given conference.
     
+    :param conf_no: Conference number
+    :type conf_no: int
+
     .. rubric:: Request
     
     ::
@@ -150,6 +164,11 @@ def persons_set_unread(conf_no):
 def persons_get_membership(pers_no, conf_no):
     """Get a person's membership for a conference.
     
+    :param pers_no: Person number
+    :type pers_no: int
+    :param conf_no: Conference number
+    :type conf_no: int
+
     .. rubric:: Request
     
     ::
@@ -177,7 +196,7 @@ def persons_get_membership(pers_no, conf_no):
           "passive_message_invert": 0, 
           "invitation": 0
         }, 
-        "last_time_read": "2012-08-19 17:14:46", 
+        "last_time_read": 1385753347,
         "added_by": {
           "pers_no": 14506, 
           "pers_name": "Oskars Testperson"
@@ -206,6 +225,11 @@ def persons_get_membership(pers_no, conf_no):
 def persons_get_membership_unread(pers_no, conf_no):
     """Get membershup unread for a person's membership.
     
+    :param pers_no: Person number
+    :type pers_no: int
+    :param conf_no: Conference number
+    :type conf_no: int
+
     .. rubric:: Request
     
     ::
@@ -251,6 +275,9 @@ def persons_get_membership_unread(pers_no, conf_no):
 def persons_list_memberships(pers_no):
     """Get list of a person's memberships.
     
+    :param pers_no: Person number
+    :type pers_no: int
+
     Query parameters:
     
     =================  =======  =================================================================
@@ -336,6 +363,9 @@ def persons_list_memberships(pers_no):
 def persons_list_membership_unreads(pers_no):
     """Get list of membership unreads for a person's memberships.
     
+    :param pers_no: Person number
+    :type pers_no: int
+
     .. rubric:: Request
     
     ::

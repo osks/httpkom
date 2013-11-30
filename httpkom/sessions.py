@@ -2,13 +2,25 @@
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
 """
-To be able to handle multiple simultaneously sessions we use a header
-for specifying the connection id::
+The httpkom connection id is the unique identifier that a httpkom
+client uses to identify which LysKOM connection that it owns. Since
+httpkom can be configured to allow connections to several different
+LysKOM servers, the connection id refers to a specific session on a
+specific LysKOM server.
+
+The session number is what the LysKOM server uses to identify an open
+connection.
+
+There is a 1-to-1 relation between httpkom connection ids and LysKOM
+session numbers. The important difference between the session number
+and the connection id, is that the session number is not
+secret. Httpkom uses a separate connection identifier, the httpkom
+connection id (a random UUID), to make it close to impossible to
+intentionally take over another httpkom client's LysKOM connection.
+
+The httpkom connection id is specified as a HTTP header::
 
   Httpkom-Connection: <uuid>
-
-The connection id is mainly to make it very hard ("impossible") to
-intentionally take over someone else connection.
 
 To open a new connection, make a request like this::
 
@@ -107,10 +119,10 @@ _komsessions = {}
 
 
 def requires_session(f):
-    """Check if the request has a Httpkom-Connection header that
-    points out a valid LysKOM session. If the header is missing, or if
-    there is no session for the id, return an empty response with
-    status code 403.
+    """Decorator. Check if the request has a Httpkom-Connection header
+    that points out a valid LysKOM session. If the header is missing,
+    or if there is no session for the id, return an empty response
+    with status code 403.
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
@@ -131,8 +143,8 @@ def requires_session(f):
 
 
 def requires_login(f):
-    """Check if the request points out a logged in LysKOM session. If
-    the session is not logged in, return status code 401.
+    """Decorator. Check if the request points out a logged in LysKOM
+    session. If the session is not logged in, return status code 401.
     """
     @functools.wraps(f)
     @requires_session
@@ -192,6 +204,12 @@ def sessions_who_am_i():
 @requires_session
 def sessions_current_active():
     """
+    Tell the LysKOM server that the current user is active.
+
+    ::
+
+      POST /<server_id>/sessions/current/active HTTP/1.1
+
     """
     g.ksession.user_is_active()
     return empty_response(204)
@@ -359,6 +377,9 @@ def sessions_logout():
 def sessions_delete(session_no):
     """Delete a session (disconnect from the LysKOM server).
     
+    :param session_no: Session number
+    :type session_no: int
+
     If the request disconnects the current session, the used
     Httpkom-Connection id is no longer valid.
     
