@@ -110,8 +110,45 @@ from misc import empty_response
 
 _CONNECTION_HEADER = app.config['HTTPKOM_CONNECTION_HEADER']
 
+
+
+# These komsessions methods are the only ones that should access the
+# _komsessions object
+
 _komsessions = {}
 
+def _save_komsession(ksession):
+    connection_id = _new_connection_id()
+    _komsessions[connection_id] = ksession
+    return connection_id
+
+def _delete_connection(connection_id):
+    if connection_id is None:
+        return
+    if connection_id in _komsessions:
+        del _komsessions[connection_id]
+
+def _get_komsession(connection_id):
+    if connection_id is None:
+        return
+    if connection_id in _komsessions:
+        return _komsessions[connection_id]
+    return None
+
+
+
+def _new_connection_id():
+    return str(uuid.uuid4())
+
+def _get_connection_id_from_request():
+    if _CONNECTION_HEADER in request.headers:
+        return request.headers[_CONNECTION_HEADER]
+    else:
+        # Work-around for allowing the connection id to be sent as
+        # query parameter.  This is needed to be able to show images
+        # (text body) by creating an img tag.
+        return request.args.get(_CONNECTION_HEADER, None)
+    return None
 
 
 # TODO: Validate that the session pointed out by the
@@ -126,8 +163,9 @@ def requires_session(f):
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        connection_id = _get_connection_id()
+        connection_id = _get_connection_id_from_request()
         g.ksession = _get_komsession(connection_id)
+        g.connection_id = connection_id
         if g.ksession is None:
             return empty_response(403)
         else:
@@ -156,37 +194,6 @@ def requires_login(f):
     return decorated
 
 
-
-# TODO: if we complete the rewrite to only have create/delete sessions
-# for opening/closing lyskom sessions (connections), we don't really
-# need all of these helper methods.
-
-def _new_connection_id():
-    return str(uuid.uuid4())
-
-def _save_komsession(ksession):
-    connection_id = _new_connection_id()
-    _komsessions[connection_id] = ksession
-    return connection_id
-
-def _delete_connection(connection_id):
-    if connection_id is not None and connection_id in _komsessions:
-        del _komsessions[connection_id]
-
-def _get_connection_id():
-    if _CONNECTION_HEADER in request.headers:
-        return request.headers[_CONNECTION_HEADER]
-    else:
-        # Work-around for allowing the connection id to be sent as
-        # query parameter.  This is needed to be able to show images
-        # (text body) by creating an img tag.
-        return request.args.get(_CONNECTION_HEADER, None)
-    return None
-
-def _get_komsession(connection_id):
-    if connection_id is not None and connection_id in _komsessions:
-        return _komsessions[connection_id]
-    return None
 
 
 @bp.route("/sessions/current/who-am-i")
@@ -257,10 +264,16 @@ def sessions_create():
         return empty_response(409)
     
     try:
+        if request.json is None:
+            return error_response(400, error_msg='Invalid body.')
+
+        if 'client' not in request.json:
+            return error_response(400, error_msg='Missing "client".')
+
         client_name = request.json['client']['name']
         client_version = request.json['client']['version']
         
-        existing_ksession = _get_komsession(_get_connection_id())
+        existing_ksession = _get_komsession(_get_connection_id_from_request())
         if existing_ksession is None:
             ksession = KomSession(g.server.host, g.server.port)
             ksession.connect("httpkom", socket.getfqdn(), client_name, client_version)
@@ -413,10 +426,11 @@ def sessions_delete(session_no):
     
     """
     try:
-        should_delete_connection = (session_no == 0) or (session_no == g.ksession.session_no)
         g.ksession.disconnect(session_no)
-        if should_delete_connection:
-            _delete_connection(_get_connection_id())
+        # We should delete the connection if we're no longer connected
+        # (i.e. we disconnected the curent session).
+        if not g.ksession.is_connected():
+            _delete_connection(g.connection_id)
         return empty_response(204)
     except kom.UndefinedSession as ex:
         return error_response(404, kom_error=ex)
