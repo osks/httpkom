@@ -1,0 +1,120 @@
+Idéer
+=====
+
+Återanvända anslutningar
+------------------------
+
+Det finns två features med att kunna använda en och samma
+LysKOM-anslutning (socket) för flera httpkom-klienter.
+
+Den första är att det skulle kunna minska antalet öppna
+LysKOM-anslutningar som httpkom har (och ibland tappar bort). Det
+skulle vara bra kortsiktigt, men för att det ska få effekt krävs det
+att det går att göra till ett default-beteende, så användare inte
+behöver bry sig.
+
+Den andra, och mer intressanta, är att faktiskt kunna dela en session
+mellan flera klienter. Dels kan det finnas prestandavinster med
+cachning och liknande, men det finns också en del intressanta features
+man skulle kunna implementera.
+
+En feature är att i KomSession kunna ha en buffert med de senaste
+lästa inläggen, så att man (likt elisp-klienten i screen) får en
+gemensam lista av de inlägg man har läst senast. Eventuellt per möte,
+istället för globalt (får nog testa för att veta vilket som blir
+bäst). Då skulle alla jskom-klienter alltid (så snart de har
+uppdaterat listan i alla fall) se samma lista av senaste lästa
+inläggen, och man kan lättare "scrolla" (eller bara stega) bakåt/uppåt
+bland de lästa inläggen. Det borde gå att implementera
+browser-back/forward till att hoppa i den listan så länge det är
+möjligt. Det är inte längre säkert att man bör ha olika URL:er för att
+läsa inlägg i olika möten. (Eller så implementerar man två olika sätt
+att läsa inlägg på.)
+
+
+Det finns en del saker att fundera på, för protokoll A har en del
+state per session ("current working conference" är ett exempel). Finns
+det något som kan blir problematiskt?
+
+Hur gör vi det säkert, så man inte kan ta över någon annans
+användare/session? Detta är nog den största och viktigaste frågan.
+
+* Förslag A: En tanke var att kunna byta connection-ID för en
+  användare när den loggar, om det är så att man loggar in som en
+  användare som redan har en inloggad session i httpkom. (Dvs om det
+  är så att en användare har en inloggad session, och en annan klient
+  sedan skapar en ny session och försöker logga in som den redan
+  inloggade användaren, och lyckas, så kommer man att logga ut den nya
+  sessionen, och returnera connection-ID:t till den gamla.
+
+  Problem: Nedan är ett exempel hur det blir fel.
+  
+  T1 - Klient A: connect() => <conn: C1, user: None>
+  T2 - Klient A: login(C1, U1) => <conn: C1, user: U1>
+  T3 - Klient B: connect()  => <conn: C2, user: None>
+  T4 - Klient B: login(C2, U1) => <conn:C1, user: U1> [ disconnect(C2) ]
+  T5 - Klient B: logout(C2, U1) => <conn: C1, user: None>
+  T6 - Klient B: login(C2, U2) => <conn: C1, user: U2>
+
+  Vid T4 får klient B en ny session. Felet uppstår i T6, då Klient A
+  plötsligt är inloggad som U2 istället för U1. Klient A och Klient B
+  inte är samma fysiska person (t.ex. om U1 är en gemensam
+  LysKOM-användare, medan U2 är en personlig användare), så har nu
+  Klient A fått otillåten tillgång till U2.
+  
+  I bästa fall är det bara förvirrande (eller till och med
+  avsiktligt), men det är ett säkerhetshål som gör Förslag A omöjligt.
+
+
+* Förslag B: Varje skapad session får alltid ett nytt connection-ID,
+  men vid en lyckad inloggning som en existerande person, så ändrar
+  man vilket KomSession-object (LysKOM-anslutning) connection-ID:t
+  pekar på. Det är då viktigt att man alltid får en ny KomSession vid
+  en inloggningsrequest, då inloggning som en annan användare inte
+  kräver att man först loggar ut.
+
+  En fråga är också vad som ska hända när man loggar ut. Ofta vill man
+  "logga ut" för göra det omöjligt för andra att använda inloggningen
+  från samma webbläsare (dvs "glöma bort connection-ID:t"). Kanske ska
+  default vara att man glömmer bort connection-ID:t, men samtidigt ha
+  en option för att på kunna logga ut (och koppla ner)
+  LysKOM-anslutningen? Det gör ju inget om det inte finns något
+  connection-ID som pekar på en viss KomSession, eftersom den kommer
+  att användas så snart man loggar in igen. Fast en oinsatt användare
+  förväntar sig nog att man blir utloggad på riktigt, så det är nog
+  ett bättre default. Det tyder även på att default vid inloggning
+  borde vara att inte återanvända någon existerande session.
+
+
+
+Explicita klasser för alla resurser
+-----------------------------------
+
+För alla HTTP-resurser som httpkom har och kan returnera/ta emot. Gör
+det enkelt att dokumentera vad httpkom returnerar i olika fall.
+
+
+
+Enklare httpkom-connection-ID-hantering
+---------------------------------------
+
+Hantera även genom query-string och cookies, för att göra det lättare
+för andra använda interaktivt för att lära sig.
+
+
+
+Separat process för hantering av LysKOM-sockets
+-----------------------------------------------
+
+Flytta socket-hanteringen till en process som är separat från
+http-severn. Jobbigt för att vi måste hitta på ett till sätt för de
+processerna att kommunicera. Kanske är Flask inte rätt för oss ändå?
+Problemet är kanske inte med Flask, utan werkzeug egentligen och hela
+wsgi-process-hanteringen.
+
+
+
+Python 3
+--------
+
+Behövs stöd i pylyskom också.
