@@ -4,11 +4,10 @@
 from flask import g, request, jsonify
 
 from pylyskom import kom
-from pylyskom.komsession import KomSession
 
 from komserialization import to_dict
 
-from httpkom import app, bp
+from httpkom import bp
 from errors import error_response
 from misc import empty_response, get_bool_arg_with_default
 from sessions import requires_session, requires_login
