@@ -226,7 +226,7 @@ def conferences_get_texts(conf_no):
     ===========  =======  =================================================================
     Key          Type     Values
     ===========  =======  =================================================================
-    no_of_texts  integer  Number of text numbers to return. Default: 10
+    no-of-texts  integer  Number of text numbers to return. Default: 10
     ===========  =======  =================================================================
     
     .. rubric:: Request
@@ -272,7 +272,7 @@ def conferences_get_texts(conf_no):
     ::
     
       curl -v -X GET -H "Content-Type: application/json" \\
-           "http://localhost:5001/lyskom/conferences/texts/?no-of-unread=3"
+           "http://localhost:5001/lyskom/conferences/texts/?no-of-texts=3"
     
     """
     no_of_texts = int(request.args.get('no-of-texts', 10))
