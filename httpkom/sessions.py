@@ -171,6 +171,9 @@ def requires_session(f):
         else:
             try:
                 return f(*args, **kwargs)
+            except KomSessionNotConnected as enot_conn:
+                _delete_connection(connection_id)
+                return empty_response(403)
             except socket.error as (eno, msg):
                 if eno in (errno.EPIPE, errno.ECONNRESET):
                     _delete_connection(connection_id)
