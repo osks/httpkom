@@ -99,7 +99,7 @@ import functools
 from flask import g, request, jsonify
 
 from pylyskom import kom
-from pylyskom.komsession import KomSession
+from pylyskom.komsession import KomSession, KomSessionNotConnected
 
 from komserialization import to_dict
 
@@ -171,7 +171,7 @@ def requires_session(f):
         else:
             try:
                 return f(*args, **kwargs)
-            except KomSessionNotConnected as enot_conn:
+            except KomSessionNotConnected:
                 _delete_connection(connection_id)
                 return empty_response(403)
             except socket.error as (eno, msg):
