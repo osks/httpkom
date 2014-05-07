@@ -39,18 +39,20 @@ app.config['HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS'].append(app.config['HTTPKOM_CONN
 
 
 class Server(object):
-    def __init__(self, sid, name, host, port=4894):
+    def __init__(self, sid, sort_order, name, host, port=4894):
         self.id = sid
+        self.sort_order = sort_order
         self.name = name
         self.host = host
         self.port = port
     
     def to_dict(self):
-        return { 'id': self.id, 'name': self.name, 'host': self.host, 'port': self.port }
+        return { 'id': self.id, 'sort_order': self.sort_order,
+                 'name': self.name, 'host': self.host, 'port': self.port }
 
 _servers = dict()
-for server in app.config['HTTPKOM_LYSKOM_SERVERS']:
-    _servers[server[0]] = Server(server[0], server[1], server[2], server[3])
+for i, server in enumerate(app.config['HTTPKOM_LYSKOM_SERVERS']):
+    _servers[server[0]] = Server(server[0], i, server[1], server[2], server[3])
 
 
 bp = Blueprint('frontend', __name__, url_prefix='/<string:server_id>')
