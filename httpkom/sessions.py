@@ -93,48 +93,23 @@ perspective to have them different resources (i.e. different
 
 import socket
 import errno
-import uuid
 import functools
 
 from flask import g, request, jsonify
 
 from pylyskom import kom
-from pylyskom.komsession import KomSession, KomSessionNotConnected
+from pylyskom.komsession import KomPerson, KomSessionNotConnected
 
 from komserialization import to_dict
 
 from httpkom import HTTPKOM_CONNECTION_HEADER, bp
 from errors import error_response
 from misc import empty_response
+from komsessionstorage import get_storage_client
 
 
-# These komsessions methods are the only ones that should access the
-# _komsessions object
+_komsessions = get_storage_client()
 
-_komsessions = {}
-
-def _save_komsession(ksession):
-    connection_id = _new_connection_id()
-    _komsessions[connection_id] = ksession
-    return connection_id
-
-def _delete_connection(connection_id):
-    if connection_id is None:
-        return
-    if connection_id in _komsessions:
-        del _komsessions[connection_id]
-
-def _get_komsession(connection_id):
-    if connection_id is None:
-        return
-    if connection_id in _komsessions:
-        return _komsessions[connection_id]
-    return None
-
-
-
-def _new_connection_id():
-    return str(uuid.uuid4())
 
 def _get_connection_id_from_request():
     if HTTPKOM_CONNECTION_HEADER in request.headers:
@@ -163,22 +138,21 @@ def requires_session(f):
     @functools.wraps(f)
     def decorated(*args, **kwargs):
         connection_id = _get_connection_id_from_request()
-        g.ksession = _get_komsession(connection_id)
-        g.connection_id = connection_id
-        if g.ksession is None:
+        if not _komsessions.has(connection_id):
             return empty_response(403)
-        else:
-            try:
-                return f(*args, **kwargs)
-            except KomSessionNotConnected:
-                _delete_connection(connection_id)
+        g.connection_id = connection_id
+        g.ksession = _komsessions.get(connection_id)
+        try:
+            return f(*args, **kwargs)
+        except KomSessionNotConnected:
+            _komsessions.remove(connection_id)
+            return empty_response(403)
+        except socket.error as (eno, msg):
+            if eno in (errno.EPIPE, errno.ECONNRESET):
+                _komsessions.remove(connection_id)
                 return empty_response(403)
-            except socket.error as (eno, msg):
-                if eno in (errno.EPIPE, errno.ECONNRESET):
-                    _delete_connection(connection_id)
-                    return empty_response(403)
-                else:
-                    raise
+            else:
+                raise
     return decorated
 
 
@@ -204,7 +178,14 @@ def sessions_who_am_i():
     """TODO
     """
     try:
-        return jsonify(to_dict(g.ksession, True, g.ksession))
+        session_no = g.ksession.who_am_i()
+        if g.ksession.is_logged_in():
+            pers_no = g.ksession.get_person_no()
+            person = to_dict(KomPerson(pers_no), True, g.ksession)
+        else:
+            person = None
+
+        return jsonify(dict(person=person, session_no=session_no))
     except kom.Error as ex:
         return error_response(400, kom_error=ex)
 
@@ -275,11 +256,11 @@ def sessions_create():
         client_name = request.json['client']['name']
         client_version = request.json['client']['version']
         
-        existing_ksession = _get_komsession(_get_connection_id_from_request())
-        if existing_ksession is None:
-            ksession = KomSession(g.server.host, g.server.port)
+        has_existing_ksession = _komsessions.has(_get_connection_id_from_request())
+        if not has_existing_ksession:
+            connection_id = _komsessions.new(g.server.host, g.server.port)
+            ksession = _komsessions.get(connection_id)
             ksession.connect("httpkom", socket.getfqdn(), client_name, client_version)
-            connection_id = _save_komsession(ksession)
             response = jsonify(session_no=ksession.who_am_i(), connection_id=connection_id)
             response.headers[HTTPKOM_CONNECTION_HEADER] = connection_id
             return response, 201
@@ -432,7 +413,7 @@ def sessions_delete(session_no):
         # We should delete the connection if we're no longer connected
         # (i.e. we disconnected the curent session).
         if not g.ksession.is_connected():
-            _delete_connection(g.connection_id)
+            _komsessions.remove(g.connection_id)
         return empty_response(204)
     except kom.UndefinedSession as ex:
         return error_response(404, kom_error=ex)

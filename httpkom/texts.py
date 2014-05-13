@@ -10,7 +10,7 @@ from pylyskom.utils import parse_content_type
 
 from komserialization import to_dict
 
-from httpkom import bp
+from httpkom import bp, app
 from errors import error_response
 from misc import empty_response
 from sessions import requires_login

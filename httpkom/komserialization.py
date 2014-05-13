@@ -3,7 +3,7 @@
 
 from pylyskom import kom, komauxitems
 from pylyskom.utils import decode_text, mime_type_tuple_to_str, parse_content_type
-from pylyskom.komsession import (KomSession, KomPerson, KomText, KomConference, KomUConference,
+from pylyskom.komsession import (KomPerson, KomText, KomConference, KomUConference,
                                  KomMembership, KomMembershipUnread)
 
 
@@ -42,10 +42,10 @@ MICommentIn_str_to_type = { 'comment': kom.MIC_COMMENT,
 
 
 def to_dict(obj, lookups=False, session=None):
-    if isinstance(obj, list):
+    if obj is None:
+        return None
+    elif isinstance(obj, list) or isinstance(obj, tuple):
         return [ to_dict(el, lookups, session) for el in obj ]
-    elif isinstance(obj, KomSession):
-        return KomSession_to_dict(obj, lookups, session)
     elif isinstance(obj, KomPerson):
         return KomPerson_to_dict(obj, lookups, session)
     elif isinstance(obj, KomText):
@@ -89,18 +89,6 @@ def from_dict(d, cls, lookups=False, session=None):
         return MICommentIn_from_dict(d, lookups, session)
     else:
         raise NotImplementedError("from_dict is not implemented for: %s" % cls)
-
-def KomSession_to_dict(ksession, lookups, session):
-    person = None
-    if ksession.is_logged_in():
-        pers_no = ksession.get_person_no()
-        person = KomPerson_to_dict(KomPerson(pers_no), lookups, session)
-    
-    session_no = None
-    if lookups:
-        session_no = ksession.who_am_i()
-    
-    return dict(person=person, session_no=session_no)
 
 def KomPerson_to_dict(kom_person, lookups, session):
     pers_name = None
