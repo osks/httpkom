@@ -6,7 +6,6 @@ import StringIO
 from flask import g, request, jsonify, send_file, url_for
 
 from pylyskom import kom
-from pylyskom.komsession import KomText
 from pylyskom.utils import parse_content_type
 
 from komserialization import to_dict, from_dict
@@ -179,8 +178,14 @@ def texts_create():
            "http://localhost:5001/lyskom/texts/"
     
     """
-    komtext = from_dict(request.json, KomText, True, g.ksession)
-    text_no = g.ksession.create_text(komtext)
+    subject = request.json['subject']
+    body = request.json['body']
+    content_type = request.json['content_type']
+    recipient_list = request.json.get('recipient_list', None)
+    comment_to_list = request.json.get('comment_to_list', None)
+
+    text_no = g.ksession.create_text(subject, body, content_type, recipient_list, comment_to_list)
+
     headers = { "Location": url_for(".texts_get", server_id=g.server.id, text_no=text_no) }
     return jsonify(text_no=text_no), 201, headers
 
