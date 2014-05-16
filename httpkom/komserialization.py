@@ -11,7 +11,9 @@ _ALLOWED_KOMTEXT_AUXITEMS = [
     komauxitems.AI_FAST_REPLY,
     komauxitems.AI_MX_DATE,
     komauxitems.AI_MX_AUTHOR,
-    
+    komauxitems.AI_FAQ_TEXT,
+    komauxitems.AI_FAQ_FOR_CONF,
+
     komauxitems.AI_KOMFEEDER_URL,
     komauxitems.AI_KOMFEEDER_TITLE,
     komauxitems.AI_KOMFEEDER_AUTHOR,
