@@ -80,18 +80,6 @@ def to_dict(obj, lookups=False, session=None):
         #raise NotImplementedError("to_dict is not implemented for: %s" % type(obj))
         return obj
 
-def from_dict(d, cls, lookups=False, session=None):
-    if cls == KomText:
-        return KomText_from_dict(d, lookups, session)
-    elif cls == kom.MIRecipient:
-        return MIRecipient_from_dict(d, lookups, session)
-    elif cls == kom.MICommentTo:
-        return MICommentTo_from_dict(d, lookups, session)
-    elif cls == kom.MICommentIn:
-        return MICommentIn_from_dict(d, lookups, session)
-    else:
-        raise NotImplementedError("from_dict is not implemented for: %s" % cls)
-
 def KomPerson_to_dict(kom_person, lookups, session):
     pers_name = None
     if lookups:
@@ -221,47 +209,6 @@ def KomText_to_dict(komtext, lookups, session):
     
     return d
 
-def KomText_from_dict(d, lookups, session):
-    kt = KomText()
-    
-    # Parse the content_type for some kind of basic test. Remove
-    # charset / encoding param if it exist, and keep the rest. The subject
-    # and body will not be encoded here.
-    mime_type, encoding = parse_content_type(d['content_type'])
-    kt.content_type = mime_type_tuple_to_str(mime_type)
-    kt.subject = d['subject']
-    kt.body = d['body']
-    
-    if 'recipient_list' in d and d['recipient_list'] is not None:
-        kt.recipient_list = []
-        for r in d['recipient_list']:
-            kt.recipient_list.append(from_dict(r, kom.MIRecipient, lookups, session))
-    else:
-        kt.recipient_list = None
-    
-    if 'comment_to_list' in d and d['comment_to_list'] is not None:
-        kt.comment_to_list = []
-        for ct in d['comment_to_list']:
-            kt.comment_to_list.append(from_dict(ct, kom.MICommentTo, lookups, session))
-    else:
-        kt.comment_to_list = None
-    
-    # comment_in typically makes no sense here, but we add them anyway
-    # for sake of completeness. The reason it makes little sense is
-    # because the primary usage for this function is when creating a
-    # new text, and you cannot decide which texts that should be
-    # comments to your new text. However, we don't know for sure here
-    # what the purpose is, so we leave it to KomSession.create_text to not
-    # make use of kt.comment_in_list.
-    if 'comment_in_list' in d and d['comment_in_list'] is not None:
-        kt.comment_in_list = []
-        for ci in d['comment_in_list']:
-            kt.comment_in_list.append(from_dict(ci, kom.MICommentIn, lookups, session))
-    else:
-        kt.comment_in_list = None
-    
-    return kt
-
 def pers_to_dict(pers_no, lookups, session):
     if pers_no is None:
         return None
@@ -304,15 +251,6 @@ def MIRecipient_to_dict(mir, lookups, session):
     
     return d
 
-def MIRecipient_from_dict(d, lookups, session):
-    """ Example dict: { "type": "to", "recpt": { "conf_no": 14506 } }
-    """
-    if d['type'] not in MIRecipient_str_to_type:
-        raise KeyError("Unknown MIRecipient type str: %s" % d['type'])
-    
-    return kom.MIRecipient(type=MIRecipient_str_to_type[d['type']],
-                           recpt=d['recpt']['conf_no'])
-
 def MICommentTo_to_dict(micto, lookups, session):
     if not micto.type in MICommentTo_type_to_str:
         raise KeyError("Unknown MICommentTo type: %s" % micto.type)
@@ -329,12 +267,6 @@ def MICommentTo_to_dict(micto, lookups, session):
                 text_no=micto.text_no,
                 author=author)
 
-def MICommentTo_from_dict(d, lookups, session):
-    if d['type'] not in MICommentTo_str_to_type:
-        raise KeyError("Unknown MICommentTo type str: %s" % d['type'])
-    
-    return kom.MICommentTo(type=MICommentTo_str_to_type[d['type']], text_no=d['text_no'])
-
 def MICommentIn_to_dict(micin, lookups, session):
     if not micin.type in MICommentIn_type_to_str:
         raise KeyError("Unknown MICommentIn type: %s" % micin.type)
@@ -350,12 +282,6 @@ def MICommentIn_to_dict(micin, lookups, session):
     return dict(type=MICommentIn_type_to_str[micin.type],
                 text_no=micin.text_no,
                 author=author)
-
-def MICommentIn_from_dict(d, lookups, session):
-    if d['type'] not in MICommentIn_str_to_type:
-        raise KeyError("Unknown MICommentIn type str: %s" % d['type'])
-    
-    return kom.MICommentTo(type=MICommentIn_str_to_type[d['type']], text_no=d['text_no'])
 
 def AuxItem_to_dict(aux_item, lookups, session):
     return dict(aux_no=aux_item.aux_no,
