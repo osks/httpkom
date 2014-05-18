@@ -265,7 +265,7 @@ def conferences_get_texts(conf_no):
           
           ...
         ]
-      }
+    }
     
     .. rubric:: Example
     

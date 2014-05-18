@@ -2,7 +2,7 @@
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
 from pylyskom import kom, komauxitems
-from pylyskom.utils import decode_text, mime_type_tuple_to_str, parse_content_type
+from pylyskom.utils import decode_text, parse_content_type
 from pylyskom.komsession import (KomPerson, KomText, KomConference, KomUConference,
                                  KomMembership, KomMembershipUnread)
 

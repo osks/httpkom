@@ -91,9 +91,8 @@ perspective to have them different resources (i.e. different
 
 """
 
-import socket
-import errno
 import functools
+import socket
 
 from flask import g, request, jsonify
 
@@ -105,10 +104,18 @@ from komserialization import to_dict
 from httpkom import HTTPKOM_CONNECTION_HEADER, bp
 from errors import error_response
 from misc import empty_response
-from komsessionstorage import get_storage_client
+from storageclient import get_client
 
 
-_komsessions = get_storage_client()
+_client = get_client()
+def requires_client(f):
+    """Decorator. Assign the client to 'g.client'.
+    """
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        g.client = _client
+        return f(*args, **kwargs)
+    return decorated
 
 
 def _get_connection_id_from_request():
@@ -129,6 +136,17 @@ def _get_connection_id_from_request():
 # Httpkom-Connection header is the same as the <server_id>.
 
 
+def with_connection_id(f):
+    """Decorator. Get the connection id from the request and assign it
+    to 'g.connection_id'.
+    """
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        g.connection_id = _get_connection_id_from_request()
+        return f(*args, **kwargs)
+    return decorated
+    
+
 def requires_session(f):
     """Decorator. Check if the request has a Httpkom-Connection header
     that points out a valid LysKOM session. If the header is missing,
@@ -136,23 +154,17 @@ def requires_session(f):
     with status code 403.
     """
     @functools.wraps(f)
+    @with_connection_id
+    @requires_client
     def decorated(*args, **kwargs):
-        connection_id = _get_connection_id_from_request()
-        if not _komsessions.has(connection_id):
+        if not g.client.has_session(g.connection_id):
             return empty_response(403)
-        g.connection_id = connection_id
-        g.ksession = _komsessions.get(connection_id)
         try:
+            g.ksession = g.client.get_session(g.connection_id)
             return f(*args, **kwargs)
         except KomSessionNotConnected:
-            _komsessions.remove(connection_id)
+            g.client.delete_session(g.connection_id)
             return empty_response(403)
-        except socket.error as (eno, msg):
-            if eno in (errno.EPIPE, errno.ECONNRESET):
-                _komsessions.remove(connection_id)
-                return empty_response(403)
-            else:
-                raise
     return decorated
 
 
@@ -206,6 +218,8 @@ def sessions_current_active():
 
 
 @bp.route("/sessions/", methods=['POST'])
+@with_connection_id
+@requires_client
 def sessions_create():
     """Create a new session (a connection to the LysKOM server).
     
@@ -256,10 +270,10 @@ def sessions_create():
         client_name = request.json['client']['name']
         client_version = request.json['client']['version']
         
-        has_existing_ksession = _komsessions.has(_get_connection_id_from_request())
+        has_existing_ksession = g.client.has_session(g.connection_id)
         if not has_existing_ksession:
-            connection_id = _komsessions.new(g.server.host, g.server.port)
-            ksession = _komsessions.get(connection_id)
+            connection_id = g.client.create_session(g.server.host, g.server.port)
+            ksession = g.client.get_session(connection_id)
             ksession.connect("httpkom", socket.getfqdn(), client_name, client_version)
             response = jsonify(session_no=ksession.who_am_i(), connection_id=connection_id)
             response.headers[HTTPKOM_CONNECTION_HEADER] = connection_id
@@ -370,6 +384,7 @@ def sessions_logout():
 
 @bp.route("/sessions/<int:session_no>", methods=['DELETE'])
 @requires_session
+@requires_client
 def sessions_delete(session_no):
     """Delete a session (disconnect from the LysKOM server).
     
@@ -413,7 +428,7 @@ def sessions_delete(session_no):
         # We should delete the connection if we're no longer connected
         # (i.e. we disconnected the curent session).
         if not g.ksession.is_connected():
-            _komsessions.remove(g.connection_id)
+            g.client.delete_session(g.connection_id)
         return empty_response(204)
     except kom.UndefinedSession as ex:
         return error_response(404, kom_error=ex)
