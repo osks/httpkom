@@ -3,11 +3,14 @@
 
 import zerorpc
 
-from pylyskom import komsession, kom
-from httpkom import app
+from pylyskom import kom, komsession
+
+from httpkom import app # todo: stop using
+
+from common import EXPOSED_KOMSESSION_METHODS
 
 
-class SessionProxy(object):
+class KomSessionProxy(object):
     def __init__(self, remote_kom_client, komsession_id):
         self._remote_kom_client = remote_kom_client
         self._komsession_id = komsession_id
@@ -19,7 +22,7 @@ class SessionProxy(object):
         return proxy_method
 
 
-class RemoteKomClient(object):
+class RemoteKomSessionClient(object):
     def __init__(self, rpc_client):
         self._rpc_client = rpc_client
 
@@ -33,7 +36,7 @@ class RemoteKomClient(object):
         return self._rpc_client.has_session(komsession_id)
 
     def get_session(self, komsession_id):
-        komsession_proxy = SessionProxy(self, komsession_id)
+        komsession_proxy = KomSessionProxy(self, komsession_id)
         return komsession_proxy
 
     def call_komsession(self, komsession_id, method_name, *args, **kwargs):
@@ -45,8 +48,10 @@ class RemoteKomClient(object):
         # zerorpc does not support keyword arguments, so send the
         # args array and kwargs dict as normal arguments
         try:
-            result, error = self._rpc_client.call_komsession_method(
-                komsession_id, method_name, args, kwargs)
+            # NOTE: we prefix methods with "ks_" because some of them
+            # collide with zerorpc (such as 'connect').
+            result, error = getattr(self._rpc_client, 'ks_' + method_name)(
+                komsession_id, args, kwargs)
 
             if error is not None:
                 app.logger.debug("Got remote remote error: %s" % (error,))
@@ -64,7 +69,22 @@ class RemoteKomClient(object):
         return result
 
 
-def get_client():
+def _wrap_komsession_method(attr_name):
+    def wrapper(self, komsession_id, *args, **kwargs):
+        return self.call_komsession(komsession_id, attr_name, *args, **kwargs)
+    #wrapped = getattr(KomSession, attr_name)
+    #functools.update_wrapper(wrapper, wrapped)
+    return wrapper
+
+
+def _add_komsession_methods(method_names, cls):
+    for method_name in method_names:
+        setattr(cls, method_name, _wrap_komsession_method(method_name))
+
+
+def create_client():
+    _add_komsession_methods(EXPOSED_KOMSESSION_METHODS, RemoteKomSessionClient)
+
     rpc_client = zerorpc.Client()
     rpc_client.connect('tcp://127.0.0.1:12345')
-    return RemoteKomClient(rpc_client)
+    return RemoteKomSessionClient(rpc_client)

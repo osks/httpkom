@@ -99,23 +99,19 @@ from flask import g, request, jsonify
 from pylyskom import kom
 from pylyskom.komsession import KomPerson, KomSessionNotConnected
 
+from pylyskomrpc.client import create_client
+
 from komserialization import to_dict
 
 from httpkom import HTTPKOM_CONNECTION_HEADER, bp
 from errors import error_response
 from misc import empty_response
-from storageclient import get_client
 
 
-_client = get_client()
-def requires_client(f):
-    """Decorator. Assign the client to 'g.client'.
-    """
-    @functools.wraps(f)
-    def decorated(*args, **kwargs):
-        g.client = _client
-        return f(*args, **kwargs)
-    return decorated
+_client = create_client()
+@bp.before_request
+def _set_client():
+    g.client = _client
 
 
 def _get_connection_id_from_request():
@@ -155,7 +151,6 @@ def requires_session(f):
     """
     @functools.wraps(f)
     @with_connection_id
-    @requires_client
     def decorated(*args, **kwargs):
         if not g.client.has_session(g.connection_id):
             return empty_response(403)
@@ -219,7 +214,6 @@ def sessions_current_active():
 
 @bp.route("/sessions/", methods=['POST'])
 @with_connection_id
-@requires_client
 def sessions_create():
     """Create a new session (a connection to the LysKOM server).
     
@@ -274,7 +268,8 @@ def sessions_create():
         if not has_existing_ksession:
             connection_id = g.client.create_session(g.server.host, g.server.port)
             ksession = g.client.get_session(connection_id)
-            ksession.connect("httpkom", socket.getfqdn(), client_name, client_version)
+            g.client.connect(connection_id, "httpkom", socket.getfqdn(),
+                             client_name, client_version)
             response = jsonify(session_no=ksession.who_am_i(), connection_id=connection_id)
             response.headers[HTTPKOM_CONNECTION_HEADER] = connection_id
             return response, 201
@@ -384,7 +379,6 @@ def sessions_logout():
 
 @bp.route("/sessions/<int:session_no>", methods=['DELETE'])
 @requires_session
-@requires_client
 def sessions_delete(session_no):
     """Delete a session (disconnect from the LysKOM server).
     

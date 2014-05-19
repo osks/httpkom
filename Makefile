@@ -11,6 +11,7 @@ docs-html:
 
 pyflakes:
 	pyflakes ./httpkom
+	pyflakes ./pylyskomrpc
 
 #test: pyflakes
 #	py.test --maxfail 1 ./tests
