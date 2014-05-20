@@ -2,6 +2,7 @@
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
 from flask import jsonify
+import zerorpc
 
 from pylyskom import kom
 from pylyskom.komsession import KomSessionError
@@ -37,6 +38,17 @@ def error_response(status_code, kom_error=None, error_msg=""):
     
     response.status_code = status_code
     return response
+
+
+@app.errorhandler(zerorpc.LostRemote)
+def zerorpc_lostremote(error):
+    app.logger.exception(error)
+    return error_response(502, error_msg="Session server not responding.")
+
+@app.errorhandler(zerorpc.TimeoutExpired)
+def zerorpc_timeout(error):
+    app.logger.exception(error)
+    return error_response(502, error_msg="Session server not responding.")
 
 @app.errorhandler(400)
 def badrequest(error):

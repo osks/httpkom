@@ -77,6 +77,7 @@ class RemoteKomSessionClient(object):
 
 
 def create_client():
-    rpc_client = zerorpc.Client()
+    # todo: set timeout that matches other configuration (such as gunicorn, etc)
+    rpc_client = zerorpc.Client(timeout=30, heartbeat=2)
     rpc_client.connect('tcp://127.0.0.1:12345')
     return RemoteKomSessionClient(rpc_client)
