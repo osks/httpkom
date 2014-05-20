@@ -51,33 +51,6 @@ class KomSessionStorage(object):
         return self._komsessions[komsession_id]
 
 
-def _call_komsession_method(komsession, method_name, args=None, kwargs=None):
-    if args is None:
-        args = []
-    if kwargs is None:
-        kwargs = dict()
-
-    # todo: deserialize arguments?
-
-    result_dict = None
-    error_dict = None
-    try:
-        result = getattr(komsession, method_name)(*args, **kwargs)
-        result_dict = to_dict(result, True, komsession)
-    except KomSessionException as ex:
-        error_dict = dict(
-            type='komsession',
-            class_name=ex.__class__.__name__,
-            args=ex.args)
-    except kom.Error as ex:
-        error_dict = dict(
-            type='kom',
-            class_name=ex.__class__.__name__,
-            args=ex.args)
-
-    return result_dict, error_dict
-
-
 # TODO: remove storage and inline it in KomSessionServer. It has so
 # little functionality that having a separate class doesn't really
 # give anything.
@@ -94,33 +67,43 @@ class KomSessionServer(object):
 
     def delete_session(self, komsession_id):
         if self._storage.has(komsession_id):
-            # make sure we have closed the connection
+            # make sure the connection is closed before we remove it
             self._storage.get(komsession_id).close()
         return self._storage.remove(komsession_id)
 
     def has_session(self, komsession_id):
         return self._storage.has(komsession_id)
 
+    def call_session(self, komsession_id, method_name, args, kwargs):
+        if method_name not in EXPOSED_KOMSESSION_METHODS:
+            raise AttributeError("Session has no method called %r" % (method_name,))
 
-def _wrap_komsession_method(method_name):
-    def wrapper(self, komsession_id, args, kwargs):
-        logger.debug("Got remote call to '%s' with args:%r kwargs:%r"
-                     % (method_name, args, kwargs))
+        if args is None:
+            args = []
+        if kwargs is None:
+            kwargs = dict()
     
+        # todo: un-dict arguments?
+
         komsession = self._storage.get(komsession_id)
-        return _call_komsession_method(komsession, method_name, args, kwargs)
-    wrapped = getattr(KomSession, method_name)
-    functools.update_wrapper(wrapper, wrapped)
-    return wrapper
-
-def _add_komsession_methods(method_names, cls):
-    for method_name in method_names:
-        logger.debug("Registering method '%s' on %s" % (method_name, cls.__name__))
-        # NOTE: we prefix methods with "ks_" because some of them
-        # collide with zerorpc (such as 'connect').
-        setattr(cls, 'ks_' + method_name, _wrap_komsession_method(method_name))
-
-
+    
+        result_dict = None
+        error_dict = None
+        try:
+            result = getattr(komsession, method_name)(*args, **kwargs)
+            result_dict = to_dict(result, True, komsession)
+        except KomSessionException as ex:
+            error_dict = dict(
+                type='komsession',
+                class_name=ex.__class__.__name__,
+                args=ex.args)
+        except kom.Error as ex:
+            error_dict = dict(
+                type='kom',
+                class_name=ex.__class__.__name__,
+                args=ex.args)
+    
+        return result_dict, error_dict
 
 
 
@@ -138,8 +121,6 @@ def _add_komsession_methods(method_names, cls):
 
 
 def run_session_server():
-    _add_komsession_methods(EXPOSED_KOMSESSION_METHODS, KomSessionServer)
-
     logger.info("Starting")
     session_server = KomSessionServer()
     rpcserver = zerorpc.Server(session_server)

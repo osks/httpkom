@@ -133,8 +133,8 @@ def _get_connection_id_from_request():
 
 
 def with_connection_id(f):
-    """Decorator. Get the connection id from the request and assign it
-    to 'g.connection_id'.
+    """View function decorator. Get the connection id from the request
+    and assign it to 'g.connection_id'.
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
@@ -144,14 +144,16 @@ def with_connection_id(f):
     
 
 def requires_session(f):
-    """Decorator. Check if the request has a Httpkom-Connection header
-    that points out a valid LysKOM session. If the header is missing,
-    or if there is no session for the id, return an empty response
-    with status code 403.
+    """View function decorator. Check if the request has a
+    Httpkom-Connection header that points out a valid LysKOM
+    session. If the header is missing, or if there is no session for
+    the id, return an empty response with status code 403.
     """
     @functools.wraps(f)
     @with_connection_id
     def decorated(*args, **kwargs):
+        if g.connection_id is None:
+            return empty_response(403)
         if not g.client.has_session(g.connection_id):
             return empty_response(403)
         try:
@@ -164,8 +166,9 @@ def requires_session(f):
 
 
 def requires_login(f):
-    """Decorator. Check if the request points out a logged in LysKOM
-    session. If the session is not logged in, return status code 401.
+    """View function decorator. Check if the request points out a
+    logged in LysKOM session. If the session is not logged in, return
+    status code 401.
     """
     @functools.wraps(f)
     @requires_session
@@ -264,12 +267,15 @@ def sessions_create():
         client_name = request.json['client']['name']
         client_version = request.json['client']['version']
         
-        has_existing_ksession = g.client.has_session(g.connection_id)
+        if g.connection_id is None:
+            has_existing_ksession = False
+        else:
+            has_existing_ksession = g.client.has_session(g.connection_id)
+
         if not has_existing_ksession:
             connection_id = g.client.create_session(g.server.host, g.server.port)
             ksession = g.client.get_session(connection_id)
-            g.client.connect(connection_id, "httpkom", socket.getfqdn(),
-                             client_name, client_version)
+            ksession.connect("httpkom", socket.getfqdn(), client_name, client_version)
             response = jsonify(session_no=ksession.who_am_i(), connection_id=connection_id)
             response.headers[HTTPKOM_CONNECTION_HEADER] = connection_id
             return response, 201
