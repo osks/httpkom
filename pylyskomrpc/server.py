@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2014 Oskar Skoog. Released under GPL.
 
-import functools
 import logging
 import uuid
 
-#import gevent
+import gevent
 import zerorpc
 
 from pylyskom import kom
@@ -23,58 +22,38 @@ def _new_komsession_id():
     return str(uuid.uuid4())
 
 
-class KomSessionStorage(object):
-    def __init__(self, komsession_factory=KomSession):
-        self._komsession_factory = komsession_factory
-        self._komsessions = dict()
-
-    def new(self, host, port):
-        assert host is not None
-        assert port is not None
-        komsession_id = _new_komsession_id()
-        assert komsession_id not in self._komsessions
-        self._komsessions[komsession_id] = self._komsession_factory(host, port)
-        return komsession_id
-    
-    def remove(self, komsession_id):
-        assert komsession_id is not None
-        if self.has(komsession_id):
-            del self._komsessions[komsession_id]
-            return True
-        return False
-
-    def has(self, komsession_id):
-        return komsession_id in self._komsessions
-
-    def get(self, komsession_id):
-        assert komsession_id is not None
-        return self._komsessions[komsession_id]
-
-
 # TODO: remove storage and inline it in KomSessionServer. It has so
 # little functionality that having a separate class doesn't really
 # give anything.
 
 class KomSessionServer(object):
-    def __init__(self, storage=None):
-        if storage is None:
-            storage = KomSessionStorage()
+    def __init__(self, komsession_factory=KomSession):
+        assert komsession_factory is not None
+        self._komsession_factory = komsession_factory
+        self._komsessions = dict()
 
-        self._storage = storage
-
-    def create_session(self, host, port):
-        return self._storage.new(host, port)
+    def create_session(self):
+        komsession_id = _new_komsession_id()
+        assert not self.has_session(komsession_id)
+        self._komsessions[komsession_id] = self._komsession_factory()
+        return komsession_id
 
     def delete_session(self, komsession_id):
-        if self._storage.has(komsession_id):
+        assert komsession_id is not None
+        if komsession_id in self._komsessions:
             # make sure the connection is closed before we remove it
-            self._storage.get(komsession_id).close()
-        return self._storage.remove(komsession_id)
+            del self._komsessions[komsession_id]
+            return True
+        return False
 
     def has_session(self, komsession_id):
-        return self._storage.has(komsession_id)
+        assert komsession_id is not None
+        return komsession_id in self._komsessions
 
     def call_session(self, komsession_id, method_name, args, kwargs):
+        assert self.has_session(komsession_id)
+        komsession = self._komsessions[komsession_id]
+
         if method_name not in EXPOSED_KOMSESSION_METHODS:
             raise AttributeError("Session has no method called %r" % (method_name,))
 
@@ -85,8 +64,6 @@ class KomSessionServer(object):
     
         # todo: un-dict arguments?
 
-        komsession = self._storage.get(komsession_id)
-    
         result_dict = None
         error_dict = None
         try:
@@ -107,22 +84,32 @@ class KomSessionServer(object):
 
 
 
-#class GeventKomSession(KomSession):
-#    pass
+class GeventKomSession(KomSession):
+    def connect(self, host, port, username, hostname, client_name, client_version):
+        KomSession.connect(self, host, port, username, hostname, client_name, client_version)
+        self.add_async_handler()
+
+    def add_async_handler(self):
+        self._conn.add_async_handler(kom.ASYNC_NEW_TEXT, self._handle_async)
+        
+    def _handle_async(self, msg, c):
+        logger.info("got async message")
 
 
-#def test():
-#    while True:
-#        print "hej"
-#        gevent.sleep(1)
-
+def test():
+    while True:
+        logger.debug("test")
+        gevent.sleep(2)
 
 #gevent.spawn(test)
+
+def create_komsession():
+    return GeventKomSession()
 
 
 def run_session_server():
     logger.info("Starting")
-    session_server = KomSessionServer()
+    session_server = KomSessionServer(komsession_factory=create_komsession)
     rpcserver = zerorpc.Server(session_server)
     rpcserver.bind('tcp://127.0.0.1:12345')
     rpcserver.run()

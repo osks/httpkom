@@ -272,10 +272,13 @@ def sessions_create():
         else:
             has_existing_ksession = g.client.has_session(g.connection_id)
 
+        # todo: perhaps we should also check if it is connected?
         if not has_existing_ksession:
-            connection_id = g.client.create_session(g.server.host, g.server.port)
+            connection_id = g.client.create_session()
             ksession = g.client.get_session(connection_id)
-            ksession.connect("httpkom", socket.getfqdn(), client_name, client_version)
+            ksession.connect(g.server.host, g.server.port,
+                             "httpkom", socket.getfqdn(),
+                             client_name, client_version)
             response = jsonify(session_no=ksession.who_am_i(), connection_id=connection_id)
             response.headers[HTTPKOM_CONNECTION_HEADER] = connection_id
             return response, 201

@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2014 Oskar Skoog. Released under GPL.
 
-import functools
-
 import zerorpc
 
-from pylyskom import kom
-from pylyskom.komsession import KomSession
+from pylyskom import kom, komsession
 from httpkom import app # todo: stop using
 
 from common import EXPOSED_KOMSESSION_METHODS
@@ -30,9 +27,9 @@ class RemoteKomSessionClient(object):
     def __init__(self, rpc_client):
         self._rpc_client = rpc_client
 
-    def create_session(self, host, port):
-        app.logger.debug("create_session(%s, %s)" % (host, port))
-        return self._rpc_client.create_session(host, port)
+    def create_session(self):
+        app.logger.debug("create_session()")
+        return self._rpc_client.create_session()
 
     def delete_session(self, komsession_id):
         app.logger.debug("delete_session(%s)" % (komsession_id,))
