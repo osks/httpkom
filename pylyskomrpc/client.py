@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2014 Oskar Skoog. Released under GPL.
 
+import logging
+
 import zerorpc
 
-from pylyskom import kom, komsession
-from httpkom import app # todo: stop using
+import pylyskom.errors as komerror
+from pylyskom import komsession
+#from httpkom import app # todo: stop using
 
 from common import EXPOSED_KOMSESSION_METHODS
+
+
+logger = logging.getLogger(__name__)
 
 
 class KomSessionProxy(object):
@@ -27,27 +33,30 @@ class RemoteKomSessionClient(object):
     def __init__(self, rpc_client):
         self._rpc_client = rpc_client
 
+    def close(self):
+        self._rpc_client.close()
+
     def create_session(self):
-        app.logger.debug("create_session()")
+        logger.debug("create_session()")
         return self._rpc_client.create_session()
 
     def delete_session(self, komsession_id):
-        app.logger.debug("delete_session(%s)" % (komsession_id,))
+        logger.debug("delete_session(%s)" % (komsession_id,))
         return self._rpc_client.delete_session(komsession_id)
 
     def has_session(self, komsession_id):
-        app.logger.debug("has_session(%s)" % (komsession_id,))
+        logger.debug("has_session(%s)" % (komsession_id,))
         has_session = self._rpc_client.has_session(komsession_id)
         return has_session
 
     def get_session(self, komsession_id):
-        app.logger.debug("get_session(%s)" % (komsession_id,))
+        logger.debug("get_session(%s)" % (komsession_id,))
         return KomSessionProxy(self, komsession_id)
 
     def call_session(self, komsession_id, method_name, args, kwargs):
         # todo: dicitify arguments
         
-        app.logger.debug("call_session(%s) '%s' with args:%r kwargs:%r"
+        logger.debug("call_session(%s) '%s' with args:%r kwargs:%r"
                         % (komsession_id, method_name, args, kwargs))
     
         # zerorpc does not support keyword arguments, so send the
@@ -57,11 +66,11 @@ class RemoteKomSessionClient(object):
                 komsession_id, method_name, args, kwargs)
     
             if error is not None:
-                app.logger.debug("Got remote remote error: %s" % (error,))
+                logger.debug("Got remote remote error: %s" % (error,))
                 if error['type'] == 'komsession':
                     raise getattr(komsession, error['class_name'])(*error['args'])
                 elif error['type'] == 'kom':
-                    raise getattr(kom, error['class_name'])(*error['args'])
+                    raise getattr(komerror, error['class_name'])(*error['args'])
                 else:
                     raise Exception("Got unknown remote error")
         except zerorpc.RemoteError as rex:
@@ -75,6 +84,6 @@ class RemoteKomSessionClient(object):
 
 def create_client():
     # todo: set timeout that matches other configuration (such as gunicorn, etc)
-    rpc_client = zerorpc.Client(timeout=30, heartbeat=2)
+    rpc_client = zerorpc.Client(timeout=30, heartbeat=10)
     rpc_client.connect('tcp://127.0.0.1:12345')
     return RemoteKomSessionClient(rpc_client)
