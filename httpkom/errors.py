@@ -4,7 +4,7 @@
 from flask import jsonify
 import zerorpc
 
-from pylyskom import kom
+from pylyskom.errors import error_dict, ServerError, LoginFirst, LocalError
 from pylyskom.komsession import KomSessionError
 
 from httpkom import app
@@ -12,7 +12,7 @@ from misc import empty_response
 
 
 # Only kom.ServerErrors in this dict (i.e. errors defined by Protocol A).
-_kom_servererror_code_dict = dict([v,k] for k,v in kom.error_dict.items())
+_kom_servererror_code_dict = dict([v,k] for k,v in error_dict.items())
 
 
 def _kom_servererror_to_error_code(ex):
@@ -59,14 +59,14 @@ def badrequest(error):
 def notfound(error):
     return empty_response(404)
 
-@app.errorhandler(kom.ServerError)
+@app.errorhandler(ServerError)
 def kom_server_error(error):
     status = 400
-    if isinstance(error, kom.LoginFirst):
+    if isinstance(error, LoginFirst):
         status = 401
     return error_response(status, kom_error=error)
 
-@app.errorhandler(kom.LocalError)
+@app.errorhandler(LocalError)
 def kom_local_error(error):
     app.logger.exception(error)
     return error_response(500, error_msg=str(error))

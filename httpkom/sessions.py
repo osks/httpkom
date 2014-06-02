@@ -96,7 +96,7 @@ import socket
 
 from flask import g, request, jsonify
 
-from pylyskom import kom
+import pylyskom.errors as komerror
 from pylyskom.komsession import KomPerson, KomSessionNotConnected
 
 from pylyskomrpc.client import create_client
@@ -196,7 +196,7 @@ def sessions_who_am_i():
             person = None
 
         return jsonify(dict(person=person, session_no=session_no))
-    except kom.Error as ex:
+    except komerror.Error as ex:
         return error_response(400, kom_error=ex)
 
 
@@ -284,7 +284,7 @@ def sessions_create():
             return response, 201
         else:
             return empty_response(204)
-    except kom.Error as ex:
+    except komerror.Error as ex:
         return error_response(400, kom_error=ex)
 
 
@@ -350,8 +350,8 @@ def sessions_login():
     try:
         kom_person = g.ksession.login(pers_no, passwd)
         return jsonify(to_dict(kom_person, True, g.ksession)), 201
-    except (kom.InvalidPassword, kom.UndefinedPerson, kom.LoginDisallowed,
-            kom.ConferenceZero) as ex:
+    except (komerror.InvalidPassword, komerror.UndefinedPerson, komerror.LoginDisallowed,
+            komerror.ConferenceZero) as ex:
         return error_response(401, kom_error=ex)
 
 
@@ -433,7 +433,7 @@ def sessions_delete(session_no):
         if not g.ksession.is_connected():
             g.client.delete_session(g.connection_id)
         return empty_response(204)
-    except kom.UndefinedSession as ex:
+    except komerror.UndefinedSession as ex:
         return error_response(404, kom_error=ex)
 
 

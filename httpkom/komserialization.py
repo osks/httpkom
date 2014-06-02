@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
-from pylyskom import kom, komauxitems
+from pylyskom import komauxitems, datatypes, errors
 from pylyskom.utils import decode_text, parse_content_type
 from pylyskom.komsession import (KomPerson, KomText, KomConference, KomUConference,
                                  KomMembership, KomMembershipUnread)
@@ -21,25 +21,25 @@ _ALLOWED_KOMTEXT_AUXITEMS = [
 ]
 
 
-MIRecipient_type_to_str = { kom.MIR_TO: 'to',
-                            kom.MIR_CC: 'cc',
-                            kom.MIR_BCC: 'bcc' }
+MIRecipient_type_to_str = { datatypes.MIR_TO: 'to',
+                            datatypes.MIR_CC: 'cc',
+                            datatypes.MIR_BCC: 'bcc' }
 
-MIRecipient_str_to_type = { 'to': kom.MIR_TO,
-                            'cc': kom.MIR_CC,
-                            'bcc': kom.MIR_BCC }
+MIRecipient_str_to_type = { 'to': datatypes.MIR_TO,
+                            'cc': datatypes.MIR_CC,
+                            'bcc': datatypes.MIR_BCC }
 
-MICommentTo_type_to_str = { kom.MIC_COMMENT: 'comment',
-                            kom.MIC_FOOTNOTE: 'footnote' }
+MICommentTo_type_to_str = { datatypes.MIC_COMMENT: 'comment',
+                            datatypes.MIC_FOOTNOTE: 'footnote' }
 
-MICommentTo_str_to_type = { 'comment': kom.MIC_COMMENT,
-                            'footnote': kom.MIC_FOOTNOTE }
+MICommentTo_str_to_type = { 'comment': datatypes.MIC_COMMENT,
+                            'footnote': datatypes.MIC_FOOTNOTE }
 
-MICommentIn_type_to_str = { kom.MIC_COMMENT: 'comment',
-                            kom.MIC_FOOTNOTE: 'footnote' }
+MICommentIn_type_to_str = { datatypes.MIC_COMMENT: 'comment',
+                            datatypes.MIC_FOOTNOTE: 'footnote' }
 
-MICommentIn_str_to_type = { 'comment': kom.MIC_COMMENT,
-                            'footnote': kom.MIC_FOOTNOTE }
+MICommentIn_str_to_type = { 'comment': datatypes.MIC_COMMENT,
+                            'footnote': datatypes.MIC_FOOTNOTE }
 
 
 
@@ -52,29 +52,29 @@ def to_dict(obj, lookups=False, session=None):
         return KomPerson_to_dict(obj, lookups, session)
     elif isinstance(obj, KomText):
         return KomText_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.MIRecipient):
+    elif isinstance(obj, datatypes.MIRecipient):
         return MIRecipient_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.MICommentTo):
+    elif isinstance(obj, datatypes.MICommentTo):
         return MICommentTo_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.MICommentIn):
+    elif isinstance(obj, datatypes.MICommentIn):
         return MICommentIn_to_dict(obj, lookups, session)
     elif isinstance(obj, KomConference):
         return KomConference_to_dict(obj, lookups, session)
     elif isinstance(obj, KomUConference):
         return KomUConference_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.ConfType):
+    elif isinstance(obj, datatypes.ConfType):
         return ConfType_to_dict(obj, lookups, session)
     elif isinstance(obj, KomMembership):
         return KomMembership_to_dict(obj, lookups, session)
     elif isinstance(obj, KomMembershipUnread):
         return KomMembershipUnread_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.MembershipType):
+    elif isinstance(obj, datatypes.MembershipType):
         return MembershipType_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.AuxItem):
+    elif isinstance(obj, datatypes.AuxItem):
         return AuxItem_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.Mark):
+    elif isinstance(obj, datatypes.Mark):
         return Mark_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.Time):
+    elif isinstance(obj, datatypes.Time):
         return Time_to_dict(obj, lookups, session)
     else:
         #raise NotImplementedError("to_dict is not implemented for: %s" % type(obj))
@@ -260,7 +260,7 @@ def MICommentTo_to_dict(micto, lookups, session):
         try:
             cts = session.get_text_stat(micto.text_no)
             author = pers_to_dict(cts.author, lookups, session)
-        except (kom.NoSuchText, kom.TextZero):
+        except (errors.NoSuchText, errors.TextZero):
             pass
     
     return dict(type=MICommentTo_type_to_str[micto.type],
@@ -276,7 +276,7 @@ def MICommentIn_to_dict(micin, lookups, session):
         try:
             cts = session.get_text_stat(micin.text_no)
             author = pers_to_dict(cts.author, lookups, session)
-        except (kom.NoSuchText, kom.TextZero):
+        except (errors.NoSuchText, errors.TextZero):
             pass
     
     return dict(type=MICommentIn_type_to_str[micin.type],
