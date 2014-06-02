@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2014 Oskar Skoog. Released under GPL.
 
+import logging
+
 import zerorpc
 
 from pylyskom import kom, komsession
@@ -8,6 +10,9 @@ from pylyskom import kom, komsession
 from httpkom import app # todo: stop using
 
 from common import EXPOSED_KOMSESSION_METHODS
+
+
+logger = logging.getLogger(__name__)
 
 
 class KomSessionProxy(object):
@@ -54,11 +59,11 @@ class RemoteKomSessionClient(object):
                 komsession_id, args, kwargs)
 
             if error is not None:
-                app.logger.debug("Got remote remote error: %s" % (error,))
+                logger.debug("Got remote remote error: %s" % (error,))
                 if error['type'] == 'komsession':
                     raise getattr(komsession, error['class_name'])(*error['args'])
                 elif error['type'] == 'kom':
-                    raise getattr(kom, error['class_name'])(*error['args'])
+                    raise getattr(komerror, error['class_name'])(*error['args'])
                 else:
                     raise Exception("Got unknown remote error")
         except zerorpc.RemoteError as rex:
