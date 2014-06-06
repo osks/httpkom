@@ -73,6 +73,13 @@ class RemoteKomSessionClient(object):
         # todo: deserialize result
         return result
 
+    def stream(self, komsession_id):
+        print "client.stream"
+        for r in self._rpc_client.stream(komsession_id):
+            print r
+            yield r
+        
+
 
 def _wrap_komsession_method(attr_name):
     def wrapper(self, komsession_id, *args, **kwargs):

@@ -35,6 +35,7 @@ class GeventKomSession(KomSession):
     def connect(self, host, port, username, hostname, client_name, client_version):
         KomSession.connect(self, host, port, username, hostname, client_name, client_version)
         self.register_async_handler()
+        self.async_queue = Queue()
 
     def register_async_handler(self):
         self._conn.register_async_handler(AsyncMessages.NEW_TEXT, self._handle_async)
@@ -44,6 +45,7 @@ class GeventKomSession(KomSession):
     def _handle_async(self, msg):
         #gevent.sleep(30) # for testing
         logger.info("GeventKomSession - got async message: %s" % (msg,))
+        self.async_queue.put(msg)
 
 
 class GeventConnection(Greenlet):
@@ -246,6 +248,22 @@ class KomSessionServer(object):
     
         logger.debug("returning komsession result")
         return result_dict, error_dict
+
+    @zerorpc.stream
+    def stream(self, komsession_id):
+        assert self.has_session(komsession_id)
+        komsession = self._komsessions[komsession_id]
+        while True:
+            msg = komsession.async_queue.get()
+            msg_dict = msg.__dict__
+            msg_dict['MSG_NO'] = msg.MSG_NO
+            yield msg_dict
+
+
+    @zerorpc.stream
+    def streaming_range(self, fr, to, step):
+        return xrange(fr, to, step)
+
 
 
 def run_session_server():

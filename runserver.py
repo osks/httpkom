@@ -3,7 +3,11 @@
 
 import logging
 
-from gevent.wsgi import WSGIServer
+# Want pywsgi for streaming responses, SSL and other stuff. Not
+# entirely sure if we actually *need* it. (otherwise we could use
+# gevent.wsgi).
+#from gevent.pywsgi import WSGIServer
+from ws4py.server.geventserver import WSGIServer
 
 from httpkom import app
 
@@ -22,6 +26,7 @@ def setup_logging():
 
 def main():
     setup_logging()
+
     # use 127.0.0.1 instead of localhost to avoid delays related to ipv6.
     # http://werkzeug.pocoo.org/docs/serving/#troubleshooting
     #app.run(host='127.0.0.1', port=5001, debug=True)

@@ -78,11 +78,21 @@ def run_test1():
     client.close()
 
 
+def run_test3():
+    client = create_client()
+    ks_id1 = create(client)
+
+    client.stream(ks_id1)
+
+    delete(client, ks_id1)
+    client.close()
+
 def run():
     logger.debug("starting")
 
-    #run_test1()
-    run_test2()
+    run_test1()
+    #run_test2()
+    #run_test3()
 
     logger.debug("done.")
 
