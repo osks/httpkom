@@ -127,10 +127,14 @@ class GeventConnection(Greenlet):
             # do we need wait_write or not?
             #gevent.socket.wait_write(self._sock.fileno())
             try:
-                logger.debug("GeventConnection - sending request")
-                async_ref_no.set(self._conn.send_request(req))
+                logger.debug("GeventConnection - sending request: %s" % (req,))
+                ref_no = self._conn.send_request(req)
+                logger.debug("GeventConnection - sent request with ref_no: %s" % (ref_no,))
+                async_ref_no.set(ref_no)
             except Exception as e:
+                logger.exception("Failed to send request")
                 async_ref_no.set_exception(e)
+            #gevent.sleep(0)
 
         logger.debug("GeventConnection - ending send loop")
         
@@ -138,6 +142,7 @@ class GeventConnection(Greenlet):
     def _read_loop(self):
         logger.debug("GeventConnection - starting read loop")
         while True:
+            #gevent.sleep(0)
             logger.debug("GeventConnection - read loop")
 
             # why doesn't it work with wait_read?
