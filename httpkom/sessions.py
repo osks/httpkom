@@ -108,15 +108,23 @@ from errors import error_response
 from misc import empty_response
 
 
-_client = create_client()
-@bp.before_request
+#_client = create_client()
+@app.before_request
 def _set_client():
-    g.client = _client
+    # todo: one new client per request or one global?
+    #g.client = _client
+    g.client = create_client()
+
+@app.teardown_appcontext
+def close_client(error):
+    """Closes the client again at the end of the request."""
+    if hasattr(g, 'client'):
+        g.client.close()
 
 
-def _get_connection_id_from_request():
-    if HTTPKOM_CONNECTION_HEADER in request.headers:
-        return request.headers[HTTPKOM_CONNECTION_HEADER]
+def get_connection_id_from_request(req):
+    if HTTPKOM_CONNECTION_HEADER in req.headers:
+        return req.headers[HTTPKOM_CONNECTION_HEADER]
     else:
         # Work-around for allowing the connection id to be sent as
         # query parameter.  This is needed to be able to show images
@@ -124,7 +132,7 @@ def _get_connection_id_from_request():
 
         # TODO: This should be considered unsafe, because it would
         # expose the connection id if the user would copy the link.
-        return request.args.get(HTTPKOM_CONNECTION_HEADER, None)
+        return req.args.get(HTTPKOM_CONNECTION_HEADER, None)
     return None
 
 
@@ -138,7 +146,7 @@ def with_connection_id(f):
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        g.connection_id = _get_connection_id_from_request()
+        g.connection_id = get_connection_id_from_request(request)
         return f(*args, **kwargs)
     return decorated
 
@@ -178,71 +186,6 @@ def requires_login(f):
         else:
             return empty_response(401)
     return decorated
-
-
-
-import json
-
-from flask import request, render_template
-
-from ws4py.server.wsgiutils import WebSocketWSGIApplication
-from ws4py.websocket import WebSocket
-from ws4py.messaging import TextMessage
-
-from zerorpc import TimeoutExpired
-
-from pylyskom.async import AsyncMessages
-
-
-class KomAsyncHandler(WebSocket):
-    def opened(self):
-        print "oskar - opened"
-        self._komsession_id = None
-
-        qs = self.environ['QUERY_STRING']
-        kv_pairs = qs.split('&')
-        qs_dict = dict([ tuple(kv.split('=', 1)) for kv in kv_pairs ])
-        if 'Httpkom-Connection' in qs_dict:
-            self._komsession_id = qs_dict['Httpkom-Connection']
-            
-        if self._komsession_id is not None:
-            print "oskar - opeened - with id"
-            
-            client = create_client()
-            while True:
-                try:
-                    print "streaming"
-                    for m in client.stream(self._komsession_id):
-                        print m
-                        self.send(json.dumps(m))
-                except TimeoutExpired:
-                    print "timed out"
-            
-        else:
-            print "oskar - opened - without id"
-
-    def received_message(self, message):
-        print "oskar - message"
-
-    def closed(self, code, reason=None):
-        print "oskar - closed"
-
-
-@app.route('/async')
-def echo():
-    return WebSocketWSGIApplication(handler_cls=KomAsyncHandler)
-
-
-@app.route('/websocket')
-@with_connection_id
-def websocket():
-    print "oskar: connection_id: %s" % g.connection_id
-    if g.connection_id is None:
-        return render_template('websocket.html', komsession_id="")
-    else:
-        return render_template('websocket.html', komsession_id=g.connection_id)
-
-
 
 
 @bp.route("/sessions/current/who-am-i")

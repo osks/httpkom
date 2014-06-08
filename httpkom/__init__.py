@@ -96,6 +96,7 @@ import texts
 import persons
 import memberships
 import errors
+import async
 
 # to avoid pyflakes errors
 dir(conferences)
@@ -104,6 +105,7 @@ dir(texts)
 dir(persons)
 dir(memberships)
 dir(errors)
+dir(async)
 
 
 app.register_blueprint(bp)

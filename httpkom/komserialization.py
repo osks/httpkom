@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
-from pylyskom import komauxitems, datatypes, errors
+from pylyskom import komauxitems, datatypes, errors, async
 from pylyskom.utils import decode_text, parse_content_type
 from pylyskom.komsession import (KomPerson, KomText, KomConference, KomUConference,
                                  KomMembership, KomMembershipUnread)
@@ -76,6 +76,8 @@ def to_dict(obj, lookups=False, session=None):
         return Mark_to_dict(obj, lookups, session)
     elif isinstance(obj, datatypes.Time):
         return Time_to_dict(obj, lookups, session)
+    elif isinstance(obj, async.AsyncMessage):
+        return obj.to_json()
     else:
         #raise NotImplementedError("to_dict is not implemented for: %s" % type(obj))
         return obj

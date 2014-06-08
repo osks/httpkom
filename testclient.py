@@ -87,12 +87,34 @@ def run_test3():
     delete(client, ks_id1)
     client.close()
 
+
+def run_test4():
+    client = create_client()
+    ks_id = client.create_session()
+    ks = client.get_session(ks_id)
+
+    host = "kom.lysator.liu.se"
+    ks.connect(host, 4894,
+               "oskar", "localhost",
+               "test", "0.1")
+    #person_no = ks.lookup_name_exact("oskars testperson", want_pers=True, want_confs=False)
+    person_no = 14506
+    ks.login(person_no, "oxide24")
+
+    memberships = ks.get_memberships(14506, 0, 100, True, False)
+    unreads = ks.get_membership_unreads(14506)
+    unread = ks.get_membership_unread(14506, 14506)
+
+    delete(client, ks_id)
+    client.close()
+
 def run():
     logger.debug("starting")
 
-    run_test1()
+    #run_test1()
     #run_test2()
     #run_test3()
+    run_test4()
 
     logger.debug("done.")
 
