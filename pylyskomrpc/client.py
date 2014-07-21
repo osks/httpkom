@@ -5,9 +5,8 @@ import logging
 
 import zerorpc
 
-from pylyskom import kom, komsession
-
-from httpkom import app # todo: stop using
+import pylyskom.errors as komerror
+from pylyskom import komsession
 
 from common import EXPOSED_KOMSESSION_METHODS
 

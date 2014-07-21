@@ -24,14 +24,20 @@ def _new_komsession_id():
 
 
 def create_client(host, port, user):
-    def linked(ks):
+    def conn_linked(ks):
         logger.debug("GeventConnection is now dead")
 
+    def client_linked(ks):
+        logger.debug("GeventClient is now dead")
+
     conn = GeventConnection(host, port, user)
-    conn.link(linked)
+    conn.link(conn_linked)
     conn.start()
+
     client = GeventClient(conn)
+    client.link(client_linked)
     client.start()
+
     return CachingPersonClient(client)
 
 
@@ -50,7 +56,7 @@ class KomSessionServer(object):
         komsession_id = _new_komsession_id()
         assert not self.has_session(komsession_id)
         self._komsessions[komsession_id] = self._komsession_factory()
-        logger.debug("KomSessionServer has %d komsessions" % (len(self._komsessions),))
+        logger.debug("KomSessionServer - has %d komsessions" % (len(self._komsessions),))
         return komsession_id
 
     def delete_session(self, komsession_id):
@@ -77,7 +83,7 @@ class KomSessionServer(object):
     
         # todo: un-dict arguments?
 
-        logger.debug("calling KomSession method '%s' with args:%r kwargs:%r"
+        logger.debug("KomSessionServer - calling KomSession method '%s' with args:%r kwargs:%r"
                         % (method_name, args, kwargs))
 
 
@@ -100,7 +106,7 @@ class KomSessionServer(object):
             logger.exception("Got unhandled exception in KomSessionServer for method: %s - raising" % method_name)
             raise
         
-        logger.debug("returning komsession result for method: %s" % method_name)
+        logger.debug("KomSessionServer - returning komsession result for method: %s" % method_name)
         return result_dict, error_dict
 
     @zerorpc.stream
@@ -112,8 +118,11 @@ class KomSessionServer(object):
         #    yield msg_dict
 
         for msg in komsession._async_queue: # should be ended with StopIteration
+            logger.debug("KomSessionServer - streaming komsession msg: %s" % msg)
             msg_dict = to_dict(msg, True, komsession)
             yield msg_dict
+
+        logger.debug("KomSessionServer - done streaming komsession")
 
 
     @zerorpc.stream

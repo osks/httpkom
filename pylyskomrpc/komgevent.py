@@ -85,6 +85,9 @@ class GeventClient(Greenlet):
         self._conn.close()
         logger.debug("GeventClient - done.")
 
+    def _read_loop(self):
+        pass
+
     def _wait_and_dequeue(self, ref_no, async_result):
         """Wait for a request to be answered, return response or raise
         error.

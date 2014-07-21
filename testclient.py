@@ -112,9 +112,9 @@ def run():
     logger.debug("starting")
 
     #run_test1()
-    #run_test2()
+    run_test2()
     #run_test3()
-    run_test4()
+    #run_test4()
 
     logger.debug("done.")
 

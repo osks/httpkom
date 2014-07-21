@@ -17,8 +17,8 @@ def setup_logging():
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
 
-    root_logger = logging.getLogger()
-    root_logger.addHandler(ch)
+    #root_logger = logging.getLogger()
+    #root_logger.addHandler(ch)
 
     zerorpc_logger = logging.getLogger('zerorpc')
     zerorpc_logger.addHandler(ch)

@@ -2,8 +2,9 @@
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
 import json
+import functools
 
-from flask import request, render_template
+from flask import request, render_template, g
 from zerorpc import TimeoutExpired
 from gevent import Greenlet
 #from geventwebsocket import WebSocketError
@@ -14,6 +15,8 @@ from httpkom import app
 from sessions import with_connection_id, get_connection_id_from_request
 from errors import error_response
 from misc import empty_response
+
+from flask.ext.websockets import websocket
 
 
 class KomAsyncWebsocket(Greenlet):
@@ -40,6 +43,7 @@ class KomAsyncWebsocket(Greenlet):
                 print "KomAsyncWebsocket - streaming for id: %s" % self._komsession_id
                 #for msg in self._client.stream_session(self._komsession_id):
                 for msg in self._komsession.stream_async_messages():
+                    print "KomAsyncWebsocket - sending: %s" % msg
                     self._websocket.send(json.dumps(msg))
             except TimeoutExpired:
                 print "KomAsyncWebsocket - timed out"
@@ -52,7 +56,6 @@ class KomAsyncWebsocket(Greenlet):
 #@requires_session
 def websocket_open():
     print "websocket - open"
-    websocket = request.environ.get('wsgi.websocket')
     if websocket is None:
         return error_response(500, "WebSocket initialization failed")
 
@@ -88,12 +91,12 @@ def websocket_index():
     client = create_client()
     ks_id = client.create_session()
     ks = client.get_session(ks_id)
-    #host = "localhost"
-    host = "kom.lysator.liu.se"
+    host = "localhost"
+    #host = "kom.lysator.liu.se"
     ks.connect(host, 4894,
                "oskar", "localhost",
                "test", "0.1")
-    person_no = ks.lookup_name_exact("oskars testperson 4711", want_pers=True, want_confs=False)
+    person_no = ks.lookup_name_exact("oskars testperson", want_pers=True, want_confs=False)
     ks.login(person_no, "oxide24")
     komsession_id = ks_id
 
