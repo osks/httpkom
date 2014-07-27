@@ -8,14 +8,13 @@ import socket
 import gevent
 import gevent.socket
 from gevent import Greenlet
-from gevent.lock import BoundedSemaphore
 from gevent.event import Event, AsyncResult
 from gevent.queue import Queue
 
 import zerorpc
 
 from pylyskom.async import AsyncMessages, async_dict
-from pylyskom.errors import ServerError, Error, ReceiveError
+from pylyskom.errors import ServerError, ReceiveError, UnimplementedAsync
 from pylyskom.connection import Connection
 from pylyskom.cachedconnection import Client, CachingPersonClient
 from pylyskom.komsession import KomSession, KomSessionException
