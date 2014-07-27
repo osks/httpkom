@@ -13,7 +13,7 @@ pyflakes:
 	pyflakes ./httpkom
 	pyflakes ./pylyskomrpc
 
-test: pyflakes
-	py.test --maxfail 1 ./tests
+#test: pyflakes
+#	py.test --maxfail 1 ./tests
 
-.PHONY: all run-debug-server docs docs-html pyflakes test
+.PHONY: all run-debug-server docs docs-html pyflakes
