@@ -1,4 +1,4 @@
-all: docs
+all: pyflakes docs
 
 run-debug-server:
 	HTTPKOM_SETTINGS=../configs/debug.cfg ./runserver.py
@@ -13,6 +13,6 @@ pyflakes:
 	pyflakes ./httpkom
 
 #test: pyflakes
-#	py.test ./tests
+#	py.test --maxfail 1 ./tests
 
 .PHONY: all run-debug-server docs docs-html pyflakes

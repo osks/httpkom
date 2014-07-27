@@ -94,6 +94,14 @@ import persons
 import memberships
 import errors
 
+# to avoid pyflakes errors
+dir(conferences)
+dir(sessions)
+dir(texts)
+dir(persons)
+dir(memberships)
+dir(errors)
+
 
 app.register_blueprint(bp)
 

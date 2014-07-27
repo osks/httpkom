@@ -8,7 +8,7 @@ from flask import g, request, jsonify, send_file, url_for
 from pylyskom import kom
 from pylyskom.utils import parse_content_type
 
-from komserialization import to_dict, from_dict
+from komserialization import to_dict
 
 from httpkom import bp
 from errors import error_response
