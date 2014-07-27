@@ -8,6 +8,10 @@ from logging.handlers import TimedRotatingFileHandler
 from flask import Flask, Blueprint, request, jsonify, g, abort
 
 
+# constants
+HTTPKOM_CONNECTION_HEADER = 'Httpkom-Connection'
+
+
 class default_settings:
     DEBUG = False
     LOG_FILE = None
@@ -17,7 +21,6 @@ class default_settings:
         ('lyslyskom', 'LysKOM', 'kom.lysator.liu.se', 4894)
         ]
     
-    HTTPKOM_CONNECTION_HEADER = 'Httpkom-Connection'
 
     HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS = '*'
     HTTPKOM_CROSSDOMAIN_MAX_AGE = 0
@@ -34,8 +37,8 @@ if 'HTTPKOM_SETTINGS' in os.environ:
 else:
     app.logger.info("No environment variable HTTPKOM_SETTINGS found, using default settings.")
 
-app.config['HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS'].append(app.config['HTTPKOM_CONNECTION_HEADER'])
-app.config['HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS'].append(app.config['HTTPKOM_CONNECTION_HEADER'])
+app.config['HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS'].append(HTTPKOM_CONNECTION_HEADER)
+app.config['HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS'].append(HTTPKOM_CONNECTION_HEADER)
 
 
 class Server(object):

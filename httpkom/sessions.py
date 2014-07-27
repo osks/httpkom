@@ -103,13 +103,9 @@ from pylyskom.komsession import KomSession, KomSessionNotConnected
 
 from komserialization import to_dict
 
-from httpkom import app, bp
+from httpkom import HTTPKOM_CONNECTION_HEADER, bp
 from errors import error_response
 from misc import empty_response
-
-
-_CONNECTION_HEADER = app.config['HTTPKOM_CONNECTION_HEADER']
-
 
 
 # These komsessions methods are the only ones that should access the
@@ -141,13 +137,16 @@ def _new_connection_id():
     return str(uuid.uuid4())
 
 def _get_connection_id_from_request():
-    if _CONNECTION_HEADER in request.headers:
-        return request.headers[_CONNECTION_HEADER]
+    if HTTPKOM_CONNECTION_HEADER in request.headers:
+        return request.headers[HTTPKOM_CONNECTION_HEADER]
     else:
         # Work-around for allowing the connection id to be sent as
         # query parameter.  This is needed to be able to show images
         # (text body) by creating an img tag.
-        return request.args.get(_CONNECTION_HEADER, None)
+
+        # TODO: This should be considered unsafe, because it would
+        # expose the connection id if the user would copy the link.
+        return request.args.get(HTTPKOM_CONNECTION_HEADER, None)
     return None
 
 
@@ -263,7 +262,7 @@ def sessions_create():
       HTTP/1.0 409 CONFLICT
     
     """
-    if _CONNECTION_HEADER in request.headers:
+    if HTTPKOM_CONNECTION_HEADER in request.headers:
         return empty_response(409)
     
     try:
@@ -282,7 +281,7 @@ def sessions_create():
             ksession.connect("httpkom", socket.getfqdn(), client_name, client_version)
             connection_id = _save_komsession(ksession)
             response = jsonify(session_no=ksession.who_am_i(), connection_id=connection_id)
-            response.headers[_CONNECTION_HEADER] = connection_id
+            response.headers[HTTPKOM_CONNECTION_HEADER] = connection_id
             return response, 201
         else:
             return empty_response(204)
