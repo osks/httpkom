@@ -3,7 +3,7 @@
 
 from flask import g, request, jsonify
 
-from pylyskom import kom
+import pylyskom.errors as komerror
 
 from komserialization import to_dict
 
@@ -54,5 +54,5 @@ def persons_create():
     try:
         kom_person = g.ksession.create_person(name, passwd)
         return jsonify(to_dict(kom_person, True, g.ksession)), 201
-    except kom.Error as ex:
+    except komerror.Error as ex:
         return error_response(400, kom_error=ex)

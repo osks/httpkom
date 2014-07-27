@@ -5,7 +5,7 @@ import StringIO
 
 from flask import g, request, jsonify, send_file, url_for
 
-from pylyskom import kom
+import pylyskom.errors as komerror
 from pylyskom.utils import parse_content_type
 
 from komserialization import to_dict
@@ -73,7 +73,7 @@ def texts_get(text_no):
     """
     try:
         return jsonify(to_dict(g.ksession.get_text(text_no), True, g.ksession))
-    except kom.NoSuchText as ex:
+    except komerror.NoSuchText as ex:
         return error_response(404, kom_error=ex)
 
 
@@ -131,7 +131,7 @@ def texts_get_body(text_no):
                              as_attachment=False)
             
         return response
-    except kom.NoSuchText as ex:
+    except komerror.NoSuchText as ex:
         return error_response(404, kom_error=ex)
 
 
@@ -263,7 +263,7 @@ def texts_put_mark(text_no):
     try:
         g.ksession.mark_text(text_no, mark_type)
         return empty_response(201)
-    except kom.NoSuchText as ex:
+    except komerror.NoSuchText as ex:
         return error_response(404, kom_error=ex)
 
 
@@ -294,7 +294,7 @@ def texts_delete_mark(text_no):
     try:
         g.ksession.unmark_text(text_no)
         return empty_response(204)
-    except kom.NoSuchText as ex:
+    except komerror.NoSuchText as ex:
         return error_response(404, kom_error=ex)
 
 

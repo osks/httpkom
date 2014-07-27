@@ -3,7 +3,7 @@
 
 from flask import g, request, jsonify
 
-from pylyskom import kom
+import pylyskom.errors as komerror
 
 from komserialization import to_dict
 
@@ -68,7 +68,7 @@ def persons_put_membership(pers_no, conf_no):
     try:
         g.ksession.add_membership(pers_no, conf_no, priority, where)
         return empty_response(201)
-    except (kom.UndefinedPerson, kom.UndefinedConference) as ex:
+    except (komerror.UndefinedPerson, komerror.UndefinedConference) as ex:
         return error_response(404, kom_error=ex)
 
 
@@ -109,7 +109,7 @@ def persons_delete_membership(pers_no, conf_no):
     try:
         g.ksession.delete_membership(pers_no, conf_no)
         return empty_response(204)
-    except (kom.UndefinedPerson, kom.UndefinedConference, kom.NotMember) as ex:
+    except (komerror.UndefinedPerson, komerror.UndefinedConference, komerror.NotMember) as ex:
         return error_response(404, kom_error=ex)
 
 
@@ -216,7 +216,7 @@ def persons_get_membership(pers_no, conf_no):
     """
     try:
         return jsonify(to_dict(g.ksession.get_membership(pers_no, conf_no), True, g.ksession))
-    except kom.NotMember as ex:
+    except komerror.NotMember as ex:
         return error_response(404, kom_error=ex)
 
 
@@ -266,7 +266,7 @@ def persons_get_membership_unread(pers_no, conf_no):
     try:
         return jsonify(to_dict(g.ksession.get_membership_unread(pers_no, conf_no),
                                True, g.ksession))
-    except kom.NotMember as ex:
+    except komerror.NotMember as ex:
         return error_response(404, kom_error=ex)
 
 

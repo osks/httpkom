@@ -3,7 +3,7 @@
 
 from flask import g, request, jsonify
 
-from pylyskom import kom
+import pylyskom.errors as komerror
 
 from komserialization import to_dict
 
@@ -71,7 +71,7 @@ def conferences_list():
         lookup = g.ksession.lookup_name(name, want_pers, want_confs)
         confs = [ dict(conf_no=t[0], conf_name=t[1]) for t in lookup ]
         return jsonify(dict(conferences=confs))
-    except kom.Error as ex:
+    except komerror.Error as ex:
         return error_response(400, kom_error=ex)
 
 
@@ -180,7 +180,7 @@ def conferences_get(conf_no):
         micro = get_bool_arg_with_default(request.args, 'micro', True)
         return jsonify(to_dict(g.ksession.get_conference(conf_no, micro),
                                True, g.ksession))
-    except kom.UndefinedConference as ex:
+    except komerror.UndefinedConference as ex:
         return error_response(404, kom_error=ex)
 
 

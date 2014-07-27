@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
-from pylyskom import kom, komauxitems
-from pylyskom.utils import decode_text, mime_type_tuple_to_str, parse_content_type
-from pylyskom.komsession import (KomSession, KomPerson, KomText, KomConference, KomUConference,
+from pylyskom import komauxitems, datatypes, errors
+from pylyskom.utils import decode_text, parse_content_type
+from pylyskom.komsession import (KomPerson, KomText, KomConference, KomUConference,
                                  KomMembership, KomMembershipUnread)
 
 
@@ -11,7 +11,9 @@ _ALLOWED_KOMTEXT_AUXITEMS = [
     komauxitems.AI_FAST_REPLY,
     komauxitems.AI_MX_DATE,
     komauxitems.AI_MX_AUTHOR,
-    
+    komauxitems.AI_FAQ_TEXT,
+    komauxitems.AI_FAQ_FOR_CONF,
+
     komauxitems.AI_KOMFEEDER_URL,
     komauxitems.AI_KOMFEEDER_TITLE,
     komauxitems.AI_KOMFEEDER_AUTHOR,
@@ -19,88 +21,64 @@ _ALLOWED_KOMTEXT_AUXITEMS = [
 ]
 
 
-MIRecipient_type_to_str = { kom.MIR_TO: 'to',
-                            kom.MIR_CC: 'cc',
-                            kom.MIR_BCC: 'bcc' }
+MIRecipient_type_to_str = { datatypes.MIR_TO: 'to',
+                            datatypes.MIR_CC: 'cc',
+                            datatypes.MIR_BCC: 'bcc' }
 
-MIRecipient_str_to_type = { 'to': kom.MIR_TO,
-                            'cc': kom.MIR_CC,
-                            'bcc': kom.MIR_BCC }
+MIRecipient_str_to_type = { 'to': datatypes.MIR_TO,
+                            'cc': datatypes.MIR_CC,
+                            'bcc': datatypes.MIR_BCC }
 
-MICommentTo_type_to_str = { kom.MIC_COMMENT: 'comment',
-                            kom.MIC_FOOTNOTE: 'footnote' }
+MICommentTo_type_to_str = { datatypes.MIC_COMMENT: 'comment',
+                            datatypes.MIC_FOOTNOTE: 'footnote' }
 
-MICommentTo_str_to_type = { 'comment': kom.MIC_COMMENT,
-                            'footnote': kom.MIC_FOOTNOTE }
+MICommentTo_str_to_type = { 'comment': datatypes.MIC_COMMENT,
+                            'footnote': datatypes.MIC_FOOTNOTE }
 
-MICommentIn_type_to_str = { kom.MIC_COMMENT: 'comment',
-                            kom.MIC_FOOTNOTE: 'footnote' }
+MICommentIn_type_to_str = { datatypes.MIC_COMMENT: 'comment',
+                            datatypes.MIC_FOOTNOTE: 'footnote' }
 
-MICommentIn_str_to_type = { 'comment': kom.MIC_COMMENT,
-                            'footnote': kom.MIC_FOOTNOTE }
+MICommentIn_str_to_type = { 'comment': datatypes.MIC_COMMENT,
+                            'footnote': datatypes.MIC_FOOTNOTE }
 
 
 
 def to_dict(obj, lookups=False, session=None):
-    if isinstance(obj, list):
+    if obj is None:
+        return None
+    elif isinstance(obj, list) or isinstance(obj, tuple):
         return [ to_dict(el, lookups, session) for el in obj ]
-    elif isinstance(obj, KomSession):
-        return KomSession_to_dict(obj, lookups, session)
     elif isinstance(obj, KomPerson):
         return KomPerson_to_dict(obj, lookups, session)
     elif isinstance(obj, KomText):
         return KomText_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.MIRecipient):
+    elif isinstance(obj, datatypes.MIRecipient):
         return MIRecipient_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.MICommentTo):
+    elif isinstance(obj, datatypes.MICommentTo):
         return MICommentTo_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.MICommentIn):
+    elif isinstance(obj, datatypes.MICommentIn):
         return MICommentIn_to_dict(obj, lookups, session)
     elif isinstance(obj, KomConference):
         return KomConference_to_dict(obj, lookups, session)
     elif isinstance(obj, KomUConference):
         return KomUConference_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.ConfType):
+    elif isinstance(obj, datatypes.ConfType):
         return ConfType_to_dict(obj, lookups, session)
     elif isinstance(obj, KomMembership):
         return KomMembership_to_dict(obj, lookups, session)
     elif isinstance(obj, KomMembershipUnread):
         return KomMembershipUnread_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.MembershipType):
+    elif isinstance(obj, datatypes.MembershipType):
         return MembershipType_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.AuxItem):
+    elif isinstance(obj, datatypes.AuxItem):
         return AuxItem_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.Mark):
+    elif isinstance(obj, datatypes.Mark):
         return Mark_to_dict(obj, lookups, session)
-    elif isinstance(obj, kom.Time):
+    elif isinstance(obj, datatypes.Time):
         return Time_to_dict(obj, lookups, session)
     else:
         #raise NotImplementedError("to_dict is not implemented for: %s" % type(obj))
         return obj
-
-def from_dict(d, cls, lookups=False, session=None):
-    if cls == KomText:
-        return KomText_from_dict(d, lookups, session)
-    elif cls == kom.MIRecipient:
-        return MIRecipient_from_dict(d, lookups, session)
-    elif cls == kom.MICommentTo:
-        return MICommentTo_from_dict(d, lookups, session)
-    elif cls == kom.MICommentIn:
-        return MICommentIn_from_dict(d, lookups, session)
-    else:
-        raise NotImplementedError("from_dict is not implemented for: %s" % cls)
-
-def KomSession_to_dict(ksession, lookups, session):
-    person = None
-    if ksession.is_logged_in():
-        pers_no = ksession.get_person_no()
-        person = KomPerson_to_dict(KomPerson(pers_no), lookups, session)
-    
-    session_no = None
-    if lookups:
-        session_no = ksession.who_am_i()
-    
-    return dict(person=person, session_no=session_no)
 
 def KomPerson_to_dict(kom_person, lookups, session):
     pers_name = None
@@ -231,47 +209,6 @@ def KomText_to_dict(komtext, lookups, session):
     
     return d
 
-def KomText_from_dict(d, lookups, session):
-    kt = KomText()
-    
-    # Parse the content_type for some kind of basic test. Remove
-    # charset / encoding param if it exist, and keep the rest. The subject
-    # and body will not be encoded here.
-    mime_type, encoding = parse_content_type(d['content_type'])
-    kt.content_type = mime_type_tuple_to_str(mime_type)
-    kt.subject = d['subject']
-    kt.body = d['body']
-    
-    if 'recipient_list' in d and d['recipient_list'] is not None:
-        kt.recipient_list = []
-        for r in d['recipient_list']:
-            kt.recipient_list.append(from_dict(r, kom.MIRecipient, lookups, session))
-    else:
-        kt.recipient_list = None
-    
-    if 'comment_to_list' in d and d['comment_to_list'] is not None:
-        kt.comment_to_list = []
-        for ct in d['comment_to_list']:
-            kt.comment_to_list.append(from_dict(ct, kom.MICommentTo, lookups, session))
-    else:
-        kt.comment_to_list = None
-    
-    # comment_in typically makes no sense here, but we add them anyway
-    # for sake of completeness. The reason it makes little sense is
-    # because the primary usage for this function is when creating a
-    # new text, and you cannot decide which texts that should be
-    # comments to your new text. However, we don't know for sure here
-    # what the purpose is, so we leave it to KomSession.create_text to not
-    # make use of kt.comment_in_list.
-    if 'comment_in_list' in d and d['comment_in_list'] is not None:
-        kt.comment_in_list = []
-        for ci in d['comment_in_list']:
-            kt.comment_in_list.append(from_dict(ci, kom.MICommentIn, lookups, session))
-    else:
-        kt.comment_in_list = None
-    
-    return kt
-
 def pers_to_dict(pers_no, lookups, session):
     if pers_no is None:
         return None
@@ -314,15 +251,6 @@ def MIRecipient_to_dict(mir, lookups, session):
     
     return d
 
-def MIRecipient_from_dict(d, lookups, session):
-    """ Example dict: { "type": "to", "recpt": { "conf_no": 14506 } }
-    """
-    if d['type'] not in MIRecipient_str_to_type:
-        raise KeyError("Unknown MIRecipient type str: %s" % d['type'])
-    
-    return kom.MIRecipient(type=MIRecipient_str_to_type[d['type']],
-                           recpt=d['recpt']['conf_no'])
-
 def MICommentTo_to_dict(micto, lookups, session):
     if not micto.type in MICommentTo_type_to_str:
         raise KeyError("Unknown MICommentTo type: %s" % micto.type)
@@ -332,18 +260,12 @@ def MICommentTo_to_dict(micto, lookups, session):
         try:
             cts = session.get_text_stat(micto.text_no)
             author = pers_to_dict(cts.author, lookups, session)
-        except (kom.NoSuchText, kom.TextZero):
+        except (errors.NoSuchText, errors.TextZero):
             pass
     
     return dict(type=MICommentTo_type_to_str[micto.type],
                 text_no=micto.text_no,
                 author=author)
-
-def MICommentTo_from_dict(d, lookups, session):
-    if d['type'] not in MICommentTo_str_to_type:
-        raise KeyError("Unknown MICommentTo type str: %s" % d['type'])
-    
-    return kom.MICommentTo(type=MICommentTo_str_to_type[d['type']], text_no=d['text_no'])
 
 def MICommentIn_to_dict(micin, lookups, session):
     if not micin.type in MICommentIn_type_to_str:
@@ -354,18 +276,12 @@ def MICommentIn_to_dict(micin, lookups, session):
         try:
             cts = session.get_text_stat(micin.text_no)
             author = pers_to_dict(cts.author, lookups, session)
-        except (kom.NoSuchText, kom.TextZero):
+        except (errors.NoSuchText, errors.TextZero):
             pass
     
     return dict(type=MICommentIn_type_to_str[micin.type],
                 text_no=micin.text_no,
                 author=author)
-
-def MICommentIn_from_dict(d, lookups, session):
-    if d['type'] not in MICommentIn_str_to_type:
-        raise KeyError("Unknown MICommentIn type str: %s" % d['type'])
-    
-    return kom.MICommentTo(type=MICommentIn_str_to_type[d['type']], text_no=d['text_no'])
 
 def AuxItem_to_dict(aux_item, lookups, session):
     return dict(aux_no=aux_item.aux_no,
