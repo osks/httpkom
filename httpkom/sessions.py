@@ -133,11 +133,7 @@ def _delete_komsession(connection_id):
         del _komsessions[connection_id]
 
 def _get_komsession(connection_id):
-    if connection_id is None:
-        return
-    if connection_id in _komsessions:
-        return _komsessions[connection_id]
-    return None
+    return _komsessions.get(connection_id, None)
 
 def _new_connection_id():
     return str(uuid.uuid4())
@@ -183,9 +179,9 @@ def requires_session(f):
     @functools.wraps(f)
     @with_connection_id
     def decorated(*args, **kwargs):
-        if g.connection_id is None:
-            return empty_response(403)
         g.ksession = _get_komsession(g.connection_id)
+        if g.ksession is None:
+            return empty_response(403)
         try:
             return f(*args, **kwargs)
         except KomSessionNotConnected:
