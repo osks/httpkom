@@ -397,7 +397,7 @@ def persons_list_membership_unreads(pers_no):
     
     ::
     
-      curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/?unread=true"
+      curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/unread/"
     
     """
     membership_unreads = g.ksession.get_membership_unreads(pers_no)
