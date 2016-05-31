@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
-import StringIO
+from __future__ import absolute_import
+from six.moves import cStringIO
 
 from flask import g, request, jsonify, send_file, url_for
 
 import pylyskom.errors as komerror
 from pylyskom.utils import parse_content_type
 
-from komserialization import to_dict
+from .komserialization import to_dict
 
 from httpkom import bp
-from errors import error_response
-from misc import empty_response
-from sessions import requires_login
+from .errors import error_response
+from .misc import empty_response
+from .sessions import requires_login
 
 
 @bp.route('/texts/<int:text_no>')
@@ -119,7 +120,7 @@ def texts_get_body(text_no):
         text = g.ksession.get_text(text_no)
         mime_type, encoding = parse_content_type(text.content_type)
         
-        data = StringIO.StringIO()
+        data = cStringIO.StringIO()
         if mime_type[0] == 'text':
             data.write(text.body.encode('utf-8'))
         else:

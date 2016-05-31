@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
+from __future__ import absolute_import
 from flask import jsonify
 
 from pylyskom.errors import error_dict, ServerError, LoginFirst, LocalError
 from pylyskom.komsession import KomSessionError
 
 from httpkom import app
-from misc import empty_response
+from .misc import empty_response
 
 
 # Only kom.ServerErrors in this dict (i.e. errors defined by Protocol A).

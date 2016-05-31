@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
+from __future__ import absolute_import
 import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
 from flask import Flask, Blueprint, request, jsonify, g, abort
+import six
 
 
 # constants
@@ -90,12 +92,12 @@ if not app.debug and app.config['LOG_FILE'] is not None:
 
 
 # Load app parts
-import conferences
-import sessions
-import texts
-import persons
-import memberships
-import errors
+from . import conferences
+from . import sessions
+from . import texts
+from . import persons
+from . import memberships
+from . import errors
 
 # to avoid pyflakes errors
 dir(conferences)
@@ -114,7 +116,7 @@ def allow_crossdomain(resp):
     def is_allowed(origin):
         allowed_origins = app.config['HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS']
         if allowed_origins is not None:
-            if isinstance(allowed_origins, basestring) and allowed_origins == '*':
+            if isinstance(allowed_origins, six.string_types) and allowed_origins == '*':
                 return True
             
             if origin in allowed_origins:

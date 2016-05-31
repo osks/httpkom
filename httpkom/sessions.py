@@ -91,6 +91,7 @@ perspective to have them different resources (i.e. different
 
 """
 
+from __future__ import absolute_import
 import errno
 import functools
 import socket
@@ -101,11 +102,11 @@ from flask import g, request, jsonify
 import pylyskom.errors as komerror
 from pylyskom.komsession import KomSession, KomPerson, KomSessionNotConnected
 
-from komserialization import to_dict
+from .komserialization import to_dict
 
 from httpkom import HTTPKOM_CONNECTION_HEADER, bp
-from errors import error_response
-from misc import empty_response
+from .errors import error_response
+from .misc import empty_response
 
 
 # These komsessions methods are the only ones that should access the
@@ -187,7 +188,8 @@ def requires_session(f):
         except KomSessionNotConnected:
             _delete_komsession(g.connection_id)
             return empty_response(403)
-        except socket.error as (eno, msg):
+        except socket.error as e:
+            (eno, msg) = e.args
             if eno in (errno.EPIPE, errno.ECONNRESET):
                 _delete_komsession(g.connection_id)
                 return empty_response(403)
