@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
+from __future__ import absolute_import
 from pylyskom import komauxitems, datatypes, errors
 from pylyskom.utils import decode_text, parse_content_type
 from pylyskom.komsession import (KomPerson, KomText, KomConference, KomUConference,
@@ -147,7 +148,7 @@ def KomConference_to_dict(conf, lookups, session):
         d['aux_items'] = None
     else:
         aux_items = []
-        for ai in filter(lambda ai: ai.tag in _ALLOWED_KOMTEXT_AUXITEMS, conf.aux_items):
+        for ai in [ai for ai in conf.aux_items if ai.tag in _ALLOWED_KOMTEXT_AUXITEMS]:
             aux_items.append(to_dict(ai, lookups, session))
         d['aux_items'] = aux_items
 
@@ -197,8 +198,7 @@ def KomText_to_dict(komtext, lookups, session):
         d['aux_items'] = None
     else:
         aux_items = []
-        for ai in filter(lambda ai: ai.tag in _ALLOWED_KOMTEXT_AUXITEMS,
-                         komtext.aux_items):
+        for ai in [ai for ai in komtext.aux_items if ai.tag in _ALLOWED_KOMTEXT_AUXITEMS]:
             aux_items.append(to_dict(ai, lookups, session))
         d['aux_items'] = aux_items
     

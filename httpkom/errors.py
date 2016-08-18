@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
+from __future__ import absolute_import
 from flask import jsonify
 
 from pylyskom.errors import error_dict, ServerError, LoginFirst, LocalError
 from pylyskom.komsession import KomSessionError
 
 from httpkom import app
-from misc import empty_response
+from .misc import empty_response
+from .stats import stats
 
 
 # Only kom.ServerErrors in this dict (i.e. errors defined by Protocol A).
@@ -42,10 +44,12 @@ def error_response(status_code, kom_error=None, error_msg=""):
 @app.errorhandler(400)
 def badrequest(error):
     app.logger.exception(error)
+    stats.set('http.errors.badrequest.sum', 1, agg='sum')
     return empty_response(400)
 
 @app.errorhandler(404)
 def notfound(error):
+    stats.set('http.errors.notfound.sum', 1, agg='sum')
     return empty_response(404)
 
 @app.errorhandler(ServerError)
@@ -53,24 +57,29 @@ def kom_server_error(error):
     status = 400
     if isinstance(error, LoginFirst):
         status = 401
+    stats.set('http.errors.komservererror.sum', 1, agg='sum')
     return error_response(status, kom_error=error)
 
 @app.errorhandler(LocalError)
 def kom_local_error(error):
     app.logger.exception(error)
+    stats.set('http.errors.komlocalerror.sum', 1, agg='sum')
     return error_response(500, error_msg=str(error))
 
 @app.errorhandler(KomSessionError)
 def komsession_error(error):
     app.logger.exception(error)
+    stats.set('http.errors.komsessionerror.sum', 1, agg='sum')
     return error_response(400, error_msg=str(error))
 
 @app.errorhandler(500)
 def internalservererror(error):
     app.logger.exception(error)
+    stats.set('http.errors.internalservererror.sum', 1, agg='sum')
     return error_response(500, error_msg=str(error))
 
 @app.errorhandler(Exception)
 def exceptionhandler(error):
     app.logger.exception(error)
+    stats.set('http.errors.exception.sum', 1, agg='sum')
     return error_response(500, error_msg="Unknown error")

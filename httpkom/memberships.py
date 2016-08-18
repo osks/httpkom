@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
+from __future__ import absolute_import
 from flask import g, request, jsonify
 
 import pylyskom.errors as komerror
 
-from komserialization import to_dict
+from .komserialization import to_dict
 
 from httpkom import bp
-from errors import error_response
-from misc import empty_response, get_bool_arg_with_default
-from sessions import requires_login
+from .errors import error_response
+from .misc import empty_response, get_bool_arg_with_default
+from .sessions import requires_login
 
 
 @bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['PUT'])
