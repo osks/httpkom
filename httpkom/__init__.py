@@ -31,6 +31,8 @@ class default_settings:
     HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS = [ 'Cache-Control' ]
     HTTPKOM_CROSSDOMAIN_ALLOW_METHODS = [ 'GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD' ]
 
+    PRESERVE_CONTEXT_ON_EXCEPTION = False
+
 
 app = Flask(__name__)
 app.config.from_object(default_settings)
@@ -98,6 +100,7 @@ from . import texts
 from . import persons
 from . import memberships
 from . import errors
+from . import stats
 
 # to avoid pyflakes errors
 dir(conferences)
@@ -106,6 +109,7 @@ dir(texts)
 dir(persons)
 dir(memberships)
 dir(errors)
+dir(stats)
 
 
 app.register_blueprint(bp)
