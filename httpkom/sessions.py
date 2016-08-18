@@ -136,10 +136,10 @@ def _delete_komsession(connection_id):
         return
     if connection_id in _komsessions:
         del _komsessions[connection_id]
-        stats.set('sessions.komsessions.deleted', 1, agg='sum')
+        stats.set('sessions.komsessions.deleted.sum', 1, agg='sum')
 
 def _get_komsession(connection_id):
-    stats.set('sessions.komsessions.count.last', len(_komsessions), agg='last')
+    stats.set('sessions.komsessions.active.last', len(_komsessions), agg='last')
     return _komsessions.get(connection_id, None)
 
 def _new_connection_id():

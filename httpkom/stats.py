@@ -22,7 +22,16 @@ def stats_request_count():
     try:
         stats.set('http.requests.received.sum', 1, agg='sum')
     except Exception:
-        app.logger.exception("Failed to record request count")
+        app.logger.exception("Failed to record received request count")
+
+
+@app.after_request
+def stats_response_status(response):
+    try:
+        stats.set('http.responses.sent.{}.sum'.format(response.status_code), 1, agg='sum')
+    except Exception:
+        app.logger.exception("Failed to record returned request count")
+    return response
 
 
 # http://stackoverflow.com/questions/38987/how-can-i-merge-two-python-dictionaries-in-a-single-expression
