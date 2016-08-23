@@ -1,5 +1,14 @@
 # Changelog for httpkom
 
+## Unreleased
+
+### Added
+
+- Should now run as a standalone process, not an WSGI app
+- Python 3 support
+- Internal counters (stats / metrics)
+- Stats reporting to Graphite
+
 ## 0.11 (2016-05-29)
 
 ### Added
