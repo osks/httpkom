@@ -121,14 +121,14 @@ def _open_komsession(host, port, client_name, client_version):
         host, port,
         "httpkom", socket.getfqdn(),
         client_name, client_version)
-    stats.set('sessions.komsessions.connected.sum', 1, agg='sum')
+    stats.set('sessions.komsessions.connected.last', 1, agg='sum')
     return komsession
 
 def _save_komsession(ksession):
     connection_id = _new_connection_id()
     assert connection_id not in _komsessions, "Komsession ID already used: {}".format(connection_id)
     _komsessions[connection_id] = ksession
-    stats.set('sessions.komsessions.saved.sum', 1, agg='sum')
+    stats.set('sessions.komsessions.saved.last', 1, agg='sum')
     return connection_id
 
 def _delete_komsession(connection_id):
@@ -136,7 +136,7 @@ def _delete_komsession(connection_id):
         return
     if connection_id in _komsessions:
         del _komsessions[connection_id]
-        stats.set('sessions.komsessions.deleted.sum', 1, agg='sum')
+        stats.set('sessions.komsessions.deleted.last', 1, agg='sum')
 
 def _get_komsession(connection_id):
     stats.set('sessions.komsessions.active.last', len(_komsessions), agg='last')

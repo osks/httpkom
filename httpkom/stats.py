@@ -20,7 +20,7 @@ def get_stats():
 @app.before_request
 def stats_request_count():
     try:
-        stats.set('http.requests.received.sum', 1, agg='sum')
+        stats.set('http.requests.received.last', 1, agg='sum')
     except Exception:
         app.logger.exception("Failed to record received request count")
 
@@ -28,7 +28,7 @@ def stats_request_count():
 @app.after_request
 def stats_response_status(response):
     try:
-        stats.set('http.responses.sent.{}.sum'.format(response.status_code), 1, agg='sum')
+        stats.set('http.responses.sent.{}.last'.format(response.status_code), 1, agg='sum')
     except Exception:
         app.logger.exception("Failed to record returned request count")
     return response
