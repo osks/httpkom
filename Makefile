@@ -1,10 +1,10 @@
 all: pyflakes docs
 
 run-debug-server-py2:
-	HTTPKOM_SETTINGS=../configs/debug.cfg python2 ./runserver.py
+	python2 -m httpkom.main --config ../configs/debug.cfg
 
 run-debug-server-py3:
-	HTTPKOM_SETTINGS=../configs/debug.cfg python3 ./runserver.py
+	python3 -m httpkom.main --config ../configs/debug.cfg
 
 docs: docs-html
 
