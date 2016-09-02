@@ -1,10 +1,10 @@
 all: pyflakes docs
 
 run-debug-server-py2:
-	python2 -m httpkom.main --config ../configs/debug.cfg
+	python2 -m httpkom.main --config configs/debug.cfg --host 127.0.0.1
 
 run-debug-server-py3:
-	python3 -m httpkom.main --config ../configs/debug.cfg
+	python3 -m httpkom.main --config configs/debug.cfg --host 127.0.0.1
 
 docs: docs-html
 
