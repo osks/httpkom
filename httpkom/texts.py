@@ -138,13 +138,13 @@ def texts_get_body(text_no):
 @requires_login
 def texts_create():
     """Create a text.
-    
+
     .. rubric:: Request
-    
+
     ::
-    
+
       POST /<server_id>/texts/ HTTP/1.0
-      
+
       {
         "body": "r\u00e4ksm\u00f6rg\u00e5s",
         "subject": "jaha",
@@ -152,38 +152,53 @@ def texts_create():
         "content_type": "text/x-kom-basic",
         "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ]
       }
-    
+
     .. rubric:: Responses
-    
+
     Text was created::
-    
+
       HTTP/1.0 201 Created
       Location: http://localhost:5001/<server_id>/texts/19724960
-      
+
       {
         "text_no": 19724960,
       }
-    
-    .. rubric:: Example
-    
+
+    .. rubric:: Example text:
+
     ::
-    
-      curl -v -X POST H "Content-Type: application/json" \\
+
+      curl -v -X POST -H "Content-Type: application/json" \\
            -d '{ "body": "r\u00e4ksm\u00f6rg\u00e5s", \\
                  "subject": "jaha",
-                 "recpipent_list": [ { recpt: { "conf_no": 14506 }, "type": "to" } ], \\
+                 "recipipent_list": [ { recpt: { "conf_no": 14506 }, "type": "to" } ], \\
                  "content_type": "text/x-kom-basic", \\
                  "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \\
            "http://localhost:5001/lyskom/texts/"
-    
+
+
+    .. rubric:: Example image:
+
+    ::
+
+      curl -v -X POST -H "Content-Type: application/json" \\
+           -d '{ "body": <base64>, \\
+                 "subject": "jaha",
+                 "recipipent_list": [ { recpt: { "conf_no": 14506 }, "type": "to" } ], \\
+                 "content_type": "image/jpeg", \\
+                 "content_encoding": "base64", \\
+                 "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \\
+           "http://localhost:5001/lyskom/texts/"
+
     """
     subject = request.json['subject']
     body = request.json['body']
     content_type = request.json['content_type']
+    content_encoding = request.json.get('content_encoding', None)
     recipient_list = request.json.get('recipient_list', None)
     comment_to_list = request.json.get('comment_to_list', None)
 
-    text_no = g.ksession.create_text(subject, body, content_type, recipient_list, comment_to_list)
+    text_no = g.ksession.create_text(subject, body, content_type, content_encoding, recipient_list, comment_to_list)
 
     headers = { "Location": url_for(".texts_get", server_id=g.server.id, text_no=text_no) }
     return jsonify(text_no=text_no), 201, headers
