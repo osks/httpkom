@@ -73,6 +73,7 @@ def main():
 
     log.info("Using args: %s", args)
 
+    args.config = os.path.abspath(args.config)
     if not os.path.exists(args.config):
         log.info("Config file does not exist: %s", args.config)
         sys.exit(1)
