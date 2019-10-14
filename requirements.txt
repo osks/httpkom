@@ -3,7 +3,7 @@ Flask==0.12
 Jinja2==2.9.6
 Paste==2.0.3
 Sphinx==1.5.5
-Werkzeug==0.12.1
+Werkzeug==0.15.3
 itsdangerous==0.24
 gunicorn==19.7.1
 mimeparse==0.1.3
