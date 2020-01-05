@@ -9,7 +9,7 @@ from paste.translogger import TransLogger
 from pylyskom import stats
 from pylyskom.stats import stats as pylyskom_stats
 from httpkom.stats import stats as httpkom_stats
-from httpkom import app
+from httpkom import app, init_app
 
 
 log = logging.getLogger("httpkom.main")
@@ -27,6 +27,7 @@ def start_stats_sender(graphite_host, graphite_port):
 
 def run_http_server(args):
     os.environ['HTTPKOM_SETTINGS'] = args.config
+    init_app(app)
 
     # Enable WSGI access logging via Paste
     app_logged = TransLogger(app)
