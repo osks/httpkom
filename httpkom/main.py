@@ -1,10 +1,14 @@
 import argparse
+from functools import partial
 import logging
 import os
 import sys
 
 import cherrypy
 from paste.translogger import TransLogger
+import trio
+from hypercorn.trio import serve
+from hypercorn.config import Config
 
 from pylyskom import stats
 from pylyskom.stats import stats as pylyskom_stats
@@ -23,6 +27,14 @@ def start_stats_sender(graphite_host, graphite_port):
         sender.start()
     else:
         log.info("No Graphite host and port specified, not sending stats")
+
+
+def run_http_server_async(args):
+    os.environ['HTTPKOM_SETTINGS'] = args.config
+    init_app(app)
+    config = Config()
+    config.bind = ["{}:{}".format(args.host, args.port)]
+    trio.run(partial(serve, app, config))
 
 
 def run_http_server(args):
@@ -80,7 +92,8 @@ def main():
         sys.exit(1)
 
     start_stats_sender(args.graphite_host, args.graphite_port)
-    run_http_server(args)
+    #run_http_server(args)
+    run_http_server_async(args)
 
 
 if __name__ == "__main__":

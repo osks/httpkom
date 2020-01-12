@@ -97,10 +97,11 @@ import functools
 import socket
 import uuid
 
-from flask import g, request, jsonify
+from quart import g, request, jsonify
 
 import pylyskom.errors as komerror
-from pylyskom.komsession import KomSession, KomPerson, KomSessionNotConnected
+from pylyskom.komsession import KomPerson, KomSessionNotConnected
+from pylyskom.aio import AioKomSession
 
 from .komserialization import to_dict
 
@@ -115,9 +116,9 @@ from .stats import stats
 
 _komsessions = {}
 
-def _open_komsession(host, port, client_name, client_version):
-    komsession = KomSession()
-    komsession.connect(
+async def _open_komsession(host, port, client_name, client_version):
+    komsession = AioKomSession()
+    await komsession.connect(
         host, port,
         "httpkom", socket.getfqdn(),
         client_name, client_version)
@@ -185,12 +186,12 @@ def requires_session(f):
     """
     @functools.wraps(f)
     @with_connection_id
-    def decorated(*args, **kwargs):
+    async def decorated(*args, **kwargs):
         g.ksession = _get_komsession(g.connection_id)
         if g.ksession is None:
             return empty_response(403)
         try:
-            return f(*args, **kwargs)
+            return await f(*args, **kwargs)
         except KomSessionNotConnected:
             _delete_komsession(g.connection_id)
             return empty_response(403)
@@ -211,9 +212,9 @@ def requires_login(f):
     """
     @functools.wraps(f)
     @requires_session
-    def decorated(*args, **kwargs):
+    async def decorated(*args, **kwargs):
         if g.ksession.is_logged_in():
-            return f(*args, **kwargs)
+            return await f(*args, **kwargs)
         else:
             return empty_response(401)
     return decorated
@@ -223,14 +224,14 @@ def requires_login(f):
 
 @bp.route("/sessions/current/who-am-i")
 @requires_session
-def sessions_who_am_i():
+async def sessions_who_am_i():
     """TODO
     """
     try:
-        session_no = g.ksession.who_am_i()
+        session_no = await g.ksession.who_am_i()
         if g.ksession.is_logged_in():
             pers_no = g.ksession.get_person_no()
-            person = to_dict(KomPerson(pers_no), True, g.ksession)
+            person = await to_dict(KomPerson(pers_no), True, g.ksession)
         else:
             person = None
 
@@ -241,7 +242,7 @@ def sessions_who_am_i():
 
 @bp.route("/sessions/current/active", methods=['POST'])
 @requires_session
-def sessions_current_active():
+async def sessions_current_active():
     """
     Tell the LysKOM server that the current user is active.
 
@@ -250,13 +251,13 @@ def sessions_current_active():
       POST /<server_id>/sessions/current/active HTTP/1.1
 
     """
-    g.ksession.user_is_active()
+    await g.ksession.user_is_active()
     return empty_response(204)
 
 
 @bp.route("/sessions/", methods=['POST'])
 @with_connection_id
-def sessions_create():
+async def sessions_create():
     """Create a new session (a connection to the LysKOM server).
     
     Note: The response body also contains the connection_id (in
@@ -297,14 +298,15 @@ def sessions_create():
         return empty_response(409)
     
     try:
-        if request.json is None:
+        request_json = await request.json
+        if request_json is None:
             return error_response(400, error_msg='Invalid body.')
 
-        if 'client' not in request.json:
+        if 'client' not in request_json:
             return error_response(400, error_msg='Missing "client".')
 
-        client_name = request.json['client']['name']
-        client_version = request.json['client']['version']
+        client_name = request_json['client']['name']
+        client_version = request_json['client']['version']
         
         if g.connection_id is None:
             has_existing_ksession = False
@@ -314,10 +316,10 @@ def sessions_create():
         # todo: perhaps we should also check if the session is connected?
 
         if not has_existing_ksession:
-            ksession = _open_komsession(
+            ksession = await _open_komsession(
                 g.server.host, g.server.port, client_name, client_version)
             connection_id = _save_komsession(ksession)
-            response = jsonify(session_no=ksession.who_am_i(), connection_id=connection_id)
+            response = jsonify(session_no=await ksession.who_am_i(), connection_id=connection_id)
             response.headers[HTTPKOM_CONNECTION_HEADER] = connection_id
             return response, 201
         else:
@@ -328,7 +330,7 @@ def sessions_create():
 
 @bp.route("/sessions/current/login", methods=['POST'])
 @requires_session
-def sessions_login():
+async def sessions_login():
     """Log in using the current session.
     
     Note: If the login is successful, the matched full name will be
@@ -371,23 +373,24 @@ def sessions_login():
             "http://localhost:5001/lyskom/sessions/current/login"
     
     """
+    request_json = await request.json
     try:
-        pers_no = request.json['pers_no']
+        pers_no = request_json['pers_no']
         if pers_no is None:
             return error_response(400, error_msg='"pers_no" is null.')
     except KeyError:
         return error_response(400, error_msg='Missing "pers_no".')
     
     try:
-        passwd = request.json['passwd']
+        passwd = request_json['passwd']
         if passwd is None:
             return error_response(400, error_msg='"passwd" is null.')
     except KeyError:
         return error_response(400, error_msg='Missing "passwd".')
     
     try:
-        kom_person = g.ksession.login(pers_no, passwd)
-        return jsonify(to_dict(kom_person, True, g.ksession)), 201
+        kom_person = await g.ksession.login(pers_no, passwd)
+        return jsonify(await to_dict(kom_person, True, g.ksession)), 201
     except (komerror.InvalidPassword, komerror.UndefinedPerson, komerror.LoginDisallowed,
             komerror.ConferenceZero) as ex:
         return error_response(401, kom_error=ex)
@@ -395,7 +398,7 @@ def sessions_login():
 
 @bp.route("/sessions/current/logout", methods=['POST'])
 @requires_login
-def sessions_logout():
+async def sessions_logout():
     """Log out in the current session.
     
     .. rubric:: Request
@@ -420,13 +423,13 @@ def sessions_logout():
     
     """
 
-    g.ksession.logout()
+    await g.ksession.logout()
     return empty_response(204)
 
 
 @bp.route("/sessions/<int:session_no>", methods=['DELETE'])
 @requires_session
-def sessions_delete(session_no):
+async def sessions_delete(session_no):
     """Delete a session (disconnect from the LysKOM server).
     
     :param session_no: Session number
@@ -465,7 +468,7 @@ def sessions_delete(session_no):
     
     """
     try:
-        g.ksession.disconnect(session_no)
+        await g.ksession.disconnect(session_no)
         # We should delete the connection if we're no longer connected
         # (i.e. we disconnected the curent session).
         if not g.ksession.is_connected():
@@ -477,7 +480,7 @@ def sessions_delete(session_no):
 
 @bp.route("/sessions/current/working-conference", methods=['POST'])
 @requires_login
-def sessions_change_working_conference():
+async def sessions_change_working_conference():
     """Change current working conference of the current session.
     
     .. rubric:: Request
@@ -507,12 +510,13 @@ def sessions_change_working_conference():
            "http://localhost:5001/lyskom/sessions/current/working-conference"
     
     """
+    request_json = await request.json
     try:
-        conf_no = request.json['conf_no']
+        conf_no = request_json['conf_no']
         if conf_no is None:
             return error_response(400, error_msg='"conf_no" is null.')
     except KeyError:
         return error_response(400, error_msg='Missing "conf_no".')
     
-    g.ksession.change_conference(conf_no)
+    await g.ksession.change_conference(conf_no)
     return empty_response(204)

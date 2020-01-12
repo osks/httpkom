@@ -2,7 +2,7 @@
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
 from __future__ import absolute_import
-from flask import g, request, jsonify
+from quart import g, request, jsonify
 
 import pylyskom.errors as komerror
 
@@ -16,10 +16,10 @@ from .misc import empty_response
 
 @bp.route('/persons/<int:pers_no>/user-area/<string:block_name>', methods=['GET'])
 @requires_login
-def persons_get_user_area_block(pers_no, block_name):
+async def persons_get_user_area_block(pers_no, block_name):
     """Get a user area block
     """
-    block = g.ksession.get_user_area_block(pers_no, block_name)
+    block = await g.ksession.get_user_area_block(pers_no, block_name)
     print(block)
     if block is None:
         return empty_response(404)
@@ -28,7 +28,7 @@ def persons_get_user_area_block(pers_no, block_name):
 
 @bp.route('/persons/', methods=['POST'])
 @requires_session
-def persons_create():
+async def persons_create():
     """Create a person
     
     .. rubric:: Request
@@ -62,11 +62,12 @@ def persons_create():
            http://localhost:5001/lyskom/persons/
     
     """
-    name = request.json['name']
-    passwd = request.json['passwd']
+    request_json = await request.json
+    name = request_json['name']
+    passwd = request_json['passwd']
     
     try:
-        kom_person = g.ksession.create_person(name, passwd)
-        return jsonify(to_dict(kom_person, True, g.ksession)), 201
+        kom_person = await g.ksession.create_person(name, passwd)
+        return jsonify(await to_dict(kom_person, True, g.ksession)), 201
     except komerror.Error as ex:
         return error_response(400, kom_error=ex)

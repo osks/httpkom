@@ -2,7 +2,7 @@
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
 from __future__ import absolute_import
-from flask import request, Response, abort
+from quart import request, Response, abort
 
 
 def get_bool_arg_with_default(args, arg, default):
