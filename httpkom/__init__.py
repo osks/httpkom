@@ -5,8 +5,8 @@ import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-from quart import Blueprint, request, jsonify, g, abort, current_app
-from quart_trio import QuartTrio
+from quart import Quart, Blueprint, request, jsonify, g, abort, current_app
+#from quart_trio import QuartTrio
 import six
 
 
@@ -14,7 +14,8 @@ import six
 HTTPKOM_CONNECTION_HEADER = 'Httpkom-Connection'
 
 
-app = QuartTrio(__name__)
+#app = QuartTrio(__name__)
+app = Quart(__name__)
 bp = Blueprint('frontend', __name__, url_prefix='/<string:server_id>')
 
 
@@ -34,7 +35,8 @@ def patched_inject_url_defaults(self, endpoint: str, values: dict) -> None:
 
     for function in functions:
         function(endpoint, values)
-QuartTrio.inject_url_defaults = patched_inject_url_defaults
+#QuartTrio.inject_url_defaults = patched_inject_url_defaults
+Quart.inject_url_defaults = patched_inject_url_defaults
 
 
 class default_settings:

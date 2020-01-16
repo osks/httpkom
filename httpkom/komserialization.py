@@ -149,7 +149,7 @@ async def KomConference_to_dict(conf, lookups, session):
     else:
         aux_items = []
         for ai in [ai for ai in conf.aux_items if ai.tag in _ALLOWED_KOMTEXT_AUXITEMS]:
-            aux_items.append(to_dict(ai, lookups, session))
+            aux_items.append(await to_dict(ai, lookups, session))
         d['aux_items'] = aux_items
 
     return d

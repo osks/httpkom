@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 from functools import partial
 import logging
 import os
@@ -6,8 +7,9 @@ import sys
 
 import cherrypy
 from paste.translogger import TransLogger
-import trio
-from hypercorn.trio import serve
+#import trio
+#from hypercorn.trio import serve
+from hypercorn.asyncio import serve
 from hypercorn.config import Config
 
 from pylyskom import stats
@@ -29,12 +31,52 @@ def start_stats_sender(graphite_host, graphite_port):
         log.info("No Graphite host and port specified, not sending stats")
 
 
+#class Tracer(trio.abc.Instrument):
+#    def before_run(self):
+#        print("!!! run started")
+#
+#    def _print_with_task(self, msg, task):
+#        # repr(task) is perhaps more useful than task.name in general,
+#        # but in context of a tutorial the extra noise is unhelpful.
+#        print("{}: {}".format(msg, task.name))
+#
+#    def task_spawned(self, task):
+#        self._print_with_task("### new task spawned", task)
+#
+#    def task_scheduled(self, task):
+#        self._print_with_task("### task scheduled", task)
+#
+#    def before_task_step(self, task):
+#        self._print_with_task(">>> about to run one step of task", task)
+#
+#    def after_task_step(self, task):
+#        self._print_with_task("<<< task step finished", task)
+#
+#    def task_exited(self, task):
+#        self._print_with_task("### task exited", task)
+#
+#    def before_io_wait(self, timeout):
+#        if timeout:
+#            print("### waiting for I/O for up to {} seconds".format(timeout))
+#        else:
+#            print("### doing a quick check for I/O")
+#        self._sleep_time = trio.current_time()
+#
+#    def after_io_wait(self, timeout):
+#        duration = trio.current_time() - self._sleep_time
+#        print("### finished I/O check (took {} seconds)".format(duration))
+#
+#    def after_run(self):
+#        print("!!! run finished")
+
+
 def run_http_server_async(args):
     os.environ['HTTPKOM_SETTINGS'] = args.config
     init_app(app)
     config = Config()
     config.bind = ["{}:{}".format(args.host, args.port)]
-    trio.run(partial(serve, app, config))
+    #trio.run(partial(serve, app, config), instruments=[Tracer()])
+    asyncio.run(serve(app, config))
 
 
 def run_http_server(args):

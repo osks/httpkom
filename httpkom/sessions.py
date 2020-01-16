@@ -117,7 +117,7 @@ from .stats import stats
 _komsessions = {}
 
 async def _open_komsession(host, port, client_name, client_version):
-    komsession = AioKomSession(nursery=current_app.nursery)
+    komsession = AioKomSession()#nursery=current_app.nursery)
     await komsession.connect(
         host, port,
         "httpkom", socket.getfqdn(),
