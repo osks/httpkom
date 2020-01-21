@@ -6,7 +6,6 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 
 from quart import Quart, Blueprint, request, jsonify, g, abort, current_app
-#from quart_trio import QuartTrio
 import six
 
 
@@ -14,7 +13,6 @@ import six
 HTTPKOM_CONNECTION_HEADER = 'Httpkom-Connection'
 
 
-#app = QuartTrio(__name__)
 app = Quart(__name__)
 bp = Blueprint('frontend', __name__, url_prefix='/<string:server_id>')
 
