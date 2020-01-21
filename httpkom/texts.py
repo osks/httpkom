@@ -272,7 +272,7 @@ async def texts_put_mark(text_no):
     """
     request_json = await request.json
     try:
-        mark_type = request.json['type']
+        mark_type = request_json['type']
     except KeyError:
         return error_response(400, error_msg='Missing "type".')
     

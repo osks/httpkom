@@ -1,4 +1,4 @@
-from quart import g, jsonify
+from quart import jsonify
 
 from pylyskom.stats import Stats
 from pylyskom.stats import stats as pylyskom_stats

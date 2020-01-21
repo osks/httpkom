@@ -97,7 +97,7 @@ import functools
 import socket
 import uuid
 
-from quart import g, request, jsonify, current_app
+from quart import g, request, jsonify
 
 import pylyskom.errors as komerror
 from pylyskom.komsession import KomPerson, KomSessionNotConnected
@@ -117,7 +117,7 @@ from .stats import stats
 _komsessions = {}
 
 async def _open_komsession(host, port, client_name, client_version):
-    komsession = AioKomSession()#nursery=current_app.nursery)
+    komsession = AioKomSession()
     await komsession.connect(
         host, port,
         "httpkom", socket.getfqdn(),
