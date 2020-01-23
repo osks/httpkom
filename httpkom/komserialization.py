@@ -72,7 +72,7 @@ async def to_dict(obj, lookups=False, session=None):
     elif isinstance(obj, datatypes.MembershipType):
         return MembershipType_to_dict(obj, lookups, session)
     elif isinstance(obj, datatypes.AuxItem):
-        return AuxItem_to_dict(obj, lookups, session)
+        return await AuxItem_to_dict(obj, lookups, session)
     elif isinstance(obj, datatypes.Mark):
         return Mark_to_dict(obj, lookups, session)
     elif isinstance(obj, datatypes.Time):
