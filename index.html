@@ -1,35 +1,24 @@
 
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>httpkom &mdash; httpkom 0.11-beta documentation</title>
-    
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <meta charset="utf-8" />
+    <title>httpkom &#8212; httpkom 0.12+dev documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.11-beta',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="httpkom 0.11-beta documentation" href="#" />
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Intro" href="intro.html" /> 
-  </head>
-  <body>
-    <div class="related">
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -41,14 +30,14 @@
         <li class="right" >
           <a href="intro.html" title="Intro"
              accesskey="N">next</a> |</li>
-        <li><a href="#">httpkom 0.11-beta documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="#">httpkom 0.12+dev documentation</a> &#187;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="httpkom">
 <h1>httpkom<a class="headerlink" href="#httpkom" title="Permalink to this headline">¶</a></h1>
@@ -57,13 +46,62 @@ REST-like HTTP API. It can for example be used for writing LysKOM
 clients in Javascript.</p>
 <p>The source code can be found at: <a class="reference external" href="https://github.com/osks/httpkom">https://github.com/osks/httpkom</a></p>
 <p>The documentation can be found at: <a class="reference external" href="http://osks.github.io/httpkom/">http://osks.github.io/httpkom/</a></p>
-<p>httpkom uses <a class="reference external" href="https://github.com/osks/pylyskom">python-lyskom</a>, which
+<p>httpkom uses <a class="reference external" href="https://github.com/osks/pylyskom">pylyskom</a>, which
 is also released under GPL.</p>
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <p>For required Python packages, see requirements.txt. Install them with:</p>
-<blockquote>
-<div>$ pip install -r requirements.txt</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install -r requirements.txt
+</pre></div>
+</div>
+</div>
+<div class="section" id="development">
+<h2>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="preparing-a-release">
+<h3>Preparing a release<a class="headerlink" href="#preparing-a-release" title="Permalink to this headline">¶</a></h3>
+<p>TODO: How do we update the documentation on github pages?</p>
+<p>On master:</p>
+<ol class="arabic">
+<li><p>Update and check CHANGELOG.md.</p></li>
+<li><p>Increment version number and remove <code class="docutils literal notranslate"><span class="pre">+dev</span></code> suffix
+(in <code class="docutils literal notranslate"><span class="pre">httpkom/version.py</span></code>).</p></li>
+<li><p>Test manually by using jskom.</p></li>
+<li><p>Commit, push.</p></li>
+<li><p>Tag (annotated) with <code class="docutils literal notranslate"><span class="pre">v&lt;version&gt;</span></code> (example: <code class="docutils literal notranslate"><span class="pre">v0.1</span></code>) and push the tag:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">tag</span> <span class="o">-</span><span class="n">a</span> <span class="n">v0</span><span class="o">.</span><span class="mi">1</span> <span class="o">-</span><span class="n">m</span> <span class="s2">&quot;Version 0.1&quot;</span>
+<span class="n">git</span> <span class="n">push</span> <span class="n">origin</span> <span class="n">v0</span><span class="o">.</span><span class="mi">1</span>
+</pre></div>
+</div>
+</li>
+<li><p>Build PyPI dist: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">dist</span></code></p></li>
+<li><p>Push to Test PyPI: <code class="docutils literal notranslate"><span class="pre">twine</span> <span class="pre">upload</span> <span class="pre">--repository</span> <span class="pre">testpypi</span> <span class="pre">dist/*</span></code> and check
+<a class="reference external" href="https://test.pypi.org/project/httpkom/">https://test.pypi.org/project/httpkom/</a> .</p></li>
+<li><p>Push to PyPI: <code class="docutils literal notranslate"><span class="pre">twine</span> <span class="pre">upload</span> <span class="pre">dist/*</span></code> and check
+<a class="reference external" href="https://pypi.org/project/httpkom/">https://pypi.org/project/httpkom/</a> .</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">+dev</span></code> suffix to version number, commit and push.</p></li>
+</ol>
+</div>
+<div class="section" id="tools">
+<h3>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h3>
+<p>Install and update release tools with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">setuptools</span> <span class="n">pip</span> <span class="n">twine</span>
+</pre></div>
+</div>
+<p>Twine is used for pushing the built dist to PyPI. The examples in the
+release process depends on a <code class="docutils literal notranslate"><span class="pre">.pypirc</span></code> file with config for the pypi
+and testpypi repositories.</p>
+<p>Example of <cite>.pypirc</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">pypi</span><span class="p">]</span>
+<span class="n">username</span> <span class="o">=</span> <span class="n">__token__</span>
+<span class="n">password</span> <span class="o">=</span> <span class="n">pypi</span><span class="o">-...</span>
+
+<span class="p">[</span><span class="n">testpypi</span><span class="p">]</span>
+<span class="n">repository</span> <span class="o">=</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">test</span><span class="o">.</span><span class="n">pypi</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">legacy</span><span class="o">/</span>
+<span class="n">username</span> <span class="o">=</span> <span class="n">__token__</span>
+<span class="n">password</span> <span class="o">=</span> <span class="n">pypi</span><span class="o">-...</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="authors">
 <h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h2>
@@ -71,7 +109,7 @@ is also released under GPL.</p>
 </div>
 <div class="section" id="copyright-and-license">
 <h2>Copyright and license<a class="headerlink" href="#copyright-and-license" title="Permalink to this headline">¶</a></h2>
-<p>Copyright (C) 2012, 2013 Oskar Skoog</p>
+<p>Copyright (C) 2012-2020 Oskar Skoog</p>
 <p>This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 2
@@ -85,8 +123,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA  02110-1301, USA.</p>
 </div>
+</div>
 <div class="section" id="documentation">
-<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h1>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -98,63 +137,66 @@ MA  02110-1301, USA.</p>
 <li class="toctree-l1"><a class="reference internal" href="texts.html">Texts</a></li>
 </ul>
 </div>
-</div>
-</div>
 <div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
-<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
-<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
+</div>
 </div>
 
 
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table Of Contents</a></h3>
+  <h3><a href="#">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">httpkom</a><ul>
 <li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#development">Development</a><ul>
+<li><a class="reference internal" href="#preparing-a-release">Preparing a release</a></li>
+<li><a class="reference internal" href="#tools">Tools</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#authors">Authors</a></li>
 <li><a class="reference internal" href="#copyright-and-license">Copyright and license</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#documentation">Documentation</a><ul>
-</ul>
-</li>
-</ul>
-</li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
 </ul>
 
   <h4>Next topic</h4>
   <p class="topless"><a href="intro.html"
                         title="next chapter">Intro</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/index.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -166,12 +208,12 @@ MA  02110-1301, USA.</p>
         <li class="right" >
           <a href="intro.html" title="Intro"
              >next</a> |</li>
-        <li><a href="#">httpkom 0.11-beta documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="#">httpkom 0.12+dev documentation</a> &#187;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2012, Oskar Skoog.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012, Oskar Skoog.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
     </div>
   </body>
 </html>

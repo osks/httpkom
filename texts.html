@@ -1,35 +1,24 @@
 
-
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Texts &mdash; httpkom 0.11-beta documentation</title>
-    
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <meta charset="utf-8" />
+    <title>Texts &#8212; httpkom 0.12+dev documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.11-beta',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="httpkom 0.11-beta documentation" href="index.html" />
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Sessions" href="sessions.html" /> 
-  </head>
-  <body>
-    <div class="related">
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -41,215 +30,252 @@
         <li class="right" >
           <a href="sessions.html" title="Sessions"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">httpkom 0.11-beta documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">httpkom 0.12+dev documentation</a> &#187;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="module-httpkom.texts">
 <span id="texts"></span><h1>Texts<a class="headerlink" href="#module-httpkom.texts" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="httpkom.texts.texts_create">
-<tt class="descclassname">httpkom.texts.</tt><tt class="descname">texts_create</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.texts.texts_create" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">httpkom.texts.</code><code class="sig-name descname">texts_create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#httpkom.texts.texts_create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a text.</p>
 <p class="rubric">Request</p>
-<div class="highlight-python"><pre>POST /&lt;server_id&gt;/texts/ HTTP/1.0
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/&lt;</span><span class="n">server_id</span><span class="o">&gt;/</span><span class="n">texts</span><span class="o">/</span> <span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span>
 
-{
-  "body": "r\u00e4ksm\u00f6rg\u00e5s",
-  "subject": "jaha",
-  "recipient_list": [ { "type": "to", "recpt": { "conf_no": 14506 } } ],
-  "content_type": "text/x-kom-basic",
-  "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ]
-}</pre>
+<span class="p">{</span>
+  <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="s2">&quot;räksmörgås&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;subject&quot;</span><span class="p">:</span> <span class="s2">&quot;jaha&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;recipient_list&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;to&quot;</span><span class="p">,</span> <span class="s2">&quot;recpt&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;conf_no&quot;</span><span class="p">:</span> <span class="mi">14506</span> <span class="p">}</span> <span class="p">}</span> <span class="p">],</span>
+  <span class="s2">&quot;content_type&quot;</span><span class="p">:</span> <span class="s2">&quot;text/x-kom-basic&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;comment_to_list&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;footnote&quot;</span><span class="p">,</span> <span class="s2">&quot;text_no&quot;</span><span class="p">:</span> <span class="mi">19675793</span> <span class="p">}</span> <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
 </div>
 <p class="rubric">Responses</p>
 <p>Text was created:</p>
-<div class="highlight-python"><pre>HTTP/1.0 201 Created
-Location: http://localhost:5001/&lt;server_id&gt;/texts/19724960
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span> <span class="mi">201</span> <span class="n">Created</span>
+<span class="n">Location</span><span class="p">:</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">5001</span><span class="o">/&lt;</span><span class="n">server_id</span><span class="o">&gt;/</span><span class="n">texts</span><span class="o">/</span><span class="mi">19724960</span>
 
-{
-  "text_no": 19724960,
-}</pre>
+<span class="p">{</span>
+  <span class="s2">&quot;text_no&quot;</span><span class="p">:</span> <span class="mi">19724960</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
 </div>
-<p class="rubric">Example</p>
-<div class="highlight-python"><pre>curl -v -X POST H "Content-Type: application/json" \
-     -d '{ "body": "r\u00e4ksm\u00f6rg\u00e5s", \
-           "subject": "jaha",
-           "recpipent_list": [ { recpt: { "conf_no": 14506 }, "type": "to" } ], \
-           "content_type": "text/x-kom-basic", \
-           "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \
-     "http://localhost:5001/lyskom/texts/"</pre>
+<p class="rubric">Example text:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">X</span> <span class="n">POST</span> <span class="o">-</span><span class="n">H</span> <span class="s2">&quot;Content-Type: application/json&quot;</span> \
+     <span class="o">-</span><span class="n">d</span> <span class="s1">&#39;{ &quot;body&quot;: &quot;räksmörgås&quot;, </span><span class="se">\</span>
+<span class="s1">           &quot;subject&quot;: &quot;jaha&quot;,</span>
+           <span class="s2">&quot;recipipent_list&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="p">{</span> <span class="n">recpt</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;conf_no&quot;</span><span class="p">:</span> <span class="mi">14506</span> <span class="p">},</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;to&quot;</span> <span class="p">}</span> <span class="p">],</span> \
+           <span class="s2">&quot;content_type&quot;</span><span class="p">:</span> <span class="s2">&quot;text/x-kom-basic&quot;</span><span class="p">,</span> \
+           <span class="s2">&quot;comment_to_list&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;footnote&quot;</span><span class="p">,</span> <span class="s2">&quot;text_no&quot;</span><span class="p">:</span> <span class="mi">19675793</span> <span class="p">}</span> <span class="p">]</span> <span class="p">}</span><span class="s1">&#39; </span><span class="se">\</span>
+<span class="s1">     &quot;http://localhost:5001/lyskom/texts/&quot;</span>
+</pre></div>
+</div>
+<p class="rubric">Example image:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">X</span> <span class="n">POST</span> <span class="o">-</span><span class="n">H</span> <span class="s2">&quot;Content-Type: application/json&quot;</span> \
+     <span class="o">-</span><span class="n">d</span> <span class="s1">&#39;{ &quot;body&quot;: &lt;base64&gt;, </span><span class="se">\</span>
+<span class="s1">           &quot;subject&quot;: &quot;jaha&quot;,</span>
+           <span class="s2">&quot;recipipent_list&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="p">{</span> <span class="n">recpt</span><span class="p">:</span> <span class="p">{</span> <span class="s2">&quot;conf_no&quot;</span><span class="p">:</span> <span class="mi">14506</span> <span class="p">},</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;to&quot;</span> <span class="p">}</span> <span class="p">],</span> \
+           <span class="s2">&quot;content_type&quot;</span><span class="p">:</span> <span class="s2">&quot;image/jpeg&quot;</span><span class="p">,</span> \
+           <span class="s2">&quot;content_encoding&quot;</span><span class="p">:</span> <span class="s2">&quot;base64&quot;</span><span class="p">,</span> \
+           <span class="s2">&quot;comment_to_list&quot;</span><span class="p">:</span> <span class="p">[</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;footnote&quot;</span><span class="p">,</span> <span class="s2">&quot;text_no&quot;</span><span class="p">:</span> <span class="mi">19675793</span> <span class="p">}</span> <span class="p">]</span> <span class="p">}</span><span class="s1">&#39; </span><span class="se">\</span>
+<span class="s1">     &quot;http://localhost:5001/lyskom/texts/&quot;</span>
+</pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="httpkom.texts.texts_delete_mark">
-<tt class="descclassname">httpkom.texts.</tt><tt class="descname">texts_delete_mark</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.texts.texts_delete_mark" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">httpkom.texts.</code><code class="sig-name descname">texts_delete_mark</code><span class="sig-paren">(</span><em class="sig-param">text_no</em><span class="sig-paren">)</span><a class="headerlink" href="#httpkom.texts.texts_delete_mark" title="Permalink to this definition">¶</a></dt>
 <dd><p>Unmark a text.</p>
 <p class="rubric">Request</p>
-<div class="highlight-python"><pre>DELETE /&lt;server_id&gt;/texts/&lt;text_no&gt;/mark HTTP/1.1</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DELETE</span> <span class="o">/&lt;</span><span class="n">server_id</span><span class="o">&gt;/</span><span class="n">texts</span><span class="o">/&lt;</span><span class="n">text_no</span><span class="o">&gt;/</span><span class="n">mark</span> <span class="n">HTTP</span><span class="o">/</span><span class="mf">1.1</span>
+</pre></div>
 </div>
 <p class="rubric">Response</p>
 <p>Success:</p>
-<div class="highlight-python"><pre>HTTP/1.1 204 OK</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HTTP</span><span class="o">/</span><span class="mf">1.1</span> <span class="mi">204</span> <span class="n">OK</span>
+</pre></div>
 </div>
 <p class="rubric">Example</p>
-<div class="highlight-python"><pre>curl -v -X DELETE "http://localhost:5001/lyskom/texts/4711/mark"</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">X</span> <span class="n">DELETE</span> <span class="s2">&quot;http://localhost:5001/lyskom/texts/4711/mark&quot;</span>
+</pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="httpkom.texts.texts_delete_read_marking">
-<tt class="descclassname">httpkom.texts.</tt><tt class="descname">texts_delete_read_marking</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.texts.texts_delete_read_marking" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">httpkom.texts.</code><code class="sig-name descname">texts_delete_read_marking</code><span class="sig-paren">(</span><em class="sig-param">text_no</em><span class="sig-paren">)</span><a class="headerlink" href="#httpkom.texts.texts_delete_read_marking" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mark a text as unread in all recipient conferences.</p>
 <p class="rubric">Request</p>
-<div class="highlight-python"><pre>DELETE /&lt;server_id&gt;/texts/&lt;int:text_no&gt;/read-marking HTTP/1.0</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DELETE</span> <span class="o">/&lt;</span><span class="n">server_id</span><span class="o">&gt;/</span><span class="n">texts</span><span class="o">/&lt;</span><span class="nb">int</span><span class="p">:</span><span class="n">text_no</span><span class="o">&gt;/</span><span class="n">read</span><span class="o">-</span><span class="n">marking</span> <span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span>
+</pre></div>
 </div>
 <p class="rubric">Responses</p>
 <p>Text was marked as read:</p>
-<div class="highlight-python"><pre>HTTP/1.0 204 NO CONTENT</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span> <span class="mi">204</span> <span class="n">NO</span> <span class="n">CONTENT</span>
+</pre></div>
 </div>
 <p class="rubric">Example</p>
-<div class="highlight-python"><pre>curl -v DELETE "http://localhost:5001/lyskom/texts/19680717/read-marking"</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">v</span> <span class="n">DELETE</span> <span class="s2">&quot;http://localhost:5001/lyskom/texts/19680717/read-marking&quot;</span>
+</pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="httpkom.texts.texts_get">
-<tt class="descclassname">httpkom.texts.</tt><tt class="descname">texts_get</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.texts.texts_get" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">httpkom.texts.</code><code class="sig-name descname">texts_get</code><span class="sig-paren">(</span><em class="sig-param">text_no</em><span class="sig-paren">)</span><a class="headerlink" href="#httpkom.texts.texts_get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a text.</p>
 <p>Note: The body will only be included in the response if the content type is text.</p>
 <p class="rubric">Request</p>
-<div class="highlight-python"><pre>GET /&lt;server_id&gt;/texts/19680717 HTTP/1.0</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/&lt;</span><span class="n">server_id</span><span class="o">&gt;/</span><span class="n">texts</span><span class="o">/</span><span class="mi">19680717</span> <span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span>
+</pre></div>
 </div>
 <p class="rubric">Responses</p>
 <p>Text exists:</p>
-<div class="highlight-python"><pre>HTTP/1.0 200 OK
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span> <span class="mi">200</span> <span class="n">OK</span>
 
-{
-  "body": "r\u00e4ksm\u00f6rg\u00e5s",
-  "recipient_list": [
-    {
-      "conf_name": "Oskars Testperson",
-      "type": "to",
-      "loc_no": 29,
-      "conf_no": 14506
-    }
-  ], 
-  "author": {
-    "pers_no": 14506,
-    "pers_name": "Oskars Testperson"
-  }, 
-  "creation_time": "2012-05-08 18:36:17",
-  "comment_in_list": [],
-  "content_type": "text/x-kom-basic",
-  "text_no": 19680717,
-  "comment_to_list": [],
-  "subject": "jaha"
-}</pre>
+<span class="p">{</span>
+  <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="s2">&quot;räksmörgås&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;recipient_list&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="s2">&quot;conf_name&quot;</span><span class="p">:</span> <span class="s2">&quot;Oskars Testperson&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;to&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;loc_no&quot;</span><span class="p">:</span> <span class="mi">29</span><span class="p">,</span>
+      <span class="s2">&quot;conf_no&quot;</span><span class="p">:</span> <span class="mi">14506</span>
+    <span class="p">}</span>
+  <span class="p">],</span> 
+  <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;pers_no&quot;</span><span class="p">:</span> <span class="mi">14506</span><span class="p">,</span>
+    <span class="s2">&quot;pers_name&quot;</span><span class="p">:</span> <span class="s2">&quot;Oskars Testperson&quot;</span>
+  <span class="p">},</span> 
+  <span class="s2">&quot;creation_time&quot;</span><span class="p">:</span> <span class="s2">&quot;2013-11-30T15:58:06Z&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;comment_in_list&quot;</span><span class="p">:</span> <span class="p">[],</span>
+  <span class="s2">&quot;content_type&quot;</span><span class="p">:</span> <span class="s2">&quot;text/x-kom-basic&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;text_no&quot;</span><span class="p">:</span> <span class="mi">19680717</span><span class="p">,</span>
+  <span class="s2">&quot;comment_to_list&quot;</span><span class="p">:</span> <span class="p">[],</span>
+  <span class="s2">&quot;subject&quot;</span><span class="p">:</span> <span class="s2">&quot;jaha&quot;</span>
+<span class="p">}</span>
+</pre></div>
 </div>
 <p>Text does not exist:</p>
-<div class="highlight-python"><pre>HTTP/1.0 404 NOT FOUND
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span> <span class="mi">404</span> <span class="n">NOT</span> <span class="n">FOUND</span>
 
-{ TODO: error stuff }</pre>
+<span class="p">{</span> <span class="n">TODO</span><span class="p">:</span> <span class="n">error</span> <span class="n">stuff</span> <span class="p">}</span>
+</pre></div>
 </div>
 <p class="rubric">Example</p>
-<div class="highlight-python"><pre>curl -v -X GET -H "Content-Type: application/json" \
-     "http://localhost:5001/lyskom/texts/19680717"</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">X</span> <span class="n">GET</span> <span class="o">-</span><span class="n">H</span> <span class="s2">&quot;Content-Type: application/json&quot;</span> \
+     <span class="s2">&quot;http://localhost:5001/lyskom/texts/19680717&quot;</span>
+</pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="httpkom.texts.texts_get_body">
-<tt class="descclassname">httpkom.texts.</tt><tt class="descname">texts_get_body</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.texts.texts_get_body" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">httpkom.texts.</code><code class="sig-name descname">texts_get_body</code><span class="sig-paren">(</span><em class="sig-param">text_no</em><span class="sig-paren">)</span><a class="headerlink" href="#httpkom.texts.texts_get_body" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the body of text, with the content type of the body set in the HTTP header.
 Useful for creating img-tags in HTML and specifying this URL as source.</p>
 <p>If the content type is text, the text will be recoded to UTF-8. For other types,
 the content type will be left untouched.</p>
 <p class="rubric">Request</p>
-<div class="highlight-python"><pre>GET /&lt;server_id&gt;/texts/19680717/body HTTP/1.0</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/&lt;</span><span class="n">server_id</span><span class="o">&gt;/</span><span class="n">texts</span><span class="o">/</span><span class="mi">19680717</span><span class="o">/</span><span class="n">body</span> <span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span>
+</pre></div>
 </div>
 <p class="rubric">Responses</p>
 <p>Text exists:</p>
-<div class="highlight-python"><pre>HTTP/1.0 200 OK
-Content-Type: text/x-kom-basic; charset=utf-8
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span> <span class="mi">200</span> <span class="n">OK</span>
+<span class="n">Content</span><span class="o">-</span><span class="n">Type</span><span class="p">:</span> <span class="n">text</span><span class="o">/</span><span class="n">x</span><span class="o">-</span><span class="n">kom</span><span class="o">-</span><span class="n">basic</span><span class="p">;</span> <span class="n">charset</span><span class="o">=</span><span class="n">utf</span><span class="o">-</span><span class="mi">8</span>
 
-räksmörgås</pre>
+<span class="n">räksmörgås</span>
+</pre></div>
 </div>
 <p>Text does not exist:</p>
-<div class="highlight-python"><pre>HTTP/1.0 404 NOT FOUND
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span> <span class="mi">404</span> <span class="n">NOT</span> <span class="n">FOUND</span>
 
-{ TODO: error stuff }</pre>
+<span class="p">{</span> <span class="n">TODO</span><span class="p">:</span> <span class="n">error</span> <span class="n">stuff</span> <span class="p">}</span>
+</pre></div>
 </div>
 <p class="rubric">Example</p>
-<div class="highlight-python"><pre>curl -v -X GET -H "Content-Type: application/json" \
-     "http://localhost:5001/lyskom/texts/19680717/body"</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">X</span> <span class="n">GET</span> <span class="o">-</span><span class="n">H</span> <span class="s2">&quot;Content-Type: application/json&quot;</span> \
+     <span class="s2">&quot;http://localhost:5001/lyskom/texts/19680717/body&quot;</span>
+</pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="httpkom.texts.texts_get_marks">
-<tt class="descclassname">httpkom.texts.</tt><tt class="descname">texts_get_marks</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.texts.texts_get_marks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">httpkom.texts.</code><code class="sig-name descname">texts_get_marks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#httpkom.texts.texts_get_marks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the list of marked texts.</p>
 <p class="rubric">Request</p>
-<div class="highlight-python"><pre>GET /&lt;server_id&gt;/texts/marks/ HTTP/1.1</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/&lt;</span><span class="n">server_id</span><span class="o">&gt;/</span><span class="n">texts</span><span class="o">/</span><span class="n">marks</span><span class="o">/</span> <span class="n">HTTP</span><span class="o">/</span><span class="mf">1.1</span>
+</pre></div>
 </div>
 <p class="rubric">Response</p>
-<div class="highlight-python"><pre>HTTP/1.1 200 OK
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HTTP</span><span class="o">/</span><span class="mf">1.1</span> <span class="mi">200</span> <span class="n">OK</span>
 
-{
-  "marks": [
-    { "text_no": 4711, "type": 100 },
-    { "text_no": 4999999, "type": 101 },
-  ]
-}</pre>
+<span class="p">{</span>
+  <span class="s2">&quot;marks&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span> <span class="s2">&quot;text_no&quot;</span><span class="p">:</span> <span class="mi">4711</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="mi">100</span> <span class="p">},</span>
+    <span class="p">{</span> <span class="s2">&quot;text_no&quot;</span><span class="p">:</span> <span class="mi">4999999</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="mi">101</span> <span class="p">},</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
 </div>
 <p class="rubric">Example</p>
-<div class="highlight-python"><pre>curl -v -X GET -H "Content-Type: application/json" \
-     "http://localhost:5001/lyskom/texts/marks/"</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">X</span> <span class="n">GET</span> <span class="o">-</span><span class="n">H</span> <span class="s2">&quot;Content-Type: application/json&quot;</span> \
+     <span class="s2">&quot;http://localhost:5001/lyskom/texts/marks/&quot;</span>
+</pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="httpkom.texts.texts_put_mark">
-<tt class="descclassname">httpkom.texts.</tt><tt class="descname">texts_put_mark</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.texts.texts_put_mark" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">httpkom.texts.</code><code class="sig-name descname">texts_put_mark</code><span class="sig-paren">(</span><em class="sig-param">text_no</em><span class="sig-paren">)</span><a class="headerlink" href="#httpkom.texts.texts_put_mark" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mark a text.</p>
 <p class="rubric">Request</p>
-<div class="highlight-python"><pre>PUT /&lt;server_id&gt;/texts/&lt;text_no&gt;/mark HTTP/1.1
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PUT</span> <span class="o">/&lt;</span><span class="n">server_id</span><span class="o">&gt;/</span><span class="n">texts</span><span class="o">/&lt;</span><span class="n">text_no</span><span class="o">&gt;/</span><span class="n">mark</span> <span class="n">HTTP</span><span class="o">/</span><span class="mf">1.1</span>
 
-{
-  "type": 100
-}</pre>
+<span class="p">{</span>
+  <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="mi">100</span>
+<span class="p">}</span>
+</pre></div>
 </div>
 <p class="rubric">Response</p>
 <p>Success:</p>
-<div class="highlight-python"><pre>HTTP/1.1 201 Created</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HTTP</span><span class="o">/</span><span class="mf">1.1</span> <span class="mi">201</span> <span class="n">Created</span>
+</pre></div>
 </div>
 <p class="rubric">Example</p>
-<div class="highlight-python"><pre>curl -v -X PUT -H "Content-Type: application/json" \
-     -d { "type": 100 } \
-     "http://localhost:5001/lyskom/texts/4711/mark"</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">X</span> <span class="n">PUT</span> <span class="o">-</span><span class="n">H</span> <span class="s2">&quot;Content-Type: application/json&quot;</span> \
+     <span class="o">-</span><span class="n">d</span> <span class="p">{</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="mi">100</span> <span class="p">}</span> \
+     <span class="s2">&quot;http://localhost:5001/lyskom/texts/4711/mark&quot;</span>
+</pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="httpkom.texts.texts_put_read_marking">
-<tt class="descclassname">httpkom.texts.</tt><tt class="descname">texts_put_read_marking</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#httpkom.texts.texts_put_read_marking" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">httpkom.texts.</code><code class="sig-name descname">texts_put_read_marking</code><span class="sig-paren">(</span><em class="sig-param">text_no</em><span class="sig-paren">)</span><a class="headerlink" href="#httpkom.texts.texts_put_read_marking" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mark a text as read in all recipient conferences.</p>
 <p class="rubric">Request</p>
-<div class="highlight-python"><pre>PUT /&lt;server_id&gt;/texts/&lt;int:text_no&gt;/read-marking HTTP/1.0</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PUT</span> <span class="o">/&lt;</span><span class="n">server_id</span><span class="o">&gt;/</span><span class="n">texts</span><span class="o">/&lt;</span><span class="nb">int</span><span class="p">:</span><span class="n">text_no</span><span class="o">&gt;/</span><span class="n">read</span><span class="o">-</span><span class="n">marking</span> <span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span>
+</pre></div>
 </div>
 <p class="rubric">Responses</p>
 <p>Text was marked as read:</p>
-<div class="highlight-python"><pre>HTTP/1.0 201 Created</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HTTP</span><span class="o">/</span><span class="mf">1.0</span> <span class="mi">201</span> <span class="n">Created</span>
+</pre></div>
 </div>
 <p class="rubric">Example</p>
-<div class="highlight-python"><pre>curl -v -X PUT "http://localhost:5001/lyskom/texts/19680717/read-marking"</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">v</span> <span class="o">-</span><span class="n">X</span> <span class="n">PUT</span> <span class="s2">&quot;http://localhost:5001/lyskom/texts/19680717/read-marking&quot;</span>
+</pre></div>
 </div>
 </dd></dl>
 
@@ -259,34 +285,33 @@ räksmörgås</pre>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="sessions.html"
                         title="previous chapter">Sessions</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/texts.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/texts.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -298,12 +323,12 @@ räksmörgås</pre>
         <li class="right" >
           <a href="sessions.html" title="Sessions"
              >previous</a> |</li>
-        <li><a href="index.html">httpkom 0.11-beta documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">httpkom 0.12+dev documentation</a> &#187;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2012, Oskar Skoog.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012, Oskar Skoog.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.3.1.
     </div>
   </body>
 </html>
