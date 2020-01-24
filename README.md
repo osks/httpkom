@@ -30,7 +30,7 @@ On master:
 2. Test manually by using jskom.
 3. Commit, push.
 5. Tag (annotated) with `v<version>` (example: `v0.1`) and push the tag:
-   ```
+```
 git tag -a v0.1 -m "Version 0.1"
 git push origin v0.1
 ```
