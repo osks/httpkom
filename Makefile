@@ -22,7 +22,4 @@ docs-html:
 pyflakes:
 	pyflakes ./httpkom
 
-#test: pyflakes
-#	py.test -v --maxfail 1 ./tests
-
 .PHONY: all clean run-debug-server dist docs docs-html pyflakes
