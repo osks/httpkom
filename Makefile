@@ -1,5 +1,10 @@
 all: pyflakes docs
 
+clean:
+	rm -rf dist
+	rm -rf docs/_build
+	rm -rf gh-pages
+
 run-debug-server:
 	python3 -m httpkom.main --config configs/debug.cfg --host 127.0.0.1
 
@@ -11,6 +16,7 @@ docs: docs-html
 
 docs-html:
 	make -C docs html
+	mkdir -p gh-pages/html
 	cp -r ./docs/_build/html/* ./gh-pages/html/
 
 pyflakes:
@@ -19,4 +25,4 @@ pyflakes:
 #test: pyflakes
 #	py.test -v --maxfail 1 ./tests
 
-.PHONY: all run-debug-server dist docs docs-html pyflakes
+.PHONY: all clean run-debug-server dist docs docs-html pyflakes
