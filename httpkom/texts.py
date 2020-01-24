@@ -271,7 +271,7 @@ def texts_put_mark(text_no):
     """
     try:
         mark_type = request.json['type']
-    except KeyError as ex:
+    except KeyError:
         return error_response(400, error_msg='Missing "type".')
     
     try:

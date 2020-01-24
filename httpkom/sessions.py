@@ -375,14 +375,14 @@ def sessions_login():
         pers_no = request.json['pers_no']
         if pers_no is None:
             return error_response(400, error_msg='"pers_no" is null.')
-    except KeyError as ex:
+    except KeyError:
         return error_response(400, error_msg='Missing "pers_no".')
     
     try:
         passwd = request.json['passwd']
         if passwd is None:
             return error_response(400, error_msg='"passwd" is null.')
-    except KeyError as ex:
+    except KeyError:
         return error_response(400, error_msg='Missing "passwd".')
     
     try:

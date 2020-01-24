@@ -1,7 +1,4 @@
-import time
-import threading
-
-from flask import g, jsonify
+from flask import jsonify
 from pylyskom.stats import Stats
 from pylyskom.stats import stats as pylyskom_stats
 
