@@ -4,11 +4,16 @@
 
 ### Added
 
+Nothing
+
+
+## 0.12 (2020-01-24)
+
 - Should now run as a standalone process, not an WSGI app
 - Python 3 support
 - Internal counters (stats / metrics)
 - Stats reporting to Graphite
-- Publish on PyPI
+- Published on PyPI
 
 
 ## 0.11 (2016-05-29)

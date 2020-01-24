@@ -7,6 +7,8 @@ clients in Javascript.
 
 The source code can be found at: https://github.com/osks/httpkom
 
+Packages are published on PyPI: https://pypi.org/project/httpkom/
+
 The documentation can be found at: http://osks.github.io/httpkom/
 
 httpkom uses `pylyskom <https://github.com/osks/pylyskom>`_, which
@@ -61,7 +63,7 @@ Tools
 
 Install and update release tools with::
 
-    pip install --upgrade setuptools pip twine
+    pip install --upgrade setuptools wheel pip twine
 
 Twine is used for pushing the built dist to PyPI. The examples in the
 release process depends on a ``.pypirc`` file with config for the pypi
