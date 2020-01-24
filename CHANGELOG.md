@@ -8,6 +8,8 @@
 - Python 3 support
 - Internal counters (stats / metrics)
 - Stats reporting to Graphite
+- Publish on PyPI
+
 
 ## 0.11 (2016-05-29)
 

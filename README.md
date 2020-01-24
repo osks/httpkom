@@ -1,5 +1,4 @@
-httpkom
-=======
+# httpkom
 
 httpkom is an HTTP proxy for LysKOM protocol A servers, and exposes an
 REST-like HTTP API. It can for example be used for writing LysKOM
@@ -13,22 +12,60 @@ httpkom uses `pylyskom <https://github.com/osks/pylyskom>`_, which
 is also released under GPL.
 
 
-Dependencies
-------------
+## Dependencies
 
 For required Python packages, see requirements.txt. Install them with:
 
     $ pip install -r requirements.txt
 
 
-Authors
--------
+## Development
+
+### Preparing a release
+
+On master:
+
+1. Increment version number and remove `+dev` suffix
+   (in `httpkom/version.py`).
+2. Test manually by using jskom.
+3. Commit, push.
+5. Tag (annotated) with `v<version>` (example: `v0.1`) and push the tag: ```
+git tag -a v0.1 -m "Version 0.1"
+git push origin v0.1
+```
+6. Build PyPI dist: `make dist`
+7. Push to Test PyPI: `twine upload --repository testpypi dist/*` and check
+   https://test.pypi.org/project/httpkom/ .
+8. Push to PyPI: `twine upload dist/*` and check
+   https://pypi.org/project/httpkom/ .
+9. Add `+dev` suffix to version number, commit and push.
+
+
+### Tools:
+
+Twine is used for pushing the built dist to PyPI. The examples in the
+release process depends on a `.pypirc` file with config for the pypi
+and testpypi repositories.
+
+Example of `.pypirc`:
+```
+[pypi]
+username = __token__
+password = pypi-...
+
+[testpypi]
+repository = https://test.pypi.org/legacy/
+username = __token__
+password = pypi-...
+```
+
+
+## Authors
 
 Oskar Skoog <oskar@osd.se>
 
 
-Copyright and license
----------------------
+## Copyright and license
 
 Copyright (C) 2012-2020 Oskar Skoog
 
