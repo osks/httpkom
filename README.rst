@@ -59,6 +59,10 @@ On master:
 Tools
 *****
 
+Install and update release tools with::
+
+    pip install --upgrade setuptools pip twine
+
 Twine is used for pushing the built dist to PyPI. The examples in the
 release process depends on a ``.pypirc`` file with config for the pypi
 and testpypi repositories.
