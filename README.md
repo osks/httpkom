@@ -31,10 +31,10 @@ On master:
 1. Test manually by using jskom.
 1. Commit, push.
 1. Tag (annotated) with `v<version>` (example: `v0.1`) and push the tag:
-```
-git tag -a v0.1 -m "Version 0.1"
-git push origin v0.1
-```
+   ```
+   git tag -a v0.1 -m "Version 0.1"
+   git push origin v0.1
+   ```
 1. Build PyPI dist: `make dist`
 1. Push to Test PyPI: `twine upload --repository testpypi dist/*` and check
    https://test.pypi.org/project/httpkom/ .
