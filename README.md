@@ -9,7 +9,7 @@ The source code can be found at: https://github.com/osks/httpkom
 
 The documentation can be found at: http://osks.github.io/httpkom/
 
-httpkom uses `python-lyskom <https://github.com/osks/pylyskom>`_, which
+httpkom uses `pylyskom <https://github.com/osks/pylyskom>`_, which
 is also released under GPL.
 
 
@@ -30,7 +30,7 @@ Oskar Skoog <oskar@osd.se>
 Copyright and license
 ---------------------
 
-Copyright (C) 2012-2014 Oskar Skoog
+Copyright (C) 2012-2020 Oskar Skoog
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
