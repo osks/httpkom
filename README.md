@@ -25,21 +25,22 @@ For required Python packages, see requirements.txt. Install them with:
 
 On master:
 
+1. Update and check CHANGELOG.md.
 1. Increment version number and remove `+dev` suffix
    (in `httpkom/version.py`).
-2. Test manually by using jskom.
-3. Commit, push.
-5. Tag (annotated) with `v<version>` (example: `v0.1`) and push the tag:
+1. Test manually by using jskom.
+1. Commit, push.
+1. Tag (annotated) with `v<version>` (example: `v0.1`) and push the tag:
 ```
 git tag -a v0.1 -m "Version 0.1"
 git push origin v0.1
 ```
-6. Build PyPI dist: `make dist`
-7. Push to Test PyPI: `twine upload --repository testpypi dist/*` and check
+1. Build PyPI dist: `make dist`
+1. Push to Test PyPI: `twine upload --repository testpypi dist/*` and check
    https://test.pypi.org/project/httpkom/ .
-8. Push to PyPI: `twine upload dist/*` and check
+1. Push to PyPI: `twine upload dist/*` and check
    https://pypi.org/project/httpkom/ .
-9. Add `+dev` suffix to version number, commit and push.
+1. Add `+dev` suffix to version number, commit and push.
 
 
 ### Tools:
