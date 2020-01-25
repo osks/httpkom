@@ -29,7 +29,6 @@ def start_stats_sender(graphite_host, graphite_port):
 def run_http_server(args):
     os.environ['HTTPKOM_SETTINGS'] = args.config
     init_app(app)
-    # Enable WSGI access logging via Paste
     config = Config()
     config.bind = ["{}:{}".format(args.host, args.port)]
     asyncio.run(serve(app, config))

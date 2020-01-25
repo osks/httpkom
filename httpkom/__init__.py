@@ -33,7 +33,7 @@ def patched_inject_url_defaults(self, endpoint: str, values: dict) -> None:
 
     for function in functions:
         function(endpoint, values)
-#QuartTrio.inject_url_defaults = patched_inject_url_defaults
+
 Quart.inject_url_defaults = patched_inject_url_defaults
 
 
