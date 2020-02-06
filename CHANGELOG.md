@@ -4,7 +4,8 @@
 
 ### Added
 
-Nothing
+- Now uses asyncio version of pylyskom
+- Converted from using Flask to Quart (and Hypercorn)
 
 
 ## 0.12 (2020-01-24)
