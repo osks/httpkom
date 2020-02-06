@@ -6,7 +6,7 @@ clean:
 	rm -rf gh-pages
 
 run-debug-server:
-	python3 -m httpkom.main --config configs/debug.cfg --host 127.0.0.1
+	python3 -m httpkom --config configs/debug.cfg --host 127.0.0.1
 
 dist:
 	rm -rf dist
