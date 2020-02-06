@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
-from __future__ import absolute_import
 import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-from flask import Flask, Blueprint, request, jsonify, g, abort, current_app
+from quart import Quart, Blueprint, request, jsonify, g, abort, current_app
 import six
 
 
@@ -14,8 +13,28 @@ import six
 HTTPKOM_CONNECTION_HEADER = 'Httpkom-Connection'
 
 
-app = Flask(__name__)
+app = Quart(__name__)
 bp = Blueprint('frontend', __name__, url_prefix='/<string:server_id>')
+
+
+# Patch to fix a bug in Quart.inject_url_defaults.
+# (bug reported in https://gitlab.com/pgjones/quart/issues/294)
+from itertools import chain
+def patched_inject_url_defaults(self, endpoint: str, values: dict) -> None:
+    """Injects default URL values into the passed values dict.
+
+    This is used to assist when building urls, see
+    :func:`~quart.helpers.url_for`.
+    """
+    functions = self.url_value_preprocessors[None]
+    if '.' in endpoint:
+        blueprint = endpoint.rsplit('.', 1)[0]
+        functions = chain(functions, self.url_default_functions.get(blueprint, ()))  # type: ignore
+
+    for function in functions:
+        function(endpoint, values)
+
+Quart.inject_url_defaults = patched_inject_url_defaults
 
 
 class default_settings:
@@ -38,16 +57,31 @@ class default_settings:
 
 
 def init_app(app):
-    app.config.from_object(default_settings)
+    # Use Flask's Config class to read config, as Quart's config
+    # handling is not identical to Flask's and it didn't work with our
+    # config files.  Flask will parse the config file as it was a
+    # Python file, so you can use lists for example. In Quart the list
+    # became a string.
+    #
+    # Hack: Parse with Flask and then convert (via a dict) to Quart.
+
+    import flask
+    config = flask.Config(app.config.root_path)
+
+    config.from_object(default_settings)
     if 'HTTPKOM_SETTINGS' in os.environ:
         app.logger.info("Using config file specified by HTTPKOM_SETTINGS environment variable: %s",
                         os.environ['HTTPKOM_SETTINGS'])
-        app.config.from_envvar('HTTPKOM_SETTINGS')
+        config.from_envvar('HTTPKOM_SETTINGS')
     else:
         app.logger.info("No environment variable HTTPKOM_SETTINGS found, using default settings.")
 
-    app.config['HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS'].append(HTTPKOM_CONNECTION_HEADER)
-    app.config['HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS'].append(HTTPKOM_CONNECTION_HEADER)
+    config['HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS'].append(HTTPKOM_CONNECTION_HEADER)
+    config['HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS'].append(HTTPKOM_CONNECTION_HEADER)
+
+    # Import config to Quart's app object.
+    config_dict = dict(config)
+    app.config.from_mapping(config_dict)
 
     if not app.debug and app.config['LOG_FILE'] is not None:
         # keep 7 days of logs, rotated every midnight
@@ -94,7 +128,7 @@ class Server(object):
         self.name = name
         self.host = host
         self.port = port
-    
+
     def to_dict(self):
         return { 'id': self.id, 'sort_order': self.sort_order,
                  'name': self.name, 'host': self.host, 'port': self.port }
@@ -163,7 +197,7 @@ def ios6_cache_fix(resp):
 
 
 @app.route("/")
-def index():
+async def index():
     _servers = dict()
     for i, server in enumerate(current_app.config['HTTPKOM_LYSKOM_SERVERS']):
         _servers[server[0]] = Server(server[0], i, server[1], server[2], server[3])

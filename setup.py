@@ -21,14 +21,12 @@ setuptools.setup(
     ],
     include_package_data=True,
     zip_safe=False,
-    #python_requires='>=2.7, >=3.7',
+    python_requires='>=3.6',
     install_requires=[
-        'Flask',
-        'mimeparse',
-        'Sphinx',
-        'pylyskom',
-        'six',
-        'CherryPy',
-        'Paste'
+        'pylyskom>=0.3',
+        'Flask>=1.1.1',
+        'Hypercorn>=0.9.0',
+        'six>=1.14.0',
+        'Quart>=0.10.0',
     ]
 )

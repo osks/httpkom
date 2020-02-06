@@ -1,4 +1,5 @@
-from flask import jsonify
+from quart import jsonify
+
 from pylyskom.stats import Stats
 from pylyskom.stats import stats as pylyskom_stats
 
@@ -9,7 +10,7 @@ stats = Stats(prefix='httpkom.')
 
 
 @app.route("/stats")
-def get_stats():
+async def get_stats():
     s = _merge_two_dicts(stats.dump(), pylyskom_stats.dump())
     return jsonify(s)
 

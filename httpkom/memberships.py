@@ -2,7 +2,7 @@
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
 from __future__ import absolute_import
-from flask import g, request, jsonify
+from quart import g, request, jsonify
 
 import pylyskom.errors as komerror
 
@@ -16,7 +16,7 @@ from .sessions import requires_login
 
 @bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['PUT'])
 @requires_login
-def persons_put_membership(pers_no, conf_no):
+async def persons_put_membership(pers_no, conf_no):
     """
     Add the person as member to the given conference, or update an
     existing membership.
@@ -64,10 +64,11 @@ def persons_put_membership(pers_no, conf_no):
            "http://localhost:5001/lyskom/persons/14506/memberships/6"
     
     """
-    priority = int(request.json.get('priority', 100))
-    where = int(request.json.get('where', 0))
+    request_json = await request.json
+    priority = int(request_json.get('priority', 100))
+    where = int(request_json.get('where', 0))
     try:
-        g.ksession.add_membership(pers_no, conf_no, priority, where)
+        await g.ksession.add_membership(pers_no, conf_no, priority, where)
         return empty_response(201)
     except (komerror.UndefinedPerson, komerror.UndefinedConference) as ex:
         return error_response(404, kom_error=ex)
@@ -75,7 +76,7 @@ def persons_put_membership(pers_no, conf_no):
 
 @bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['DELETE'])
 @requires_login
-def persons_delete_membership(pers_no, conf_no):
+async def persons_delete_membership(pers_no, conf_no):
     """Remove the person's membership in the given conference.
     
     :param pers_no: Person number
@@ -108,7 +109,7 @@ def persons_delete_membership(pers_no, conf_no):
     
     """
     try:
-        g.ksession.delete_membership(pers_no, conf_no)
+        await g.ksession.delete_membership(pers_no, conf_no)
         return empty_response(204)
     except (komerror.UndefinedPerson, komerror.UndefinedConference, komerror.NotMember) as ex:
         return error_response(404, kom_error=ex)
@@ -116,7 +117,7 @@ def persons_delete_membership(pers_no, conf_no):
 
 @bp.route('/persons/current/memberships/<int:conf_no>/unread', methods=['POST'])
 @requires_login
-def persons_set_unread(conf_no):
+async def persons_set_unread(conf_no):
     """Set number of unread texts in current person's membership for
     the given conference.
     
@@ -151,18 +152,19 @@ def persons_set_unread(conf_no):
     # The property in the JSON object body is just a wrapper because
     # most (all?) JSON libraries doesn't handle just sending a number
     # in the body; they expect/require an object or an array.
+    request_json = await request.json
     try:
-        no_of_unread = int(request.json['no_of_unread'])
+        no_of_unread = int(request_json['no_of_unread'])
     except KeyError:
         return error_response(400, error_msg='Missing "no_of_unread".')
     
-    g.ksession.set_unread(conf_no, no_of_unread)
+    await g.ksession.set_unread(conf_no, no_of_unread)
     return empty_response(204)
 
 
 @bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>')
 @requires_login
-def persons_get_membership(pers_no, conf_no):
+async def persons_get_membership(pers_no, conf_no):
     """Get a person's membership for a conference.
     
     :param pers_no: Person number
@@ -216,14 +218,14 @@ def persons_get_membership(pers_no, conf_no):
     
     """
     try:
-        return jsonify(to_dict(g.ksession.get_membership(pers_no, conf_no), True, g.ksession))
+        return jsonify(await to_dict(await g.ksession.get_membership(pers_no, conf_no), True, g.ksession))
     except komerror.NotMember as ex:
         return error_response(404, kom_error=ex)
 
 
 @bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>/unread')
 @requires_login
-def persons_get_membership_unread(pers_no, conf_no):
+async def persons_get_membership_unread(pers_no, conf_no):
     """Get membershup unread for a person's membership.
     
     :param pers_no: Person number
@@ -265,15 +267,15 @@ def persons_get_membership_unread(pers_no, conf_no):
     
     """
     try:
-        return jsonify(to_dict(g.ksession.get_membership_unread(pers_no, conf_no),
-                               True, g.ksession))
+        return jsonify(await to_dict(await g.ksession.get_membership_unread(pers_no, conf_no),
+                                     True, g.ksession))
     except komerror.NotMember as ex:
         return error_response(404, kom_error=ex)
 
 
 @bp.route('/persons/<int:pers_no>/memberships/')
 @requires_login
-def persons_list_memberships(pers_no):
+async def persons_list_memberships(pers_no):
     """Get list of a person's memberships.
     
     :param pers_no: Person number
@@ -354,14 +356,14 @@ def persons_list_memberships(pers_no):
     passive = get_bool_arg_with_default(request.args, 'passive', False)
     first = int(request.args.get('first', 0))
     no_of_memberships = int(request.args.get('no-of-memberships', 100))
-    memberships, has_more = g.ksession.get_memberships(
+    memberships, has_more = await g.ksession.get_memberships(
         pers_no, first, no_of_memberships, unread, passive)
-    return jsonify(has_more=has_more, memberships=to_dict(memberships, True, g.ksession))
+    return jsonify(has_more=has_more, memberships=await to_dict(memberships, True, g.ksession))
 
 
 @bp.route('/persons/<int:pers_no>/memberships/unread/')
 @requires_login
-def persons_list_membership_unreads(pers_no):
+async def persons_list_membership_unreads(pers_no):
     """Get list of membership unreads for a person's memberships.
     
     :param pers_no: Person number
@@ -401,5 +403,5 @@ def persons_list_membership_unreads(pers_no):
       curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/unread/"
     
     """
-    membership_unreads = g.ksession.get_membership_unreads(pers_no)
-    return jsonify(list=to_dict(membership_unreads, True, g.ksession))
+    membership_unreads = await g.ksession.get_membership_unreads(pers_no)
+    return jsonify(list=await to_dict(membership_unreads, True, g.ksession))

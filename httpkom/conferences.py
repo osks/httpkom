@@ -2,7 +2,7 @@
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
 from __future__ import absolute_import
-from flask import g, request, jsonify
+from quart import g, request, jsonify
 
 import pylyskom.errors as komerror
 
@@ -16,7 +16,7 @@ from .sessions import requires_session, requires_login
 
 @bp.route('/conferences/')
 @requires_session
-def conferences_list():
+async def conferences_list():
     """Lookup conference names.
     
     Query parameters:
@@ -69,7 +69,7 @@ def conferences_list():
     want_confs = get_bool_arg_with_default(request.args, 'want-confs', True)
         
     try:
-        lookup = g.ksession.lookup_name(name, want_pers, want_confs)
+        lookup = await g.ksession.lookup_name(name, want_pers, want_confs)
         confs = [ dict(conf_no=t[0], conf_name=t[1]) for t in lookup ]
         return jsonify(dict(conferences=confs))
     except komerror.Error as ex:
@@ -78,7 +78,7 @@ def conferences_list():
 
 @bp.route('/conferences/<int:conf_no>')
 @requires_login
-def conferences_get(conf_no):
+async def conferences_get(conf_no):
     """Get information about a specific conference.
     
     Query parameters:
@@ -179,15 +179,15 @@ def conferences_get(conf_no):
     """
     try:
         micro = get_bool_arg_with_default(request.args, 'micro', True)
-        return jsonify(to_dict(g.ksession.get_conference(conf_no, micro),
-                               True, g.ksession))
+        return jsonify(await to_dict(await g.ksession.get_conference(conf_no, micro),
+                                     True, g.ksession))
     except komerror.UndefinedConference as ex:
         return error_response(404, kom_error=ex)
 
 
 @bp.route('/conferences/<int:conf_no>/texts/<int:local_text_no>/read-marking', methods=['PUT'])
 @requires_login
-def conferences_put_text_read_marking(conf_no, local_text_no):
+async def conferences_put_text_read_marking(conf_no, local_text_no):
     """Mark text as read in the specified recipient conference (only).
     
     .. rubric:: Request
@@ -210,13 +210,13 @@ def conferences_put_text_read_marking(conf_no, local_text_no):
     
     """
     # TODO: handle conferences/texts that doesn't exist (i.e. return 404).
-    g.ksession.mark_as_read_local(local_text_no, conf_no)
+    await g.ksession.mark_as_read_local(local_text_no, conf_no)
     return empty_response(201)
 
 
 @bp.route('/conferences/<int:conf_no>/texts/')
 @requires_session
-def conferences_get_texts(conf_no):
+async def conferences_get_texts(conf_no):
     """Get the last created texts in the conference. Returns all text
     stats, but not the subject or body.
     
@@ -277,5 +277,5 @@ def conferences_get_texts(conf_no):
     
     """
     no_of_texts = int(request.args.get('no-of-texts', 10))
-    texts = g.ksession.get_last_texts(conf_no, no_of_texts)
-    return jsonify(texts=to_dict(texts, True, g.ksession))
+    texts = await g.ksession.get_last_texts(conf_no, no_of_texts)
+    return jsonify(texts=await to_dict(texts, True, g.ksession))

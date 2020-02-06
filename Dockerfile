@@ -1,23 +1,14 @@
-FROM python:3-alpine
+FROM python:3.8-buster
+LABEL maintainer="Oskar Skoog <oskar@osd.se>"
 
-RUN apk update && \
-    apk upgrade && \
-    apk --no-cache add git bash && \
-    rm -rf /var/cache/apk/* && \
-    pip install virtualenv
+WORKDIR /usr/src/app
 
-RUN virtualenv /env
+COPY requirements.txt ./
 
-RUN git clone https://github.com/osks/pylyskom.git && \
-    cd pylyskom && \
-    /env/bin/pip install -r requirements.txt && \
-    /env/bin/python3 setup.py develop
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-COPY . /httpkom
+COPY . .
 
-RUN cd httpkom && \
-    /env/bin/pip install -r requirements.txt && \
-    /env/bin/python3 setup.py develop
+EXPOSE 5000
 
-ENTRYPOINT ["/env/bin/python3", "-m", "httpkom.main", "--config", "/httpkom/configs/debug.cfg"]
-CMD []
+CMD ["python3", "-m", "httpkom", "--config", "/usr/src/app/configs/debug.cfg"]

@@ -5,7 +5,7 @@ from __future__ import absolute_import
 
 from io import BytesIO
 
-from flask import g, request, jsonify, send_file, url_for
+from quart import g, request, jsonify, send_file, url_for
 
 import pylyskom.errors as komerror
 from pylyskom.utils import parse_content_type
@@ -20,7 +20,7 @@ from .sessions import requires_login
 
 @bp.route('/texts/<int:text_no>')
 @requires_login
-def texts_get(text_no):
+async def texts_get(text_no):
     """Get a text.
     
     Note: The body will only be included in the response if the content type is text.
@@ -74,14 +74,14 @@ def texts_get(text_no):
     
     """
     try:
-        return jsonify(to_dict(g.ksession.get_text(text_no), True, g.ksession))
+        return jsonify(await to_dict(await g.ksession.get_text(text_no), True, g.ksession))
     except komerror.NoSuchText as ex:
         return error_response(404, kom_error=ex)
 
 
 @bp.route('/texts/<int:text_no>/body')
 @requires_login
-def texts_get_body(text_no):
+async def texts_get_body(text_no):
     """Get the body of text, with the content type of the body set in the HTTP header.
     Useful for creating img-tags in HTML and specifying this URL as source.
     
@@ -118,16 +118,16 @@ def texts_get_body(text_no):
     
     """
     try:
-        text = g.ksession.get_text(text_no)
+        text = await g.ksession.get_text(text_no)
         mime_type, encoding = parse_content_type(text.content_type)
         
         if mime_type[0] == 'text':
             data = BytesIO(text.body.encode('utf-8'))
         else:
             data = BytesIO(text.body)
-        response = send_file(data,
-                             mimetype=text.content_type,
-                             as_attachment=False)
+        response = await send_file(data,
+                                   mimetype=text.content_type,
+                                   as_attachment=False)
             
         return response
     except komerror.NoSuchText as ex:
@@ -136,7 +136,7 @@ def texts_get_body(text_no):
 
 @bp.route('/texts/', methods=['POST'])
 @requires_login
-def texts_create():
+async def texts_create():
     """Create a text.
 
     .. rubric:: Request
@@ -191,14 +191,15 @@ def texts_create():
            "http://localhost:5001/lyskom/texts/"
 
     """
-    subject = request.json['subject']
-    body = request.json['body']
-    content_type = request.json['content_type']
-    content_encoding = request.json.get('content_encoding', None)
-    recipient_list = request.json.get('recipient_list', None)
-    comment_to_list = request.json.get('comment_to_list', None)
+    request_json = await request.json
+    subject = request_json['subject']
+    body = request_json['body']
+    content_type = request_json['content_type']
+    content_encoding = request_json.get('content_encoding', None)
+    recipient_list = request_json.get('recipient_list', None)
+    comment_to_list = request_json.get('comment_to_list', None)
 
-    text_no = g.ksession.create_text(subject, body, content_type, content_encoding, recipient_list, comment_to_list)
+    text_no = await g.ksession.create_text(subject, body, content_type, content_encoding, recipient_list, comment_to_list)
 
     headers = { "Location": url_for(".texts_get", server_id=g.server.id, text_no=text_no) }
     return jsonify(text_no=text_no), 201, headers
@@ -206,7 +207,7 @@ def texts_create():
 
 @bp.route('/texts/marks/')
 @requires_login
-def texts_get_marks():
+async def texts_get_marks():
     """Get the list of marked texts.
     
     .. rubric:: Request
@@ -236,12 +237,12 @@ def texts_get_marks():
            "http://localhost:5001/lyskom/texts/marks/"
     
     """
-    return jsonify(dict(marks=to_dict(g.ksession.get_marks(), True, g.ksession)))
+    return jsonify(dict(marks=await to_dict(await g.ksession.get_marks(), True, g.ksession)))
 
 
 @bp.route('/texts/<int:text_no>/mark', methods=['PUT'])
 @requires_login
-def texts_put_mark(text_no):
+async def texts_put_mark(text_no):
     """Mark a text.
     
     .. rubric:: Request
@@ -269,13 +270,14 @@ def texts_put_mark(text_no):
            "http://localhost:5001/lyskom/texts/4711/mark"
     
     """
+    request_json = await request.json
     try:
-        mark_type = request.json['type']
+        mark_type = request_json['type']
     except KeyError:
         return error_response(400, error_msg='Missing "type".')
     
     try:
-        g.ksession.mark_text(text_no, mark_type)
+        await g.ksession.mark_text(text_no, mark_type)
         return empty_response(201)
     except komerror.NoSuchText as ex:
         return error_response(404, kom_error=ex)
@@ -283,7 +285,7 @@ def texts_put_mark(text_no):
 
 @bp.route('/texts/<int:text_no>/mark', methods=['DELETE'])
 @requires_login
-def texts_delete_mark(text_no):
+async def texts_delete_mark(text_no):
     """Unmark a text.
     
     .. rubric:: Request
@@ -306,7 +308,7 @@ def texts_delete_mark(text_no):
     
     """
     try:
-        g.ksession.unmark_text(text_no)
+        await g.ksession.unmark_text(text_no)
         return empty_response(204)
     except komerror.NoSuchText as ex:
         return error_response(404, kom_error=ex)
@@ -314,7 +316,7 @@ def texts_delete_mark(text_no):
 
 @bp.route('/texts/<int:text_no>/read-marking', methods=['PUT'])
 @requires_login
-def texts_put_read_marking(text_no):
+async def texts_put_read_marking(text_no):
     """Mark a text as read in all recipient conferences.
     
     .. rubric:: Request
@@ -336,13 +338,13 @@ def texts_put_read_marking(text_no):
       curl -v -X PUT "http://localhost:5001/lyskom/texts/19680717/read-marking"
     
     """
-    g.ksession.mark_as_read(text_no)
+    await g.ksession.mark_as_read(text_no)
     return empty_response(201)
 
 
 @bp.route('/texts/<int:text_no>/read-marking', methods=['DELETE'])
 @requires_login
-def texts_delete_read_marking(text_no):
+async def texts_delete_read_marking(text_no):
     """Mark a text as unread in all recipient conferences.
     
     .. rubric:: Request
@@ -364,5 +366,5 @@ def texts_delete_read_marking(text_no):
       curl -v DELETE "http://localhost:5001/lyskom/texts/19680717/read-marking"
     
     """
-    g.ksession.mark_as_unread(text_no)
+    await g.ksession.mark_as_unread(text_no)
     return empty_response(204)

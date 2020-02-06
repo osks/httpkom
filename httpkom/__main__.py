@@ -1,10 +1,11 @@
 import argparse
+import asyncio
 import logging
 import os
 import sys
 
-import cherrypy
-from paste.translogger import TransLogger
+from hypercorn.asyncio import serve
+from hypercorn.config import Config
 
 from pylyskom import stats
 from pylyskom.stats import stats as pylyskom_stats
@@ -28,32 +29,13 @@ def start_stats_sender(graphite_host, graphite_port):
 def run_http_server(args):
     os.environ['HTTPKOM_SETTINGS'] = args.config
     init_app(app)
-
-    # Enable WSGI access logging via Paste
-    app_logged = TransLogger(app)
-
-    # Mount the WSGI callable object (app) on the root directory
-    cherrypy.tree.graft(app_logged, '/')
-
-    # Set the configuration of the web server
-    cherrypy.config.update({
-        'engine.autoreload_on': True,
-        'log.screen': True,
-        'server.socket_port': args.port,
-        'server.socket_host': args.host,
-        'server.thread_pool': 1,
-        'server.thread_pool_max': 1,
-    })
-    cherrypy.log.access_log.propagate = False
-    cherrypy.log.error_log.propagate = False
-
-    # Start the CherryPy WSGI web server
-    cherrypy.engine.start()
-    cherrypy.engine.block()
+    config = Config()
+    config.bind = ["{}:{}".format(args.host, args.port)]
+    asyncio.run(serve(app, config))
 
 
 def main():
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
 
     parser = argparse.ArgumentParser(description='Process some integers.')
 
