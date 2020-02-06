@@ -4,11 +4,20 @@
 
 ### Added
 
+- Nothing yet.
+
+## 0.13 (2020-02-06)
+
+### Added
+
+- Run with python3 -m httpkom (instead of httpkom.main)
 - Now uses asyncio version of pylyskom
 - Converted from using Flask to Quart (and Hypercorn)
 
 
 ## 0.12 (2020-01-24)
+
+### Added
 
 - Should now run as a standalone process, not an WSGI app
 - Python 3 support
