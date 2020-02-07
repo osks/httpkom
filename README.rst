@@ -36,7 +36,7 @@ On master:
 1. Update and check CHANGELOG.md.
 
 2. Increment version number and remove ``+dev`` suffix
-   (in ``httpkom/version.py``).
+   IN BOTH ``setup.py`` AND ``httpkom/version.py``!
 
 3. Test manually by using jskom.
 

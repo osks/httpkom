@@ -1,14 +1,12 @@
 import setuptools
 
-from httpkom.version import __version__
-
 
 with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name='httpkom',
-    version=__version__,
+    version='0.13+dev',
     description='REST-like HTTP API for LysKOM',
     long_description=long_description,
     long_description_content_type="text/x-rst",

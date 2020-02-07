@@ -6,6 +6,11 @@
 
 - Nothing yet.
 
+### Changed
+
+- Fix version handling. It wasn't possible to install httpkom due to
+  the way we tried to single source the package version.
+
 
 ## 0.13 (2020-02-06)
 
