@@ -2,11 +2,10 @@
 
 ## Unreleased
 
-### Added
 
-- Nothing yet.
+## 0.14 (2020-02-07)
 
-### Changed
+### Fixed
 
 - Fix version handling. It wasn't possible to install httpkom due to
   the way we tried to single source the package version.
