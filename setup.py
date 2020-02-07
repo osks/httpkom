@@ -6,7 +6,7 @@ with open("README.rst", "r") as fh:
 
 setuptools.setup(
     name='httpkom',
-    version='0.13+dev',
+    version='0.14',
     description='REST-like HTTP API for LysKOM',
     long_description=long_description,
     long_description_content_type="text/x-rst",
