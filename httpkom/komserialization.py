@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from pylyskom import komauxitems, datatypes, errors
 from pylyskom.utils import decode_text, parse_content_type
 from pylyskom.komsession import (KomPerson, KomText, KomConference, KomUConference,
-                                 KomMembership, KomMembershipUnread)
+                                 KomMembership, KomMembershipUnread, KomAuxItem)
 
 
 _ALLOWED_KOMTEXT_AUXITEMS = [
@@ -72,7 +72,9 @@ async def to_dict(obj, session=None):
     elif isinstance(obj, datatypes.MembershipType):
         return MembershipType_to_dict(obj)
     elif isinstance(obj, datatypes.AuxItem):
-        return await AuxItem_to_dict(obj, session)
+        raise RuntimeError("Should use KomAuxItem")
+    elif isinstance(obj, KomAuxItem):
+        return KomAuxItem_to_dict(obj, session)
     elif isinstance(obj, datatypes.Mark):
         return Mark_to_dict(obj, session)
     elif isinstance(obj, datatypes.Time):
@@ -84,7 +86,7 @@ async def to_dict(obj, session=None):
 def KomPerson_to_dict(kom_person):
     if kom_person is None:
         return None
-    return dict(pers_no=kom_person.pers_no, pers_name=kom_person.name)
+    return dict(pers_no=kom_person.pers_no, pers_name=kom_person.username)
 
 async def pers_to_dict(pers_no, session):
     if pers_no is None:
@@ -153,7 +155,7 @@ async def KomConference_to_dict(conf, session):
     else:
         aux_items = []
         for ai in [ai for ai in conf.aux_items if ai.tag in _ALLOWED_KOMTEXT_AUXITEMS]:
-            aux_items.append(await AuxItem_to_dict(ai, session))
+            aux_items.append(KomAuxItem_to_dict(ai, session))
         d['aux_items'] = aux_items
 
     return d
@@ -214,7 +216,7 @@ async def KomText_to_dict(komtext, session):
     else:
         aux_items = []
         for ai in [ai for ai in komtext.aux_items if ai.tag in _ALLOWED_KOMTEXT_AUXITEMS]:
-            aux_items.append(await AuxItem_to_dict(ai, session))
+            aux_items.append(KomAuxItem_to_dict(ai, session))
         d['aux_items'] = aux_items
     
     if komtext.creation_time is None:
@@ -278,10 +280,10 @@ async def MICommentIn_to_dict(micin, session):
                 text_no=micin.text_no,
                 author=author)
 
-async def AuxItem_to_dict(aux_item, session):
+def KomAuxItem_to_dict(aux_item, session):
     return dict(aux_no=aux_item.aux_no,
                 tag=komauxitems.aux_item_number_to_name[aux_item.tag],
-                creator=await pers_to_dict(aux_item.creator, session),
+                creator=KomPerson_to_dict(aux_item.creator),
                 created_at=Time_to_dict(aux_item.created_at),
                 flags=dict(deleted=aux_item.flags.deleted,
                            inherit=aux_item.flags.inherit,
@@ -289,7 +291,7 @@ async def AuxItem_to_dict(aux_item, session):
                            hide_creator=aux_item.flags.hide_creator,
                            dont_garb=aux_item.flags.dont_garb),
                 inherit_limit=aux_item.inherit_limit,
-                
+
                 # aux-items are always latin-1 it seems like, but we
                 # can afford to try with utf-8 first anyway.
                 data=decode_text(aux_item.data, 'utf-8', backup_encoding='latin-1'))
