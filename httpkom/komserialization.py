@@ -74,9 +74,9 @@ async def to_dict(obj, session=None):
     elif isinstance(obj, datatypes.AuxItem):
         raise RuntimeError("Should use KomAuxItem")
     elif isinstance(obj, KomAuxItem):
-        return KomAuxItem_to_dict(obj, session)
+        return KomAuxItem_to_dict(obj)
     elif isinstance(obj, datatypes.Mark):
-        return Mark_to_dict(obj, session)
+        return Mark_to_dict(obj)
     elif isinstance(obj, datatypes.Time):
         return Time_to_dict(obj)
     else:
@@ -155,7 +155,7 @@ async def KomConference_to_dict(conf, session):
     else:
         aux_items = []
         for ai in [ai for ai in conf.aux_items if ai.tag in _ALLOWED_KOMTEXT_AUXITEMS]:
-            aux_items.append(KomAuxItem_to_dict(ai, session))
+            aux_items.append(KomAuxItem_to_dict(ai))
         d['aux_items'] = aux_items
 
     return d
@@ -216,7 +216,7 @@ async def KomText_to_dict(komtext, session):
     else:
         aux_items = []
         for ai in [ai for ai in komtext.aux_items if ai.tag in _ALLOWED_KOMTEXT_AUXITEMS]:
-            aux_items.append(KomAuxItem_to_dict(ai, session))
+            aux_items.append(KomAuxItem_to_dict(ai))
         d['aux_items'] = aux_items
     
     if komtext.creation_time is None:
@@ -280,7 +280,7 @@ async def MICommentIn_to_dict(micin, session):
                 text_no=micin.text_no,
                 author=author)
 
-def KomAuxItem_to_dict(aux_item, session):
+def KomAuxItem_to_dict(aux_item):
     return dict(aux_no=aux_item.aux_no,
                 tag=komauxitems.aux_item_number_to_name[aux_item.tag],
                 creator=KomPerson_to_dict(aux_item.creator),
@@ -296,7 +296,7 @@ def KomAuxItem_to_dict(aux_item, session):
                 # can afford to try with utf-8 first anyway.
                 data=decode_text(aux_item.data, 'utf-8', backup_encoding='latin-1'))
 
-def Mark_to_dict(mark, session):
+def Mark_to_dict(mark):
     return dict(text_no=mark.text_no, type=mark.type)
 
 def Time_to_dict(time):
