@@ -230,8 +230,8 @@ async def sessions_who_am_i():
     try:
         session_no = await g.ksession.who_am_i()
         if g.ksession.is_logged_in():
-            pers_no = g.ksession.get_person_no()
-            person = await to_dict(KomPerson(pers_no), True, g.ksession)
+            pers_no = g.ksession.get_current_person_no()
+            person = await to_dict(KomPerson(pers_no), g.ksession)
         else:
             person = None
 
@@ -390,7 +390,7 @@ async def sessions_login():
     
     try:
         kom_person = await g.ksession.login(pers_no, passwd)
-        return jsonify(await to_dict(kom_person, True, g.ksession)), 201
+        return jsonify(await to_dict(kom_person, g.ksession)), 201
     except (komerror.InvalidPassword, komerror.UndefinedPerson, komerror.LoginDisallowed,
             komerror.ConferenceZero) as ex:
         return error_response(401, kom_error=ex)

@@ -68,6 +68,6 @@ async def persons_create():
     
     try:
         kom_person = await g.ksession.create_person(name, passwd)
-        return jsonify(await to_dict(kom_person, True, g.ksession)), 201
+        return jsonify(await to_dict(kom_person, g.ksession)), 201
     except komerror.Error as ex:
         return error_response(400, kom_error=ex)

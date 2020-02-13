@@ -218,7 +218,7 @@ async def persons_get_membership(pers_no, conf_no):
     
     """
     try:
-        return jsonify(await to_dict(await g.ksession.get_membership(pers_no, conf_no), True, g.ksession))
+        return jsonify(await to_dict(await g.ksession.get_membership(pers_no, conf_no), g.ksession))
     except komerror.NotMember as ex:
         return error_response(404, kom_error=ex)
 
@@ -268,7 +268,7 @@ async def persons_get_membership_unread(pers_no, conf_no):
     """
     try:
         return jsonify(await to_dict(await g.ksession.get_membership_unread(pers_no, conf_no),
-                                     True, g.ksession))
+                                     g.ksession))
     except komerror.NotMember as ex:
         return error_response(404, kom_error=ex)
 
@@ -358,7 +358,7 @@ async def persons_list_memberships(pers_no):
     no_of_memberships = int(request.args.get('no-of-memberships', 100))
     memberships, has_more = await g.ksession.get_memberships(
         pers_no, first, no_of_memberships, unread, passive)
-    return jsonify(has_more=has_more, memberships=await to_dict(memberships, True, g.ksession))
+    return jsonify(has_more=has_more, memberships=await to_dict(memberships, g.ksession))
 
 
 @bp.route('/persons/<int:pers_no>/memberships/unread/')
@@ -404,4 +404,4 @@ async def persons_list_membership_unreads(pers_no):
     
     """
     membership_unreads = await g.ksession.get_membership_unreads(pers_no)
-    return jsonify(list=await to_dict(membership_unreads, True, g.ksession))
+    return jsonify(list=await to_dict(membership_unreads, g.ksession))

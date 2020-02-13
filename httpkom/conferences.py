@@ -180,7 +180,7 @@ async def conferences_get(conf_no):
     try:
         micro = get_bool_arg_with_default(request.args, 'micro', True)
         return jsonify(await to_dict(await g.ksession.get_conference(conf_no, micro),
-                                     True, g.ksession))
+                                     g.ksession))
     except komerror.UndefinedConference as ex:
         return error_response(404, kom_error=ex)
 
@@ -278,4 +278,4 @@ async def conferences_get_texts(conf_no):
     """
     no_of_texts = int(request.args.get('no-of-texts', 10))
     texts = await g.ksession.get_last_texts(conf_no, no_of_texts)
-    return jsonify(texts=await to_dict(texts, True, g.ksession))
+    return jsonify(texts=await to_dict(texts, g.ksession))

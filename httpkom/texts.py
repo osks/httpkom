@@ -74,7 +74,7 @@ async def texts_get(text_no):
     
     """
     try:
-        return jsonify(await to_dict(await g.ksession.get_text(text_no), True, g.ksession))
+        return jsonify(await to_dict(await g.ksession.get_text(text_no), g.ksession))
     except komerror.NoSuchText as ex:
         return error_response(404, kom_error=ex)
 
@@ -237,7 +237,7 @@ async def texts_get_marks():
            "http://localhost:5001/lyskom/texts/marks/"
     
     """
-    return jsonify(dict(marks=await to_dict(await g.ksession.get_marks(), True, g.ksession)))
+    return jsonify(dict(marks=await to_dict(await g.ksession.get_marks(), g.ksession)))
 
 
 @bp.route('/texts/<int:text_no>/mark', methods=['PUT'])
