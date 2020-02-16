@@ -60,7 +60,7 @@ async def to_dict(obj, session=None):
     elif isinstance(obj, datatypes.MICommentIn):
         return await MICommentIn_to_dict(obj, session)
     elif isinstance(obj, KomConference):
-        return await KomConference_to_dict(obj, session)
+        return KomConference_to_dict(obj)
     elif isinstance(obj, KomUConference):
         return KomUConference_to_dict(obj)
     elif isinstance(obj, datatypes.ConfType):
@@ -129,18 +129,18 @@ def ConfType_to_dict(conf_type):
         reserved2=conf_type.reserved2,
         reserved3=conf_type.reserved3)
 
-async def KomConference_to_dict(conf, session):
+def KomConference_to_dict(conf):
     d = dict(
         conf_no=conf.conf_no,
         name=conf.name,
         type=ConfType_to_dict(conf.type),
         creation_time=Time_to_dict(conf.creation_time),
         last_written=Time_to_dict(conf.last_written),
-        creator=await pers_to_dict(conf.creator, session),
+        creator=KomPerson_to_dict(conf.creator),
         presentation=conf.presentation,
-        supervisor=await conf_to_dict(conf.supervisor, session),
-        permitted_submitters=await conf_to_dict(conf.permitted_submitters, session),
-        super_conf=await conf_to_dict(conf.super_conf, session),
+        supervisor=KomUConference_to_dict(conf.supervisor),
+        permitted_submitters=KomUConference_to_dict(conf.permitted_submitters),
+        super_conf=KomUConference_to_dict(conf.super_conf),
         msg_of_day=conf.msg_of_day,
         nice=conf.nice,
         keep_commented=conf.keep_commented,
@@ -161,10 +161,12 @@ async def KomConference_to_dict(conf, session):
     return d
 
 def KomUConference_to_dict(conf):
+    if conf is None:
+        return None
     return dict(
         conf_no=conf.conf_no,
         name=conf.name,
-        conf_name=conf.name, # FIXME: have to have this for compat with conf_to_dict
+        conf_name=conf.name, # FIXME: have to have this for compat with conf_to_dict and usage in jskom
         type=ConfType_to_dict(conf.type),
         highest_local_no=conf.highest_local_no,
         nice=conf.nice
@@ -181,11 +183,11 @@ async def conf_to_dict(conf_no, session):
 async def KomText_to_dict(komtext, session):
     d = dict(
         text_no=komtext.text_no,
-        author=await pers_to_dict(komtext.author, session),
+        author=KomPerson_to_dict(komtext.author),
         no_of_marks=komtext.no_of_marks,
         content_type=komtext.content_type,
         subject=komtext.subject)
-    
+
     mime_type, encoding = parse_content_type(komtext.content_type)
     # Only add body if text
     if mime_type[0] == 'text':
