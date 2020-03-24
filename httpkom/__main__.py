@@ -35,7 +35,7 @@ def run_http_server(args):
 
 
 def main():
-    logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s %(levelname)-7s %(name)-15s %(message)s', level=logging.DEBUG)
 
     parser = argparse.ArgumentParser(description='Process some integers.')
 

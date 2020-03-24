@@ -12,6 +12,7 @@ import six
 # constants
 HTTPKOM_CONNECTION_HEADER = 'Httpkom-Connection'
 
+log = logging.getLogger("httpkom")
 
 app = Quart(__name__)
 bp = Blueprint('frontend', __name__, url_prefix='/<string:server_id>')
@@ -70,11 +71,11 @@ def init_app(app):
 
     config.from_object(default_settings)
     if 'HTTPKOM_SETTINGS' in os.environ:
-        app.logger.info("Using config file specified by HTTPKOM_SETTINGS environment variable: %s",
-                        os.environ['HTTPKOM_SETTINGS'])
+        log.info("Using config file specified by HTTPKOM_SETTINGS environment variable: %s",
+                 os.environ['HTTPKOM_SETTINGS'])
         config.from_envvar('HTTPKOM_SETTINGS')
     else:
-        app.logger.info("No environment variable HTTPKOM_SETTINGS found, using default settings.")
+        log.info("No environment variable HTTPKOM_SETTINGS found, using default settings.")
 
     config['HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS'].append(HTTPKOM_CONNECTION_HEADER)
     config['HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS'].append(HTTPKOM_CONNECTION_HEADER)
