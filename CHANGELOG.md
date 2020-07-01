@@ -3,6 +3,13 @@
 ## Unreleased
 
 
+## 0.15 (2020-07-01)
+
+### Changed
+
+- Minor refactorings and changes.
+
+
 ## 0.14 (2020-02-07)
 
 ### Fixed
