@@ -3,6 +3,13 @@
 ## Unreleased
 
 
+## 0.16 (2020-07-01)
+
+### Changed
+
+- Update required pylyskom version to 0.4.
+
+
 ## 0.15 (2020-07-01)
 
 ### Changed
