@@ -213,7 +213,7 @@ def requires_login(f):
     @functools.wraps(f)
     @requires_session
     async def decorated(*args, **kwargs):
-        if g.ksession.is_logged_in():
+        if await g.ksession.is_logged_in():
             return await f(*args, **kwargs)
         else:
             return empty_response(401)
@@ -229,8 +229,8 @@ async def sessions_who_am_i():
     """
     try:
         session_no = await g.ksession.who_am_i()
-        if g.ksession.is_logged_in():
-            pers_no = g.ksession.get_current_person_no()
+        if await g.ksession.is_logged_in():
+            pers_no = await g.ksession.get_current_person_no()
             person = await to_dict(KomPerson(pers_no), g.ksession)
         else:
             person = None

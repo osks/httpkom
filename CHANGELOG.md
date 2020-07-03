@@ -3,6 +3,14 @@
 ## Unreleased
 
 
+## 0.17 (2020-07-03)
+
+### Fixex
+
+- Update required pylyskom version to 0.5
+- Fix use of AioKomSession methods that are now async.
+
+
 ## 0.16 (2020-07-01)
 
 ### Changed
