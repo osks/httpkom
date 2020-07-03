@@ -37,7 +37,7 @@ def run_http_server(args):
 def main():
     logging.basicConfig(format='%(asctime)s %(levelname)-7s %(name)-15s %(message)s', level=logging.DEBUG)
 
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description='Httpkom')
 
     parser.add_argument('--config', help='Path to configuration file',
                         required=True)
