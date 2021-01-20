@@ -90,7 +90,7 @@ Oskar Skoog <oskar@osd.se>
 Copyright and license
 ---------------------
 
-Copyright (C) 2012-2020 Oskar Skoog
+Copyright (C) 2012-2021 Oskar Skoog
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
