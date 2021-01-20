@@ -1,6 +1,6 @@
 # Changelog for httpkom
 
-## Unreleased
+## 0.18 (2021-01-20)
 
 ### Changed
 
