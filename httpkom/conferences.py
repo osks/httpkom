@@ -46,11 +46,11 @@ async def conferences_list():
       {
         "conferences": [
           {
-            "conf_name": "Oskars tredje person", 
+            "name": "Oskars tredje person",
             "conf_no": 13212
-          }, 
+          },
           {
-            "conf_name": "Oskars Testperson", 
+            "name": "Oskars Testperson",
             "conf_no": 14506
           }
         ]
@@ -70,7 +70,7 @@ async def conferences_list():
         
     try:
         lookup = await g.ksession.lookup_name(name, want_pers, want_confs)
-        confs = [ dict(conf_no=t[0], conf_name=t[1]) for t in lookup ]
+        confs = [ dict(conf_no=t[0], name=t[1]) for t in lookup ]
         return jsonify(dict(conferences=confs))
     except komerror.Error as ex:
         return error_response(400, kom_error=ex)
@@ -125,7 +125,7 @@ async def conferences_get(conf_no):
       
       {
         "super_conf": {
-          "conf_name": "", 
+          "name": "",
           "conf_no": 0
         }, 
         "creator": {
@@ -136,7 +136,7 @@ async def conferences_get(conf_no):
         "no_of_members": 1, 
         "creation_time": "2013-11-30T15:58:06Z",
         "permitted_submitters": {
-          "conf_name": "", 
+          "name": "",
           "conf_no": 0
         }, 
         "conf_no": 14506, 
@@ -157,7 +157,7 @@ async def conferences_get(conf_no):
         "expire": 0, 
         "msg_of_day": 0, 
         "supervisor": {
-          "conf_name": "Oskars Testperson", 
+          "name": "Oskars Testperson",
           "conf_no": 14506
         }, 
         "presentation": 0, 
@@ -247,16 +247,18 @@ async def conferences_get_texts(conf_no):
           {
             "recipient_list": [
               {
-                "conf_name": "Oskars Testperson",
+                "recpt": {
+                  "conf_no": 14506
+                  "name": "Oskars Testperson",
+                },
                 "type": "to",
                 "loc_no": 29,
-                "conf_no": 14506
               }
-            ], 
+            ],
             "author": {
               "pers_no": 14506,
               "pers_name": "Oskars Testperson"
-            }, 
+            },
             "creation_time": "2013-11-30T15:58:06Z",
             "comment_in_list": [],
             "content_type": "text/x-kom-basic",

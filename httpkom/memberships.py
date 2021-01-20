@@ -187,7 +187,7 @@ async def persons_get_membership(pers_no, conf_no):
       {
         "pers_no": <pers_no>,
         "conference": {
-          "conf_name": "Oskars Testperson", 
+          "name": "Oskars Testperson",
           "conf_no": <conf_no>
         }, 
         "priority": 255, 
@@ -319,7 +319,7 @@ async def persons_list_memberships(pers_no):
           {
             "pers_no": <pers_no>,
             "conference": {
-              "conf_name": "Oskars Testperson", 
+              "name": "Oskars Testperson",
               "conf_no": 14506
             }, 
             "priority": 255, 

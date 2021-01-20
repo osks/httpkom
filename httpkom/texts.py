@@ -41,10 +41,12 @@ async def texts_get(text_no):
         "body": "r\u00e4ksm\u00f6rg\u00e5s",
         "recipient_list": [
           {
-            "conf_name": "Oskars Testperson",
+            "recpt": {
+              "conf_no": 14506
+              "name": "Oskars Testperson",
+            },
             "type": "to",
             "loc_no": 29,
-            "conf_no": 14506
           }
         ], 
         "author": {

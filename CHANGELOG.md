@@ -2,10 +2,15 @@
 
 ## Unreleased
 
+### Changed
+
+- Update to be compatible with next version of pylyskom.
+- API changes: Changes "conf_name" to "name".
+
 
 ## 0.17 (2020-07-03)
 
-### Fixex
+### Fixed
 
 - Update required pylyskom version to 0.5
 - Fix use of AioKomSession methods that are now async.

@@ -4,8 +4,17 @@
 from __future__ import absolute_import
 from pylyskom import komauxitems, datatypes, errors
 from pylyskom.utils import decode_text, parse_content_type
-from pylyskom.komsession import (KomPerson, KomText, KomConference, KomUConference,
-                                 KomMembership, KomMembershipUnread, KomAuxItem)
+from pylyskom.komsession import (
+    KomAuxItem,
+    KomConference,
+    KomConferenceName,
+    KomMembership,
+    KomMembershipUnread,
+    KomPerson,
+    KomPersonName,
+    KomText,
+    KomUConference,
+)
 
 
 _ALLOWED_KOMTEXT_AUXITEMS = [
@@ -51,6 +60,8 @@ async def to_dict(obj, session=None):
         return [ await to_dict(el, session) for el in obj ]
     elif isinstance(obj, KomPerson):
         return KomPerson_to_dict(obj)
+    elif isinstance(obj, KomPersonName):
+        return KomPersonName_to_dict(obj)
     elif isinstance(obj, KomText):
         return await KomText_to_dict(obj, session)
     elif isinstance(obj, datatypes.MIRecipient):
@@ -59,6 +70,8 @@ async def to_dict(obj, session=None):
         return await MICommentTo_to_dict(obj, session)
     elif isinstance(obj, datatypes.MICommentIn):
         return await MICommentIn_to_dict(obj, session)
+    elif isinstance(obj, KomConferenceName):
+        return KomConferenceName_to_dict(obj)
     elif isinstance(obj, KomConference):
         return KomConference_to_dict(obj)
     elif isinstance(obj, KomUConference):
@@ -88,10 +101,17 @@ def KomPerson_to_dict(kom_person):
         return None
     return dict(pers_no=kom_person.pers_no, pers_name=kom_person.username)
 
+def KomPersonName_to_dict(kom_person_name):
+    if kom_person_name is None:
+        return None
+    return dict(pers_no=kom_person_name.pers_no, pers_name=kom_person_name.username)
+
+# TODO: Replace usage of pers_to_dict with KomPersonName_to_dict
 async def pers_to_dict(pers_no, session):
     if pers_no is None:
         return None
-    return dict(pers_no=pers_no, pers_name=await session.get_conf_name(pers_no))
+    person = await session.get_person_name(pers_no)
+    return dict(pers_no=person.pers_no, pers_name=person.username)
 
 def KomMembership_to_dict(membership):
     return dict(
@@ -100,7 +120,7 @@ def KomMembership_to_dict(membership):
         last_time_read=Time_to_dict(membership.last_time_read),
         conference=KomUConference_to_dict(membership.conference),
         priority=membership.priority,
-        added_by=KomPerson_to_dict(membership.added_by),
+        added_by=KomPersonName_to_dict(membership.added_by),
         added_at=Time_to_dict(membership.added_at),
         type=MembershipType_to_dict(membership.type))
 
@@ -129,6 +149,14 @@ def ConfType_to_dict(conf_type):
         reserved2=conf_type.reserved2,
         reserved3=conf_type.reserved3)
 
+def KomConferenceName_to_dict(conf):
+    if conf is None:
+        return None
+    return dict(
+        conf_no=conf.conf_no,
+        name=conf.name,
+    )
+
 def KomConference_to_dict(conf):
     d = dict(
         conf_no=conf.conf_no,
@@ -136,7 +164,7 @@ def KomConference_to_dict(conf):
         type=ConfType_to_dict(conf.type),
         creation_time=Time_to_dict(conf.creation_time),
         last_written=Time_to_dict(conf.last_written),
-        creator=KomPerson_to_dict(conf.creator),
+        creator=KomPersonName_to_dict(conf.creator),
         presentation=conf.presentation,
         supervisor=KomUConference_to_dict(conf.supervisor),
         permitted_submitters=KomUConference_to_dict(conf.permitted_submitters),
@@ -166,18 +194,9 @@ def KomUConference_to_dict(conf):
     return dict(
         conf_no=conf.conf_no,
         name=conf.name,
-        conf_name=conf.name, # FIXME: have to have this for compat with conf_to_dict and usage in jskom
         type=ConfType_to_dict(conf.type),
         highest_local_no=conf.highest_local_no,
         nice=conf.nice
-    )
-
-async def conf_to_dict(conf_no, session):
-    if conf_no is None:
-        return None
-    return dict(
-        conf_no=conf_no,
-        conf_name=await session.get_conf_name(conf_no)
     )
 
 async def KomText_to_dict(komtext, session):
@@ -231,25 +250,25 @@ async def KomText_to_dict(komtext, session):
 async def MIRecipient_to_dict(mir, session):
     if not mir.type in MIRecipient_type_to_str:
         raise KeyError("Unknown MIRecipient type: %s" % mir.type)
-    
+
     if mir.rec_time is None:
         rec_time = None
     else:
         rec_time = Time_to_dict(mir.rec_time)
-    
-    
+
     if mir.sent_at is None:
         sent_at = None
     else:
         sent_at = Time_to_dict(mir.sent_at)
-    
+
+    recpt_conf = await session.get_conf_name(mir.recpt)
     d = dict(type=MIRecipient_type_to_str[mir.type],
-             recpt=await conf_to_dict(mir.recpt, session),
+             recpt=KomConferenceName_to_dict(recpt_conf),
              loc_no=mir.loc_no,
              sent_by=await pers_to_dict(mir.sent_by, session),
              sent_at=sent_at,
              rec_time=rec_time)
-    
+
     return d
 
 async def MICommentTo_to_dict(micto, session):
