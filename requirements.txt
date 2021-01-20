@@ -1,4 +1,4 @@
-pylyskom==0.5
+pylyskom==0.6
 Flask==1.1.1
 Sphinx==2.3.1
 six==1.14.0

@@ -21,7 +21,7 @@ setuptools.setup(
     zip_safe=False,
     python_requires='>=3.6',
     install_requires=[
-        'pylyskom>=0.5',
+        'pylyskom>=0.6',
         'Flask>=1.1.1',
         'Hypercorn>=0.9.0',
         'six>=1.14.0',
