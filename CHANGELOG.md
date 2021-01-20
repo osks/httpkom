@@ -1,5 +1,12 @@
 # Changelog for httpkom
 
+## 0.19 (2021-01-20)
+
+### Fixed
+
+- Fix dict serialization.
+
+
 ## 0.18 (2021-01-20)
 
 ### Changed
