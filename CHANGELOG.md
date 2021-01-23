@@ -1,5 +1,13 @@
 # Changelog for httpkom
 
+## Unreleased
+
+### Added
+
+- Added API for returning server info.
+- Added API for changing presentation.
+
+
 ## 0.19 (2021-01-20)
 
 ### Fixed

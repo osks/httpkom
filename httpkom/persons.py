@@ -26,6 +26,18 @@ async def persons_get_user_area_block(pers_no, block_name):
     return jsonify(block)
 
 
+@bp.route('/persons/<int:pers_no>/set-presentation', methods=['POST'])
+@requires_login
+async def persons_set_presentation(pers_no):
+    request_json = await request.json
+    text_no = request_json['text_no']
+    try:
+        await g.ksession.set_presentation(pers_no, text_no);
+    except komerror.Error as ex:
+        return error_response(400, kom_error=ex)
+    return empty_response(201)
+
+
 @bp.route('/persons/', methods=['POST'])
 @requires_session
 async def persons_create():

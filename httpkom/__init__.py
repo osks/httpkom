@@ -108,6 +108,7 @@ def init_app(app):
     from . import persons
     from . import memberships
     from . import errors
+    from . import server
     from . import stats
 
     # to avoid pyflakes errors
@@ -117,6 +118,7 @@ def init_app(app):
     dir(persons)
     dir(memberships)
     dir(errors)
+    dir(server)
     dir(stats)
 
     app.register_blueprint(bp)

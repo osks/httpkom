@@ -14,6 +14,7 @@ from pylyskom.komsession import (
     KomPersonName,
     KomText,
     KomUConference,
+    KomServerInfo,
 )
 
 
@@ -92,6 +93,8 @@ async def to_dict(obj, session=None):
         return Mark_to_dict(obj)
     elif isinstance(obj, datatypes.Time):
         return Time_to_dict(obj)
+    elif isinstance(obj, KomServerInfo):
+        return KomServerInfo_to_dict(obj)
     else:
         #raise NotImplementedError("to_dict is not implemented for: %s" % type(obj))
         return obj
@@ -322,3 +325,14 @@ def Mark_to_dict(mark):
 
 def Time_to_dict(time):
     return time.to_iso_8601()
+
+def KomServerInfo_to_dict(info):
+    return dict(
+        version=info.version,
+        conf_pres_conf=KomConferenceName_to_dict(info.conf_pres_conf),
+        pers_pres_conf=KomConferenceName_to_dict(info.pers_pres_conf),
+        motd_conf=KomConferenceName_to_dict(info.motd_conf),
+        kom_news_conf=KomConferenceName_to_dict(info.kom_news_conf),
+        motd_of_lyskom=info.motd_of_lyskom,
+        #aux_item_list=info.aux_item_list #(ArrayAuxItem)
+    )
