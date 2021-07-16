@@ -32,7 +32,20 @@ async def persons_set_presentation(pers_no):
     request_json = await request.json
     text_no = request_json['text_no']
     try:
-        await g.ksession.set_presentation(pers_no, text_no);
+        await g.ksession.set_presentation(pers_no, text_no)
+    except komerror.Error as ex:
+        return error_response(400, kom_error=ex)
+    return empty_response(201)
+
+
+@bp.route('/persons/<int:pers_no>/set-passwd', methods=['POST'])
+@requires_login
+async def persons_set_passwd(pers_no):
+    request_json = await request.json
+    old_pwd = request_json['old_pwd']
+    new_pwd = request_json['new_pwd']
+    try:
+        await g.ksession.set_passwd(pers_no, old_pwd, new_pwd)
     except komerror.Error as ex:
         return error_response(400, kom_error=ex)
     return empty_response(201)

@@ -5,7 +5,8 @@
 ### Added
 
 - Added API for returning server info.
-- Added API for changing presentation.
+- Added API for setting presentation.
+- Added API for setting password.
 
 
 ## 0.19 (2021-01-20)
