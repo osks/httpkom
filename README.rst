@@ -57,6 +57,10 @@ On master:
 
 9. Add ``+dev`` suffix to version number, commit and push.
 
+10. Github release: Go to https://github.com/osks/httpkom/releases
+    and draft a new release. Select tag and set title to "Version
+    <version>", and then publish the release.
+
 
 Tools
 *****
