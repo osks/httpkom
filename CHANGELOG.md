@@ -2,11 +2,19 @@
 
 ## Unreleased
 
+
+## 0.20 (2022-09-12)
+
 ### Added
 
 - Added API for returning server info.
 - Added API for setting presentation.
 - Added API for setting password.
+
+### Fixed
+
+- Update required pylyskom version to 0.8 to fix issue with texts by
+  anonymous users, and to add support for new functionality.
 
 
 ## 0.19 (2021-01-20)
