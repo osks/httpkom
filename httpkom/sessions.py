@@ -172,9 +172,9 @@ def with_connection_id(f):
     and assign it to 'g.connection_id'.
     """
     @functools.wraps(f)
-    def decorated(*args, **kwargs):
+    async def decorated(*args, **kwargs):
         g.connection_id = _get_connection_id_from_request()
-        return f(*args, **kwargs)
+        return await f(*args, **kwargs)
     return decorated
 
 

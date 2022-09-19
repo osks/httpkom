@@ -19,12 +19,12 @@ setuptools.setup(
     ],
     include_package_data=True,
     zip_safe=False,
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     install_requires=[
         'pylyskom>=0.8',
-        'Flask>=1.1.1',
-        'Hypercorn>=0.9.0',
+        'Flask>=2.2.2',
+        'Hypercorn>=0.14.3',
         'six>=1.14.0',
-        'Quart>=0.10.0',
+        'Quart>=0.18.0',
     ]
 )

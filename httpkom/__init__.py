@@ -18,26 +18,6 @@ app = Quart(__name__)
 bp = Blueprint('frontend', __name__, url_prefix='/<string:server_id>')
 
 
-# Patch to fix a bug in Quart.inject_url_defaults.
-# (bug reported in https://gitlab.com/pgjones/quart/issues/294)
-from itertools import chain
-def patched_inject_url_defaults(self, endpoint: str, values: dict) -> None:
-    """Injects default URL values into the passed values dict.
-
-    This is used to assist when building urls, see
-    :func:`~quart.helpers.url_for`.
-    """
-    functions = self.url_value_preprocessors[None]
-    if '.' in endpoint:
-        blueprint = endpoint.rsplit('.', 1)[0]
-        functions = chain(functions, self.url_default_functions.get(blueprint, ()))  # type: ignore
-
-    for function in functions:
-        function(endpoint, values)
-
-Quart.inject_url_defaults = patched_inject_url_defaults
-
-
 class default_settings:
     DEBUG = False
     LOG_FILE = None

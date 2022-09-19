@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Fixed
+
+- Fixed with_connection_id wrapper to be async. For some reason it
+  worked before with the old version of Quart/Hypercorn, but after the
+  upgrade it didn't work.
+
+### Changed
+
+- Update dependencies to newer Quart and Hypercorn, and thus also
+  newer Flask.
+- Removed Quart patch inject_url_defaults, as Quart has been upgraded
+  to a version that should have that fix.
+- Python 3.6 is not supported (wasn't supported before either, the
+  information in setup.py was incorrect).
+
 
 ## 0.20 (2022-09-12)
 
