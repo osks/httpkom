@@ -133,38 +133,33 @@ def pull_server_id(endpoint, values):
 
 @app.after_request
 def allow_crossdomain(resp):
-    def is_allowed(origin):
-        allowed_origins = app.config['HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS']
-        if allowed_origins is not None:
-            if isinstance(allowed_origins, six.string_types) and allowed_origins == '*':
-                return True
-            
-            if origin in allowed_origins:
-                return True
-        
-        return False
-            
-    
     if 'Origin' in request.headers:
         h = resp.headers
+        allowed_origins = app.config['HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS']
         origin = request.headers['Origin']
-        if is_allowed(origin):
+        if (allowed_origins == '*') or ('*' in allowed_origins):
+            h['Access-Control-Allow-Origin'] = '*'
+            is_allowed = True
+        elif origin in allowed_origins:
             h['Access-Control-Allow-Origin'] = origin
-                          
-            h['Access-Control-Allow-Methods'] = \
-                ', '.join(app.config['HTTPKOM_CROSSDOMAIN_ALLOW_METHODS'])
-            
-            h['Access-Control-Max-Age'] = \
-                str(app.config['HTTPKOM_CROSSDOMAIN_MAX_AGE'])
-            
-            h['Access-Control-Allow-Headers'] = \
-                ', '.join(app.config['HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS'])
-            
-            h['Access-Control-Expose-Headers'] = \
-                ', '.join(app.config['HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS'])
+            is_allowed = True
         else:
             h['Access-Control-Allow-Origin'] = 'null'
-    
+            is_allowed = False
+
+        if is_allowed:
+            h['Access-Control-Allow-Methods'] = \
+                ', '.join(app.config['HTTPKOM_CROSSDOMAIN_ALLOW_METHODS'])
+
+            h['Access-Control-Max-Age'] = \
+                str(app.config['HTTPKOM_CROSSDOMAIN_MAX_AGE'])
+
+            h['Access-Control-Allow-Headers'] = \
+                ', '.join(app.config['HTTPKOM_CROSSDOMAIN_ALLOW_HEADERS'])
+
+            h['Access-Control-Expose-Headers'] = \
+                ', '.join(app.config['HTTPKOM_CROSSDOMAIN_EXPOSE_HEADERS'])
+
     return resp
 
 
