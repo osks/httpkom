@@ -5,7 +5,7 @@ import os
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-from quart import Quart, Blueprint, request, jsonify, g, abort, current_app
+from quart import Quart, Blueprint, request, jsonify, g, abort, current_app, has_request_context, has_app_context
 import six
 
 
@@ -90,6 +90,7 @@ def init_app(app):
     from . import errors
     from . import server
     from . import stats
+    from . import ws
 
     # to avoid pyflakes errors
     dir(conferences)
@@ -100,6 +101,7 @@ def init_app(app):
     dir(errors)
     dir(server)
     dir(stats)
+    dir(ws)
 
     app.register_blueprint(bp)
 
@@ -120,6 +122,10 @@ class Server(object):
 # http://flask.pocoo.org/docs/patterns/urlprocessors/
 @bp.url_value_preprocessor
 def pull_server_id(endpoint, values):
+    if not has_request_context():
+        return
+    if not has_app_context():
+        return
     _servers = dict()
     for i, server in enumerate(current_app.config['HTTPKOM_LYSKOM_SERVERS']):
         _servers[server[0]] = Server(server[0], i, server[1], server[2], server[3])
@@ -133,6 +139,8 @@ def pull_server_id(endpoint, values):
 
 @app.after_request
 def allow_crossdomain(resp):
+    if not has_request_context():
+        return
     if 'Origin' in request.headers:
         h = resp.headers
         allowed_origins = app.config['HTTPKOM_CROSSDOMAIN_ALLOWED_ORIGINS']
@@ -165,6 +173,8 @@ def allow_crossdomain(resp):
 
 @app.after_request
 def ios6_cache_fix(resp):
+    if not has_request_context():
+        return
     # Safari in iOS 6 has excessive caching, so this is to stop it
     # from caching our POST requests. We also add Cache-Control:
     # no-cache to any request that doesn't already have a

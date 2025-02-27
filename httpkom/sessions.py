@@ -97,7 +97,7 @@ import functools
 import socket
 import uuid
 
-from quart import g, request, jsonify
+from quart import g, request, jsonify, websocket, has_request_context, has_websocket_context
 
 import pylyskom.errors as komerror
 from pylyskom.komsession import KomPerson, KomSessionNotConnected
@@ -147,8 +147,6 @@ def _new_connection_id():
     return str(uuid.uuid4())
 
 
-
-
 def _get_connection_id_from_request():
     if HTTPKOM_CONNECTION_HEADER in request.headers:
         return request.headers[HTTPKOM_CONNECTION_HEADER]
@@ -173,7 +171,12 @@ def with_connection_id(f):
     """
     @functools.wraps(f)
     async def decorated(*args, **kwargs):
-        g.connection_id = _get_connection_id_from_request()
+        if has_request_context():
+            g.connection_id = _get_connection_id_from_request()
+        elif has_websocket_context():
+            g.connection_id = _get_connection_id_from_websocket()
+        else:
+            g.connection_id = None
         return await f(*args, **kwargs)
     return decorated
 
@@ -347,7 +350,20 @@ async def sessions_login():
         "pers_no": 14506,
         "passwd": "test123"
       }
+
+    Or
+
+    ::
     
+      POST /<server_id>/sessions/current/login HTTP/1.1
+      Httpkom-Connection: <id>
+      
+      {
+        "pers_name": "Oskars",
+        "passwd": "test123"
+      }
+
+
     .. rubric:: Responses
     
     Successful login::
@@ -374,22 +390,22 @@ async def sessions_login():
     
     """
     request_json = await request.json
-    try:
-        pers_no = request_json['pers_no']
-        if pers_no is None:
-            return error_response(400, error_msg='"pers_no" is null.')
-    except KeyError:
-        return error_response(400, error_msg='Missing "pers_no".')
-    
+    pers_no = request_json.get('pers_no')
+    pers_name = request_json.get('pers_name')
+    if pers_no is None and pers_name is None:
+        return error_response(400, error_msg='Missing "pers_no" or "pers_name".')
+    if pers_no is not None and pers_name is not None:
+        return error_response(400, error_msg='Only one of "pers_no" and "pers_name" is allowed')
+
     try:
         passwd = request_json['passwd']
         if passwd is None:
             return error_response(400, error_msg='"passwd" is null.')
     except KeyError:
         return error_response(400, error_msg='Missing "passwd".')
-    
+
     try:
-        kom_person = await g.ksession.login(pers_no, passwd)
+        kom_person = await g.ksession.login(pers_no=pers_no, pers_name=pers_name, passwd=passwd)
         return jsonify(await to_dict(kom_person, g.ksession)), 201
     except (komerror.InvalidPassword, komerror.UndefinedPerson, komerror.LoginDisallowed,
             komerror.ConferenceZero) as ex:
