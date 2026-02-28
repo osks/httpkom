@@ -76,6 +76,51 @@ async def conferences_list():
         return error_response(400, kom_error=ex)
 
 
+@bp.route('/conferences/', methods=['POST'])
+@requires_login
+async def conferences_create():
+    """Create a conference.
+
+    .. rubric:: Request
+
+    ::
+
+      POST /<server_id>/conferences/ HTTP/1.0
+
+      {
+        "name": "Test Conference"
+      }
+
+    .. rubric:: Responses
+
+    Conference was created::
+
+      HTTP/1.0 201 Created
+
+      {
+        "conf_no": 14,
+        "name": "Test Conference"
+      }
+
+    .. rubric:: Example
+
+    ::
+
+      curl -v -X POST -H "Content-Type: application/json" \\
+           -d '{ "name": "Test Conference" }' \\
+           http://localhost:5001/lyskom/conferences/
+
+    """
+    request_json = await request.json
+    name = request_json['name']
+
+    try:
+        conf_no = await g.ksession.create_conference(name)
+        return jsonify(conf_no=conf_no, name=name), 201
+    except komerror.Error as ex:
+        return error_response(400, kom_error=ex)
+
+
 @bp.route('/conferences/<int:conf_no>')
 @requires_login
 async def conferences_get(conf_no):
