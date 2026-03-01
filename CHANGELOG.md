@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.32 (2026-03-01)
+
+### Fixed
+
+- Fix pylyskom dependency version (0.30 and 0.31 depended on non-released code).
+
+
 ## 0.31 (2026-03-01)
 
 ### Fixed
