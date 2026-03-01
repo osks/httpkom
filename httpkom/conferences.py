@@ -18,51 +18,47 @@ from .sessions import requires_session, requires_login
 @requires_session
 async def conferences_list():
     """Lookup conference names.
-    
+
     Query parameters:
-    
-    ==========  =======  =================================================================
-    Key         Type     Values
-    ==========  =======  =================================================================
-    name        string   Name to look up according to `KOM conventions <http://www.lysator.liu.se/lyskom/protocol/11.1/protocol-a.html#Name%20Expansion>`_.
-    want-pers   boolean  :true: (Default) Include conferences that are mailboxes.
-                         :false: Do not include conferences that are mailboxes.
-    want-confs  boolean  :true: (Default) Include conferences that are not mailboxes.
-                         :false: Do not include conferences that are not mailboxes.
-    ==========  =======  =================================================================
-        
-    .. rubric:: Request
-    
-    ::
-    
-      GET /<server_id>/conferences/?name=osk%20t&want-confs=false HTTP/1.0
-    
-    .. rubric:: Response
-    
-    ::
-    
-      HTTP/1.0 200 OK
-      
-      {
-        "conferences": [
-          {
-            "name": "Oskars tredje person",
-            "conf_no": 13212
-          },
-          {
-            "name": "Oskars Testperson",
-            "conf_no": 14506
-          }
-        ]
-      }
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X GET -H "Content-Type: application/json" \\
-           "http://localhost:5001/lyskom/conferences/?name=osk%20t&want-confs=false"
-    
+
+    | Key | Type | Values |
+    |---|---|---|
+    | name | string | Name to look up according to [KOM conventions](http://www.lysator.liu.se/lyskom/protocol/11.1/protocol-a.html#Name%20Expansion). |
+    | want-pers | boolean | **true** (Default): Include conferences that are mailboxes. **false**: Do not include conferences that are mailboxes. |
+    | want-confs | boolean | **true** (Default): Include conferences that are not mailboxes. **false**: Do not include conferences that are not mailboxes. |
+
+    **Request:**
+
+    ```
+    GET /<server_id>/conferences/?name=osk%20t&want-confs=false HTTP/1.0
+    ```
+
+    **Response:**
+
+    ```json
+    HTTP/1.0 200 OK
+
+    {
+      "conferences": [
+        {
+          "name": "Oskars tredje person",
+          "conf_no": 13212
+        },
+        {
+          "name": "Oskars Testperson",
+          "conf_no": 14506
+        }
+      ]
+    }
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X GET -H "Content-Type: application/json" \\
+         "http://localhost:5001/lyskom/conferences/?name=osk%20t&want-confs=false"
+    ```
+
     """
     name = request.args['name']
     want_pers = get_bool_arg_with_default(request.args, 'want-pers', True)
@@ -81,34 +77,36 @@ async def conferences_list():
 async def conferences_create():
     """Create a conference.
 
-    .. rubric:: Request
+    **Request:**
 
-    ::
+    ```
+    POST /<server_id>/conferences/ HTTP/1.0
 
-      POST /<server_id>/conferences/ HTTP/1.0
+    {
+      "name": "Test Conference"
+    }
+    ```
 
-      {
-        "name": "Test Conference"
-      }
+    **Responses:**
 
-    .. rubric:: Responses
+    Conference was created:
 
-    Conference was created::
+    ```json
+    HTTP/1.0 201 Created
 
-      HTTP/1.0 201 Created
+    {
+      "conf_no": 14,
+      "name": "Test Conference"
+    }
+    ```
 
-      {
-        "conf_no": 14,
-        "name": "Test Conference"
-      }
+    **Example:**
 
-    .. rubric:: Example
-
-    ::
-
-      curl -v -X POST -H "Content-Type: application/json" \\
-           -d '{ "name": "Test Conference" }' \\
-           http://localhost:5001/lyskom/conferences/
+    ```bash
+    curl -v -X POST -H "Content-Type: application/json" \\
+         -d '{ "name": "Test Conference" }' \\
+         http://localhost:5001/lyskom/conferences/
+    ```
 
     """
     request_json = await request.json
@@ -125,102 +123,105 @@ async def conferences_create():
 @requires_login
 async def conferences_get(conf_no):
     """Get information about a specific conference.
-    
+
     Query parameters:
-    
-    =======  =======  =================================================================
-    Key      Type     Values
-    =======  =======  =================================================================
-    micro    boolean  :true: (Default) Return micro conference information (`UConference <http://www.lysator.liu.se/lyskom/protocol/11.1/protocol-a.html#Conferences>`_) which causes less load on the server.
-                      :false: Return full conference information.
-    =======  =======  =================================================================
-    
-    .. rubric:: Request
-    
-    ::
-    
-      GET /<server_id>/conferences/14506 HTTP/1.1
-    
-    .. rubric:: Responses
-    
-    With micro=true::
-    
-      HTTP/1.0 200 OK
-      
-      {
-        "highest_local_no": 1996, 
-        "nice": 77, 
-        "type": {
-          "forbid_secret": 0, 
-          "allow_anonymous": 1, 
-          "rd_prot": 1, 
-          "secret": 0, 
-          "letterbox": 1, 
-          "original": 0, 
-          "reserved3": 0, 
-          "reserved2": 0
-        }, 
-        "name": "Oskars Testperson", 
+
+    | Key | Type | Values |
+    |---|---|---|
+    | micro | boolean | **true** (Default): Return micro conference information ([UConference](http://www.lysator.liu.se/lyskom/protocol/11.1/protocol-a.html#Conferences)) which causes less load on the server. **false**: Return full conference information. |
+
+    **Request:**
+
+    ```
+    GET /<server_id>/conferences/14506 HTTP/1.1
+    ```
+
+    **Responses:**
+
+    With micro=true:
+
+    ```json
+    HTTP/1.0 200 OK
+
+    {
+      "highest_local_no": 1996,
+      "nice": 77,
+      "type": {
+        "forbid_secret": 0,
+        "allow_anonymous": 1,
+        "rd_prot": 1,
+        "secret": 0,
+        "letterbox": 1,
+        "original": 0,
+        "reserved3": 0,
+        "reserved2": 0
+      },
+      "name": "Oskars Testperson",
+      "conf_no": 14506
+    }
+    ```
+
+    With micro=false:
+
+    ```json
+    HTTP/1.0 200 OK
+
+    {
+      "super_conf": {
+        "name": "",
+        "conf_no": 0
+      },
+      "creator": {
+        "pers_no": 14506,
+        "pers_name": "Oskars Testperson"
+      },
+      "no_of_texts": 1977,
+      "no_of_members": 1,
+      "creation_time": "2013-11-30T15:58:06Z",
+      "permitted_submitters": {
+        "name": "",
+        "conf_no": 0
+      },
+      "conf_no": 14506,
+      "last_written": "2013-11-30T15:58:06Z",
+      "keep_commented": 77,
+      "name": "Oskars Testperson",
+      "type": {
+        "forbid_secret": 0,
+        "allow_anonymous": 1,
+        "rd_prot": 1,
+        "secret": 0,
+        "letterbox": 1,
+        "original": 0,
+        "reserved3": 0,
+        "reserved2": 0
+      },
+      "first_local_no": 20,
+      "expire": 0,
+      "msg_of_day": 0,
+      "supervisor": {
+        "name": "Oskars Testperson",
         "conf_no": 14506
-      }
-    
-    With micro=false::
-    
-      HTTP/1.0 200 OK
-      
-      {
-        "super_conf": {
-          "name": "",
-          "conf_no": 0
-        }, 
-        "creator": {
-          "pers_no": 14506, 
-          "pers_name": "Oskars Testperson"
-        }, 
-        "no_of_texts": 1977, 
-        "no_of_members": 1, 
-        "creation_time": "2013-11-30T15:58:06Z",
-        "permitted_submitters": {
-          "name": "",
-          "conf_no": 0
-        }, 
-        "conf_no": 14506, 
-        "last_written": "2013-11-30T15:58:06Z",
-        "keep_commented": 77, 
-        "name": "Oskars Testperson", 
-        "type": {
-          "forbid_secret": 0, 
-          "allow_anonymous": 1, 
-          "rd_prot": 1, 
-          "secret": 0, 
-          "letterbox": 1, 
-          "original": 0, 
-          "reserved3": 0, 
-          "reserved2": 0
-        }, 
-        "first_local_no": 20, 
-        "expire": 0, 
-        "msg_of_day": 0, 
-        "supervisor": {
-          "name": "Oskars Testperson",
-          "conf_no": 14506
-        }, 
-        "presentation": 0, 
-        "nice": 77
-      }
-    
-    Conference does not exist::
-    
-      HTTP/1.0 404 NOT FOUND
-      
-      { TODO: error stuff }
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X GET "http://localhost:5001/lyskom/conferences/14506?micro=true"
-    
+      },
+      "presentation": 0,
+      "nice": 77
+    }
+    ```
+
+    Conference does not exist:
+
+    ```
+    HTTP/1.0 404 NOT FOUND
+
+    { TODO: error stuff }
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X GET "http://localhost:5001/lyskom/conferences/14506?micro=true"
+    ```
+
     """
     try:
         micro = get_bool_arg_with_default(request.args, 'micro', True)
@@ -234,25 +235,25 @@ async def conferences_get(conf_no):
 @requires_login
 async def conferences_put_text_read_marking(conf_no, local_text_no):
     """Mark text as read in the specified recipient conference (only).
-    
-    .. rubric:: Request
-    
-    ::
-    
-      PUT /<server_id>/conferences/14506/texts/29/read-marking HTTP/1.1
-    
-    .. rubric:: Response
-    
-    ::
-    
-      HTTP/1.1 201 Created
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X PUT "http://localhost:5001/lyskom/conferences/14506/texts/29/read-marking"
-    
+
+    **Request:**
+
+    ```
+    PUT /<server_id>/conferences/14506/texts/29/read-marking HTTP/1.1
+    ```
+
+    **Response:**
+
+    ```
+    HTTP/1.1 201 Created
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X PUT "http://localhost:5001/lyskom/conferences/14506/texts/29/read-marking"
+    ```
+
     """
     # TODO: handle conferences/texts that doesn't exist (i.e. return 404).
     await g.ksession.mark_as_read_local(local_text_no, conf_no)
@@ -264,64 +265,62 @@ async def conferences_put_text_read_marking(conf_no, local_text_no):
 async def conferences_get_texts(conf_no):
     """Get the last created texts in the conference. Returns all text
     stats, but not the subject or body.
-    
+
     TODO: Query parameters for pagination.
-    
+
     Query parameters:
-    
-    ===========  =======  =================================================================
-    Key          Type     Values
-    ===========  =======  =================================================================
-    no-of-texts  integer  Number of text numbers to return. Default: 10
-    ===========  =======  =================================================================
-    
-    .. rubric:: Request
-    
-    ::
-    
-      GET /<server_id>/conferences/<conf_no>/texts/ HTTP/1.0
-    
-    .. rubric:: Response
-    
-    ::
-    
-      HTTP/1.0 200 OK
-      
-      {
-        "texts": [
-          {
-            "recipient_list": [
-              {
-                "recpt": {
-                  "conf_no": 14506
-                  "name": "Oskars Testperson",
-                },
-                "type": "to",
-                "loc_no": 29,
-              }
-            ],
-            "author": {
-              "pers_no": 14506,
-              "pers_name": "Oskars Testperson"
-            },
-            "creation_time": "2013-11-30T15:58:06Z",
-            "comment_in_list": [],
-            "content_type": "text/x-kom-basic",
-            "text_no": 19680717,
-            "comment_to_list": [],
+
+    | Key | Type | Values |
+    |---|---|---|
+    | no-of-texts | integer | Number of text numbers to return. Default: 10 |
+
+    **Request:**
+
+    ```
+    GET /<server_id>/conferences/<conf_no>/texts/ HTTP/1.0
+    ```
+
+    **Response:**
+
+    ```json
+    HTTP/1.0 200 OK
+
+    {
+      "texts": [
+        {
+          "recipient_list": [
+            {
+              "recpt": {
+                "conf_no": 14506
+                "name": "Oskars Testperson",
+              },
+              "type": "to",
+              "loc_no": 29,
+            }
+          ],
+          "author": {
+            "pers_no": 14506,
+            "pers_name": "Oskars Testperson"
           },
-          
-          ...
-        ]
-      }
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X GET -H "Content-Type: application/json" \\
-           "http://localhost:5001/lyskom/conferences/14506/texts/?no-of-texts=3"
-    
+          "creation_time": "2013-11-30T15:58:06Z",
+          "comment_in_list": [],
+          "content_type": "text/x-kom-basic",
+          "text_no": 19680717,
+          "comment_to_list": [],
+        },
+
+        ...
+      ]
+    }
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X GET -H "Content-Type: application/json" \\
+         "http://localhost:5001/lyskom/conferences/14506/texts/?no-of-texts=3"
+    ```
+
     """
     no_of_texts = int(request.args.get('no-of-texts', 10))
     texts = await g.ksession.get_last_texts(conf_no, no_of_texts)

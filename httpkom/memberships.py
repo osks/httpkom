@@ -17,52 +17,52 @@ from .sessions import requires_login
 @bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>', methods=['PUT'])
 @requires_login
 async def persons_put_membership(pers_no, conf_no):
-    """
-    Add the person as member to the given conference, or update an
+    """Add the person as member to the given conference, or update an
     existing membership.
 
-    :param pers_no: Person number
-    :type pers_no: int
-    :param conf_no: Conference number
-    :type conf_no: int
-    
+    Args:
+        pers_no (int): Person number.
+        conf_no (int): Conference number.
+
     Optional parameters in the body:
-    
-    ===========  =======  =================================================================
-    Key          Type     Values
-    ===========  =======  =================================================================
-    priority     integer  (Default 100) The priority of the membership.
-    where        integer  (Default 0) The position in the membership list.
-    ===========  =======  =================================================================
-    
-    .. rubric:: Request
-    
-    ::
-    
-      PUT /<server_id>/persons/<pers_no>/memberships/<conf_no> HTTP/1.1
-      
-      {
-        "priority": 100,
-        "where": 3
-      }
-    
-    .. rubric:: Response
-    
-    Success::
-    
-      HTTP/1.1 201 Created
-    
-    If the person or conference do not exist::
-    
-      HTTP/1.1 404 NOT FOUND
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X PUT -H "Content-Type: application/json" -d { "priority": 100 } \\
-           "http://localhost:5001/lyskom/persons/14506/memberships/6"
-    
+
+    | Key | Type | Values |
+    |---|---|---|
+    | priority | integer | (Default 100) The priority of the membership. |
+    | where | integer | (Default 0) The position in the membership list. |
+
+    **Request:**
+
+    ```
+    PUT /<server_id>/persons/<pers_no>/memberships/<conf_no> HTTP/1.1
+
+    {
+      "priority": 100,
+      "where": 3
+    }
+    ```
+
+    **Response:**
+
+    Success:
+
+    ```
+    HTTP/1.1 201 Created
+    ```
+
+    If the person or conference do not exist:
+
+    ```
+    HTTP/1.1 404 NOT FOUND
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X PUT -H "Content-Type: application/json" -d { "priority": 100 } \\
+         "http://localhost:5001/lyskom/persons/14506/memberships/6"
+    ```
+
     """
     request_json = await request.json
     priority = int(request_json.get('priority', 100))
@@ -78,35 +78,38 @@ async def persons_put_membership(pers_no, conf_no):
 @requires_login
 async def persons_delete_membership(pers_no, conf_no):
     """Remove the person's membership in the given conference.
-    
-    :param pers_no: Person number
-    :type pers_no: int
-    :param conf_no: Conference number
-    :type conf_no: int
 
-    .. rubric:: Request
-    
-    ::
-    
-      DELETE /<server_id>/persons/<pers_no>/memberships/<conf_no> HTTP/1.1
-    
-    .. rubric:: Response
-    
-    Success::
-    
-      HTTP/1.1 204 OK
-    
+    Args:
+        pers_no (int): Person number.
+        conf_no (int): Conference number.
+
+    **Request:**
+
+    ```
+    DELETE /<server_id>/persons/<pers_no>/memberships/<conf_no> HTTP/1.1
+    ```
+
+    **Response:**
+
+    Success:
+
+    ```
+    HTTP/1.1 204 OK
+    ```
+
     If the person or conference do not exist, or if the membership do
-    not exist::
-    
-      HTTP/1.1 404 NOT FOUND
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X DELETE "http://localhost:5001/lyskom/persons/14506/memberships/6"
-    
+    not exist:
+
+    ```
+    HTTP/1.1 404 NOT FOUND
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X DELETE "http://localhost:5001/lyskom/persons/14506/memberships/6"
+    ```
+
     """
     try:
         await g.ksession.delete_membership(pers_no, conf_no)
@@ -120,34 +123,34 @@ async def persons_delete_membership(pers_no, conf_no):
 async def persons_set_unread(conf_no):
     """Set number of unread texts in current person's membership for
     the given conference.
-    
-    :param conf_no: Conference number
-    :type conf_no: int
 
-    .. rubric:: Request
-    
-    ::
-    
-      POST /<server_id>/persons/current/memberships/<conf_no>/unread HTTP/1.1
-      
-      {
-        "no_of_unread": 17
-      }
-    
-    .. rubric:: Response
-    
-    ::
-    
-      HTTP/1.1 204 OK
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X POST -H "Content-Type: application/json" \\
-           -d { "no_of_unread": 17 } \\
-           http://localhost:5001/lyskom/persons/current/memberships/14506/unread
-    
+    Args:
+        conf_no (int): Conference number.
+
+    **Request:**
+
+    ```
+    POST /<server_id>/persons/current/memberships/<conf_no>/unread HTTP/1.1
+
+    {
+      "no_of_unread": 17
+    }
+    ```
+
+    **Response:**
+
+    ```
+    HTTP/1.1 204 OK
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X POST -H "Content-Type: application/json" \\
+         -d { "no_of_unread": 17 } \\
+         http://localhost:5001/lyskom/persons/current/memberships/14506/unread
+    ```
+
     """
     # The property in the JSON object body is just a wrapper because
     # most (all?) JSON libraries doesn't handle just sending a number
@@ -166,56 +169,57 @@ async def persons_set_unread(conf_no):
 @requires_login
 async def persons_get_membership(pers_no, conf_no):
     """Get a person's membership for a conference.
-    
-    :param pers_no: Person number
-    :type pers_no: int
-    :param conf_no: Conference number
-    :type conf_no: int
 
-    .. rubric:: Request
-    
-    ::
-    
-      GET /<server_id>/persons/<pers_no>/memberships/<conf_no> HTTP/1.0
-    
-    .. rubric:: Responses
-    
-    ::
-    
-      HTTP/1.0 200 OK
-      
-      {
-        "pers_no": <pers_no>,
-        "conference": {
-          "name": "Oskars Testperson",
-          "conf_no": <conf_no>
-        }, 
-        "priority": 255, 
-        "added_at": "2013-11-30T15:58:06Z",
-        "position": 3, 
-        "type": {
-          "passive": 0, 
-          "secret": 0, 
-          "passive_message_invert": 0, 
-          "invitation": 0
-        }, 
-        "last_time_read": "2013-11-30T15:58:06Z",
-        "added_by": {
-          "pers_no": 14506, 
-          "pers_name": "Oskars Testperson"
-        }
+    Args:
+        pers_no (int): Person number.
+        conf_no (int): Conference number.
+
+    **Request:**
+
+    ```
+    GET /<server_id>/persons/<pers_no>/memberships/<conf_no> HTTP/1.0
+    ```
+
+    **Responses:**
+
+    ```json
+    HTTP/1.0 200 OK
+
+    {
+      "pers_no": <pers_no>,
+      "conference": {
+        "name": "Oskars Testperson",
+        "conf_no": <conf_no>
+      },
+      "priority": 255,
+      "added_at": "2013-11-30T15:58:06Z",
+      "position": 3,
+      "type": {
+        "passive": 0,
+        "secret": 0,
+        "passive_message_invert": 0,
+        "invitation": 0
+      },
+      "last_time_read": "2013-11-30T15:58:06Z",
+      "added_by": {
+        "pers_no": 14506,
+        "pers_name": "Oskars Testperson"
       }
-    
-    Not a member::
-    
-      HTTP/1.0 404 NOT FOUND
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/14506"
-    
+    }
+    ```
+
+    Not a member:
+
+    ```
+    HTTP/1.0 404 NOT FOUND
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/14506"
+    ```
+
     """
     try:
         return jsonify(await to_dict(await g.ksession.get_membership(pers_no, conf_no), g.ksession))
@@ -227,44 +231,45 @@ async def persons_get_membership(pers_no, conf_no):
 @requires_login
 async def persons_get_membership_unread(pers_no, conf_no):
     """Get membership unread for a person's membership.
-    
-    :param pers_no: Person number
-    :type pers_no: int
-    :param conf_no: Conference number
-    :type conf_no: int
 
-    .. rubric:: Request
-    
-    ::
-    
-      GET /<server_id>/persons/<pers_no>/memberships/<conf_no>/unread HTTP/1.0
-    
-    .. rubric:: Responses
-    
-    ::
-    
-      HTTP/1.0 200 OK
-      
-      {
-        "pers_no": <pers_no>,
-        "conf_no": <conf_no>,
-        "no_of_unread": 2,
-        "unread_texts": [
-          19831603,
-          19831620
-        ]
-      }
-    
-    Not a member::
-    
-      HTTP/1.0 404 NOT FOUND
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/14506/unread"
-    
+    Args:
+        pers_no (int): Person number.
+        conf_no (int): Conference number.
+
+    **Request:**
+
+    ```
+    GET /<server_id>/persons/<pers_no>/memberships/<conf_no>/unread HTTP/1.0
+    ```
+
+    **Responses:**
+
+    ```json
+    HTTP/1.0 200 OK
+
+    {
+      "pers_no": <pers_no>,
+      "conf_no": <conf_no>,
+      "no_of_unread": 2,
+      "unread_texts": [
+        19831603,
+        19831620
+      ]
+    }
+    ```
+
+    Not a member:
+
+    ```
+    HTTP/1.0 404 NOT FOUND
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/14506/unread"
+    ```
+
     """
     try:
         return jsonify(await to_dict(await g.ksession.get_membership_unread(pers_no, conf_no),
@@ -277,80 +282,69 @@ async def persons_get_membership_unread(pers_no, conf_no):
 @requires_login
 async def persons_list_memberships(pers_no):
     """Get list of a person's memberships.
-    
-    :param pers_no: Person number
-    :type pers_no: int
+
+    Args:
+        pers_no (int): Person number.
 
     Query parameters:
-    
-    =================  =======  =================================================================
-    Key                Type     Values
-    =================  =======  =================================================================
-    unread             boolean  :true: Return memberships with unread texts in. The protocol A
-                                       spec says: "The result is guaranteed to include all
-                                       conferences where pers-no has unread texts. It may also
-                                       return some extra conferences. Passive memberships are
-                                       never returned." See persons_list_membership_unreads() if
-                                       you want the exact list of conferences with unread.
-                                :false: (Default) Return all memberships.
-    passive            boolean  :true: Include passive memberships.
-                                :false: (Default) Do not include passive memberships.
-    first              integer  The first position in the membership list to retrieve, numbered
-                                from 0 and up. Not possible with unread=true. Default: 0.
-    no-of-memberships  integer  The number of memberships to retrieve. Not possible with
-                                unread=true. Default: 100.
-    =================  =======  =================================================================
-    
-    .. rubric:: Request
-    
-    ::
-    
-      GET /<server_id>/persons/<pers_no>/memberships/ HTTP/1.1
-    
-    .. rubric:: Response
-    
-    ::
-    
-      HTTP/1.1 200 OK
-      
-      {
-        "has_more": true,
-        "memberships": [
-          {
-            "pers_no": <pers_no>,
-            "conference": {
-              "name": "Oskars Testperson",
-              "conf_no": 14506
-            }, 
-            "priority": 255, 
-            "added_at": "2013-11-30T15:58:06Z",
-            "position": 3, 
-            "type": {
-              "passive": 0, 
-              "secret": 0, 
-              "passive_message_invert": 0, 
-              "invitation": 0
-            }, 
-            "last_time_read": "2013-11-30T15:58:06Z",
-            "added_by": {
-              "pers_no": 14506, 
-              "pers_name": "Oskars Testperson"
-            },
-            
-            "no_of_unread": null,
-            "unread_texts": null
+
+    | Key | Type | Values |
+    |---|---|---|
+    | unread | boolean | **true**: Return memberships with unread texts in. The protocol A spec says: "The result is guaranteed to include all conferences where pers-no has unread texts. It may also return some extra conferences. Passive memberships are never returned." See persons_list_membership_unreads() if you want the exact list of conferences with unread. **false** (Default): Return all memberships. |
+    | passive | boolean | **true**: Include passive memberships. **false** (Default): Do not include passive memberships. |
+    | first | integer | The first position in the membership list to retrieve, numbered from 0 and up. Not possible with unread=true. Default: 0. |
+    | no-of-memberships | integer | The number of memberships to retrieve. Not possible with unread=true. Default: 100. |
+
+    **Request:**
+
+    ```
+    GET /<server_id>/persons/<pers_no>/memberships/ HTTP/1.1
+    ```
+
+    **Response:**
+
+    ```json
+    HTTP/1.1 200 OK
+
+    {
+      "has_more": true,
+      "memberships": [
+        {
+          "pers_no": <pers_no>,
+          "conference": {
+            "name": "Oskars Testperson",
+            "conf_no": 14506
           },
-          
-          ...
-        ]
-      }
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/?unread=true"
-    
+          "priority": 255,
+          "added_at": "2013-11-30T15:58:06Z",
+          "position": 3,
+          "type": {
+            "passive": 0,
+            "secret": 0,
+            "passive_message_invert": 0,
+            "invitation": 0
+          },
+          "last_time_read": "2013-11-30T15:58:06Z",
+          "added_by": {
+            "pers_no": 14506,
+            "pers_name": "Oskars Testperson"
+          },
+
+          "no_of_unread": null,
+          "unread_texts": null
+        },
+
+        ...
+      ]
+    }
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/?unread=true"
+    ```
+
     """
     unread = get_bool_arg_with_default(request.args, 'unread', False)
     passive = get_bool_arg_with_default(request.args, 'passive', False)
@@ -365,43 +359,43 @@ async def persons_list_memberships(pers_no):
 @requires_login
 async def persons_list_membership_unreads(pers_no):
     """Get list of membership unreads for a person's memberships.
-    
-    :param pers_no: Person number
-    :type pers_no: int
 
-    .. rubric:: Request
-    
-    ::
-    
-      GET /<server_id>/persons/<pers_no>/memberships/unread/ HTTP/1.1
-    
-    .. rubric:: Response
-    
-    ::
-    
-      HTTP/1.1 200 OK
-      
-      {
-        "list": [
-          {
-            "pers_no": <pers_no>,
-            "conf_no": <conf_no>,
-            "no_of_unread": 2,
-            "unread_texts": [
-              19831603,
-              19831620
-            ]
-          },
-          ...
-        ]
-      }
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/unread/"
-    
+    Args:
+        pers_no (int): Person number.
+
+    **Request:**
+
+    ```
+    GET /<server_id>/persons/<pers_no>/memberships/unread/ HTTP/1.1
+    ```
+
+    **Response:**
+
+    ```json
+    HTTP/1.1 200 OK
+
+    {
+      "list": [
+        {
+          "pers_no": <pers_no>,
+          "conf_no": <conf_no>,
+          "no_of_unread": 2,
+          "unread_texts": [
+            19831603,
+            19831620
+          ]
+        },
+        ...
+      ]
+    }
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X GET "http://localhost:5001/lyskom/persons/14506/memberships/unread/"
+    ```
+
     """
     membership_unreads = await g.ksession.get_membership_unreads(pers_no)
     return jsonify(list=await to_dict(membership_unreads, g.ksession))

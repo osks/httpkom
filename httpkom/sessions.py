@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2012 Oskar Skoog. Released under GPL.
 
-"""
-The httpkom connection id is the unique identifier that a httpkom
+"""The httpkom connection id is the unique identifier that a httpkom
 client uses to identify which LysKOM connection that it owns. Since
 httpkom can be configured to allow connections to several different
 LysKOM servers, the connection id refers to a specific session on a
@@ -18,61 +17,77 @@ secret. Httpkom uses a separate connection identifier, the httpkom
 connection id (a random UUID), to make it close to impossible to
 intentionally take over another httpkom client's LysKOM connection.
 
-The httpkom connection id is specified as a HTTP header::
+The httpkom connection id is specified as a HTTP header:
 
-  Httpkom-Connection: <uuid>
+```
+Httpkom-Connection: <uuid>
+```
 
-To open a new connection, make a request like this::
+To open a new connection, make a request like this:
 
-  POST /<server_id>/sessions/
-  Content-Type: application/json
-  
-  { "client": { "name": "jskom", "version": "0.6" } }
+```
+POST /<server_id>/sessions/
+Content-Type: application/json
 
-The response will look like this::
+{ "client": { "name": "jskom", "version": "0.6" } }
+```
 
-  HTTP/1.0 201 Created
-  Content-Type: application/json
-  Httpkom-Connection: <uuid>
-  
-  { "session_no": 123456 }
+The response will look like this:
+
+```json
+HTTP/1.0 201 Created
+Content-Type: application/json
+Httpkom-Connection: <uuid>
+
+{ "session_no": 123456 }
+```
 
 This is the only response that will contain the Httpkom-Connection.
 The request must not contain any Httpkom-Connnection header. If the
 request contains a Httpkom-Connection header, the request will fail
-and the response will be::
+and the response will be:
 
-  HTTP/1.0 409 Conflict
+```
+HTTP/1.0 409 Conflict
+```
 
 Subsequent request to that server should contain the returned
 Httpkom-Connection header. For example, a login request will look
-like this::
+like this:
 
-  POST /<server_id>/sessions/current/login
-  Content-Type: application/json
-  Httpkom-Connection: <uuid>
+```
+POST /<server_id>/sessions/current/login
+Content-Type: application/json
+Httpkom-Connection: <uuid>
 
-  { "pers_no": 14506, "passwd": "test123" }
+{ "pers_no": 14506, "passwd": "test123" }
+```
 
-and the response::
+and the response:
 
-  HTTP/1.0 201 Created
-  Content-Type: application/json
-  
-  { "pers_no": 14506, "pers_name": "Oskars Testperson" }
+```json
+HTTP/1.0 201 Created
+Content-Type: application/json
+
+{ "pers_no": 14506, "pers_name": "Oskars Testperson" }
+```
 
 If a resource requires a logged in session and the request contains a
 valid Httpkom-Connection header which is not logged in, the response
-will be::
+will be:
 
-  HTTP/1.0 401 Unauthorized
+```
+HTTP/1.0 401 Unauthorized
+```
 
 If the Httpkom-Connection is missing, or if the connection id specified
 by the Httpkom-Connection header is invalid (for example if the
 connection was to another server than <server_id>, or if there is no
-connection with that id), the response will be::
+connection with that id), the response will be:
 
-  HTTP/1.0 403 Forbidden
+```
+HTTP/1.0 403 Forbidden
+```
 
 When you get a 403 response, the used Httpkom-Connection should be
 considered invalid and should not be used again. If the
@@ -232,42 +247,46 @@ async def sessions_who_am_i():
 
     Returns the session number and, if logged in, the current person.
 
-    .. rubric:: Request
+    **Request:**
 
-    ::
+    ```
+    GET /<server_id>/sessions/current/who-am-i HTTP/1.1
+    Httpkom-Connection: <id>
+    ```
 
-      GET /<server_id>/sessions/current/who-am-i HTTP/1.1
-      Httpkom-Connection: <id>
+    **Response:**
 
-    .. rubric:: Response
+    Logged in:
 
-    Logged in::
+    ```json
+    HTTP/1.1 200 OK
 
-      HTTP/1.1 200 OK
-
-      {
-        "session_no": 12345,
-        "person": {
-          "pers_no": 14506,
-          "pers_name": "Oskars Testperson"
-        }
+    {
+      "session_no": 12345,
+      "person": {
+        "pers_no": 14506,
+        "pers_name": "Oskars Testperson"
       }
+    }
+    ```
 
-    Not logged in::
+    Not logged in:
 
-      HTTP/1.1 200 OK
+    ```json
+    HTTP/1.1 200 OK
 
-      {
-        "session_no": 12345,
-        "person": null
-      }
+    {
+      "session_no": 12345,
+      "person": null
+    }
+    ```
 
-    .. rubric:: Example
+    **Example:**
 
-    ::
-
-      curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
-           "http://localhost:5001/lyskom/sessions/current/who-am-i"
+    ```bash
+    curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
+         "http://localhost:5001/lyskom/sessions/current/who-am-i"
+    ```
 
     """
     try:
@@ -288,25 +307,25 @@ async def sessions_who_am_i():
 async def sessions_current_active():
     """Tell the LysKOM server that the current user is active.
 
-    .. rubric:: Request
+    **Request:**
 
-    ::
+    ```
+    POST /<server_id>/sessions/current/active HTTP/1.1
+    Httpkom-Connection: <id>
+    ```
 
-      POST /<server_id>/sessions/current/active HTTP/1.1
-      Httpkom-Connection: <id>
+    **Response:**
 
-    .. rubric:: Response
+    ```
+    HTTP/1.1 204 No Content
+    ```
 
-    ::
+    **Example:**
 
-      HTTP/1.1 204 No Content
-
-    .. rubric:: Example
-
-    ::
-
-      curl -v -X POST -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
-           "http://localhost:5001/lyskom/sessions/current/active"
+    ```bash
+    curl -v -X POST -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
+         "http://localhost:5001/lyskom/sessions/current/active"
+    ```
 
     """
     await g.ksession.user_is_active()
@@ -317,40 +336,43 @@ async def sessions_current_active():
 @with_connection_id
 async def sessions_create():
     """Create a new session (a connection to the LysKOM server).
-    
+
     Note: The response body also contains the connection_id (in
     addition to the response header) to around problems with buggy
-    CORS implementations[1] in combination with certain javascript
-    libraries (AngularJS).
-    
-    [1] https://bugzilla.mozilla.org/show_bug.cgi?id=608735
-    
-    .. rubric:: Request
-    
-    ::
-    
-      POST /<server_id>/sessions/ HTTP/1.1
-      
-      {
-        "client": { "name": "jskom", "version": "0.2" }
-      }
-    
-    .. rubric:: Responses
-    
-    Successful connect::
-    
-      HTTP/1.0 201 Created
-      Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1
-      
-      {
-        "session_no": 12345,
-        "connection_id": "033556ee-3e52-423f-9c9a-d85aed7688a1"
-      }
-    
-    If the request contains a Httpkom-Connection header::
+    CORS implementations
+    ([bug 608735](https://bugzilla.mozilla.org/show_bug.cgi?id=608735))
+    in combination with certain javascript libraries (AngularJS).
 
-      HTTP/1.0 409 CONFLICT
-    
+    **Request:**
+
+    ```
+    POST /<server_id>/sessions/ HTTP/1.1
+
+    {
+      "client": { "name": "jskom", "version": "0.2" }
+    }
+    ```
+
+    **Responses:**
+
+    Successful connect:
+
+    ```json
+    HTTP/1.0 201 Created
+    Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1
+
+    {
+      "session_no": 12345,
+      "connection_id": "033556ee-3e52-423f-9c9a-d85aed7688a1"
+    }
+    ```
+
+    If the request contains a Httpkom-Connection header:
+
+    ```
+    HTTP/1.0 409 CONFLICT
+    ```
+
     """
     if HTTPKOM_CONNECTION_HEADER in request.headers:
         return empty_response(409)
@@ -390,59 +412,62 @@ async def sessions_create():
 @requires_session
 async def sessions_login():
     """Log in using the current session.
-    
+
     Note: If the login is successful, the matched full name will be
     returned in the response.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      POST /<server_id>/sessions/current/login HTTP/1.1
-      Httpkom-Connection: <id>
-      
-      {
-        "pers_no": 14506,
-        "passwd": "test123"
-      }
+
+    **Request:**
+
+    ```
+    POST /<server_id>/sessions/current/login HTTP/1.1
+    Httpkom-Connection: <id>
+
+    {
+      "pers_no": 14506,
+      "passwd": "test123"
+    }
+    ```
 
     Or
 
-    ::
-    
-      POST /<server_id>/sessions/current/login HTTP/1.1
-      Httpkom-Connection: <id>
-      
-      {
-        "pers_name": "Oskars",
-        "passwd": "test123"
-      }
+    ```
+    POST /<server_id>/sessions/current/login HTTP/1.1
+    Httpkom-Connection: <id>
 
+    {
+      "pers_name": "Oskars",
+      "passwd": "test123"
+    }
+    ```
 
-    .. rubric:: Responses
-    
-    Successful login::
-    
-      HTTP/1.0 201 Created
-      
-      {
-        "pers_no": 14506,
-        "pers_name": "Oskars testperson"
-      }
-    
-    Failed login::
-    
-      HTTP/1.1 401 Unauthorized
-      
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X POST -H "Content-Type: application/json" \\
-           -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
-           -d '{ "pers_no": 14506, "passwd": "test123" }' \\
-            "http://localhost:5001/lyskom/sessions/current/login"
-    
+    **Responses:**
+
+    Successful login:
+
+    ```json
+    HTTP/1.0 201 Created
+
+    {
+      "pers_no": 14506,
+      "pers_name": "Oskars testperson"
+    }
+    ```
+
+    Failed login:
+
+    ```
+    HTTP/1.1 401 Unauthorized
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X POST -H "Content-Type: application/json" \\
+         -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
+         -d '{ "pers_no": 14506, "passwd": "test123" }' \\
+          "http://localhost:5001/lyskom/sessions/current/login"
+    ```
+
     """
     request_json = await request.json
     pers_no = request_json.get('pers_no')
@@ -471,27 +496,29 @@ async def sessions_login():
 @requires_login
 async def sessions_logout():
     """Log out in the current session.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      POST /<server_id>/sessions/current/logout HTTP/1.1
-      Httpkom-Connection: <id>
-      
-    .. rubric:: Responses
-    
-    Successful logout::
-    
-      HTTP/1.0 204 NO CONTENT
-      
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
-           -X POST "http://localhost:5001/lyskom/sessions/current/logout"
-    
+
+    **Request:**
+
+    ```
+    POST /<server_id>/sessions/current/logout HTTP/1.1
+    Httpkom-Connection: <id>
+    ```
+
+    **Responses:**
+
+    Successful logout:
+
+    ```
+    HTTP/1.0 204 NO CONTENT
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
+         -X POST "http://localhost:5001/lyskom/sessions/current/logout"
+    ```
+
     """
 
     await g.ksession.logout()
@@ -502,41 +529,45 @@ async def sessions_logout():
 @requires_session
 async def sessions_delete(session_no):
     """Delete a session (disconnect from the LysKOM server).
-    
-    :param session_no: Session number
-    :type session_no: int
 
     If the request disconnects the current session, the used
     Httpkom-Connection id is no longer valid.
-    
+
     Note (from the protocol A spec): "Session number zero is always
     interpreted as the session making the call, so the easiest way to
     disconnect the current session is to disconnect session zero."
-    
-    .. rubric:: Request
-    
-    ::
-    
-      DELETE /<server_id>/sessions/12345 HTTP/1.1
-      Httpkom-Connection: <id>
-    
-    .. rubric:: Responses
-    
-    Success::
-    
-      HTTP/1.1 204 No Content
-    
-    Session does not exist::
-    
-      HTTP/1.1 404 Not Found
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
-           -X DELETE "http://localhost:5001/lyskom/sessions/12345"
-    
+
+    Args:
+        session_no (int): Session number.
+
+    **Request:**
+
+    ```
+    DELETE /<server_id>/sessions/12345 HTTP/1.1
+    Httpkom-Connection: <id>
+    ```
+
+    **Responses:**
+
+    Success:
+
+    ```
+    HTTP/1.1 204 No Content
+    ```
+
+    Session does not exist:
+
+    ```
+    HTTP/1.1 404 Not Found
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
+         -X DELETE "http://localhost:5001/lyskom/sessions/12345"
+    ```
+
     """
     try:
         await g.ksession.disconnect(session_no)
@@ -553,33 +584,33 @@ async def sessions_delete(session_no):
 @requires_login
 async def sessions_change_working_conference():
     """Change current working conference of the current session.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      POST /<server_id>/sessions/current/working-conference HTTP/1.1
-      Httpkom-Connection: <id>
-      
-      {
-        "conf_no": 14506,
-      }
-    
-    .. rubric:: Responses
-    
-    ::
-    
-      HTTP/1.1 204 No Content
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
-           -X POST -H "Content-Type: application/json" \\
-           -d '{ "conf_no": 14506 }' \\
-           "http://localhost:5001/lyskom/sessions/current/working-conference"
-    
+
+    **Request:**
+
+    ```
+    POST /<server_id>/sessions/current/working-conference HTTP/1.1
+    Httpkom-Connection: <id>
+
+    {
+      "conf_no": 14506,
+    }
+    ```
+
+    **Responses:**
+
+    ```
+    HTTP/1.1 204 No Content
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
+         -X POST -H "Content-Type: application/json" \\
+         -d '{ "conf_no": 14506 }' \\
+         "http://localhost:5001/lyskom/sessions/current/working-conference"
+    ```
+
     """
     request_json = await request.json
     try:

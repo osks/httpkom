@@ -24,19 +24,23 @@ class WebSocketConnection:
     async def handle_request(self, req_msg: dict):
         """Expects websocket request with json like:
 
+        ```json
         {
           "protocol": "echo" / "a",
           "ref_no": <int>,
           "request": "...",
         }
+        ```
 
         and sends back websocket replies with json like:
 
+        ```json
         {
           "protocol": "echo" / "a",
           "ref_no": <int>,
           "reply": "...",
         }
+        ```
 
         """
         try:
@@ -132,31 +136,37 @@ async def ws_new():
     """Open a WebSocket connection for sending raw protocol A requests.
 
     Note: This endpoint is registered directly on the app, not the
-    blueprint, so it does **not** have the ``/<server_id>/`` prefix.
+    blueprint, so it does **not** have the `/<server_id>/` prefix.
 
-    The connection id is passed as a query parameter::
+    The connection id is passed as a query parameter:
 
-      ws://localhost:5001/websocket?Httpkom-Connection=<uuid>
+    ```
+    ws://localhost:5001/websocket?Httpkom-Connection=<uuid>
+    ```
 
     Messages are JSON objects with the following format:
 
-    Request::
+    Request:
 
-      {
-        "protocol": "a",
-        "ref_no": 1,
-        "request": "92 0 { ... }\\n"
-      }
+    ```json
+    {
+      "protocol": "a",
+      "ref_no": 1,
+      "request": "92 0 { ... }\\n"
+    }
+    ```
 
-    Reply::
+    Reply:
 
-      {
-        "protocol": "a",
-        "ref_no": 1,
-        "reply": "=1 ...\\n"
-      }
+    ```json
+    {
+      "protocol": "a",
+      "ref_no": 1,
+      "reply": "=1 ...\\n"
+    }
+    ```
 
-    The ``echo`` protocol can be used for testing -- it echoes back the
+    The `echo` protocol can be used for testing -- it echoes back the
     request as the reply.
     """
     app.logger.debug("Websocket connected")

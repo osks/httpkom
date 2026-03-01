@@ -22,58 +22,62 @@ from .sessions import requires_login
 @requires_login
 async def texts_get(text_no):
     """Get a text.
-    
+
     Note: The body will only be included in the response if the content type is text.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      GET /<server_id>/texts/19680717 HTTP/1.0
-    
-    .. rubric:: Responses
-    
-    Text exists::
-    
-      HTTP/1.0 200 OK
-      
-      {
-        "body": "r\u00e4ksm\u00f6rg\u00e5s",
-        "recipient_list": [
-          {
-            "recpt": {
-              "conf_no": 14506
-              "name": "Oskars Testperson",
-            },
-            "type": "to",
-            "loc_no": 29,
-          }
-        ], 
-        "author": {
-          "pers_no": 14506,
-          "pers_name": "Oskars Testperson"
-        }, 
-        "creation_time": "2013-11-30T15:58:06Z",
-        "comment_in_list": [],
-        "content_type": "text/x-kom-basic",
-        "text_no": 19680717,
-        "comment_to_list": [],
-        "subject": "jaha"
-      }
-    
-    Text does not exist::
-    
-      HTTP/1.0 404 NOT FOUND
-      
-      { TODO: error stuff }
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X GET -H "Content-Type: application/json" \\
-           "http://localhost:5001/lyskom/texts/19680717"
-    
+
+    **Request:**
+
+    ```
+    GET /<server_id>/texts/19680717 HTTP/1.0
+    ```
+
+    **Responses:**
+
+    Text exists:
+
+    ```json
+    HTTP/1.0 200 OK
+
+    {
+      "body": "r\u00e4ksm\u00f6rg\u00e5s",
+      "recipient_list": [
+        {
+          "recpt": {
+            "conf_no": 14506
+            "name": "Oskars Testperson",
+          },
+          "type": "to",
+          "loc_no": 29,
+        }
+      ],
+      "author": {
+        "pers_no": 14506,
+        "pers_name": "Oskars Testperson"
+      },
+      "creation_time": "2013-11-30T15:58:06Z",
+      "comment_in_list": [],
+      "content_type": "text/x-kom-basic",
+      "text_no": 19680717,
+      "comment_to_list": [],
+      "subject": "jaha"
+    }
+    ```
+
+    Text does not exist:
+
+    ```
+    HTTP/1.0 404 NOT FOUND
+
+    { TODO: error stuff }
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X GET -H "Content-Type: application/json" \\
+         "http://localhost:5001/lyskom/texts/19680717"
+    ```
+
     """
     try:
         return jsonify(await to_dict(await g.ksession.get_text(text_no), g.ksession))
@@ -86,38 +90,42 @@ async def texts_get(text_no):
 async def texts_get_body(text_no):
     """Get the body of text, with the content type of the body set in the HTTP header.
     Useful for creating img-tags in HTML and specifying this URL as source.
-    
+
     If the content type is text, the text will be recoded to UTF-8. For other types,
     the content type will be left untouched.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      GET /<server_id>/texts/19680717/body HTTP/1.0
-    
-    .. rubric:: Responses
-    
-    Text exists::
-    
-      HTTP/1.0 200 OK
-      Content-Type: text/x-kom-basic; charset=utf-8
-      
-      räksmörgås
-    
-    Text does not exist::
-    
-      HTTP/1.0 404 NOT FOUND
-      
-      { TODO: error stuff }
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X GET -H "Content-Type: application/json" \\
-           "http://localhost:5001/lyskom/texts/19680717/body"
-    
+
+    **Request:**
+
+    ```
+    GET /<server_id>/texts/19680717/body HTTP/1.0
+    ```
+
+    **Responses:**
+
+    Text exists:
+
+    ```
+    HTTP/1.0 200 OK
+    Content-Type: text/x-kom-basic; charset=utf-8
+
+    räksmörgås
+    ```
+
+    Text does not exist:
+
+    ```
+    HTTP/1.0 404 NOT FOUND
+
+    { TODO: error stuff }
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X GET -H "Content-Type: application/json" \\
+         "http://localhost:5001/lyskom/texts/19680717/body"
+    ```
+
     """
     try:
         text = await g.ksession.get_text(text_no)
@@ -141,56 +149,57 @@ async def texts_get_body(text_no):
 async def texts_create():
     """Create a text.
 
-    .. rubric:: Request
+    **Request:**
 
-    ::
+    ```
+    POST /<server_id>/texts/ HTTP/1.0
 
-      POST /<server_id>/texts/ HTTP/1.0
+    {
+      "body": "r\u00e4ksm\u00f6rg\u00e5s",
+      "subject": "jaha",
+      "recipient_list": [ { "type": "to", "recpt": { "conf_no": 14506 } } ],
+      "content_type": "text/x-kom-basic",
+      "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ]
+    }
+    ```
 
-      {
-        "body": "r\u00e4ksm\u00f6rg\u00e5s",
-        "subject": "jaha",
-        "recipient_list": [ { "type": "to", "recpt": { "conf_no": 14506 } } ],
-        "content_type": "text/x-kom-basic",
-        "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ]
-      }
+    **Responses:**
 
-    .. rubric:: Responses
+    Text was created:
 
-    Text was created::
+    ```json
+    HTTP/1.0 201 Created
+    Location: http://localhost:5001/<server_id>/texts/19724960
 
-      HTTP/1.0 201 Created
-      Location: http://localhost:5001/<server_id>/texts/19724960
+    {
+      "text_no": 19724960,
+    }
+    ```
 
-      {
-        "text_no": 19724960,
-      }
+    **Example text:**
 
-    .. rubric:: Example text:
+    ```bash
+    curl -v -X POST -H "Content-Type: application/json" \\
+         -d '{ "body": "r\u00e4ksm\u00f6rg\u00e5s", \\
+               "subject": "jaha", \\
+               "recipient_list": [ { "recpt": { "conf_no": 14506 }, "type": "to" } ], \\
+               "content_type": "text/x-kom-basic", \\
+               "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \\
+         "http://localhost:5001/lyskom/texts/"
+    ```
 
-    ::
+    **Example image:**
 
-      curl -v -X POST -H "Content-Type: application/json" \\
-           -d '{ "body": "r\u00e4ksm\u00f6rg\u00e5s", \\
-                 "subject": "jaha", \\
-                 "recipient_list": [ { "recpt": { "conf_no": 14506 }, "type": "to" } ], \\
-                 "content_type": "text/x-kom-basic", \\
-                 "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \\
-           "http://localhost:5001/lyskom/texts/"
-
-
-    .. rubric:: Example image:
-
-    ::
-
-      curl -v -X POST -H "Content-Type: application/json" \\
-           -d '{ "body": "<base64>", \\
-                 "subject": "jaha", \\
-                 "recipient_list": [ { "recpt": { "conf_no": 14506 }, "type": "to" } ], \\
-                 "content_type": "image/jpeg", \\
-                 "content_encoding": "base64", \\
-                 "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \\
-           "http://localhost:5001/lyskom/texts/"
+    ```bash
+    curl -v -X POST -H "Content-Type: application/json" \\
+         -d '{ "body": "<base64>", \\
+               "subject": "jaha", \\
+               "recipient_list": [ { "recpt": { "conf_no": 14506 }, "type": "to" } ], \\
+               "content_type": "image/jpeg", \\
+               "content_encoding": "base64", \\
+               "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \\
+         "http://localhost:5001/lyskom/texts/"
+    ```
 
     """
     request_json = await request.json
@@ -211,33 +220,33 @@ async def texts_create():
 @requires_login
 async def texts_get_marks():
     """Get the list of marked texts.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      GET /<server_id>/texts/marks/ HTTP/1.1
-    
-    .. rubric:: Response
-    
-    ::
-    
-      HTTP/1.1 200 OK
-      
-      {
-        "marks": [
-          { "text_no": 4711, "type": 100 },
-          { "text_no": 4999999, "type": 101 },
-        ]
-      }
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X GET -H "Content-Type: application/json" \\
-           "http://localhost:5001/lyskom/texts/marks/"
-    
+
+    **Request:**
+
+    ```
+    GET /<server_id>/texts/marks/ HTTP/1.1
+    ```
+
+    **Response:**
+
+    ```json
+    HTTP/1.1 200 OK
+
+    {
+      "marks": [
+        { "text_no": 4711, "type": 100 },
+        { "text_no": 4999999, "type": 101 },
+      ]
+    }
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X GET -H "Content-Type: application/json" \\
+         "http://localhost:5001/lyskom/texts/marks/"
+    ```
+
     """
     return jsonify(dict(marks=await to_dict(await g.ksession.get_marks(), g.ksession)))
 
@@ -246,31 +255,33 @@ async def texts_get_marks():
 @requires_login
 async def texts_put_mark(text_no):
     """Mark a text.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      PUT /<server_id>/texts/<text_no>/mark HTTP/1.1
-      
-      {
-        "type": 100
-      }
-    
-    .. rubric:: Response
-    
-    Success::
-    
-      HTTP/1.1 201 Created
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X PUT -H "Content-Type: application/json" \\
-           -d { "type": 100 } \\
-           "http://localhost:5001/lyskom/texts/4711/mark"
-    
+
+    **Request:**
+
+    ```
+    PUT /<server_id>/texts/<text_no>/mark HTTP/1.1
+
+    {
+      "type": 100
+    }
+    ```
+
+    **Response:**
+
+    Success:
+
+    ```
+    HTTP/1.1 201 Created
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X PUT -H "Content-Type: application/json" \\
+         -d { "type": 100 } \\
+         "http://localhost:5001/lyskom/texts/4711/mark"
+    ```
+
     """
     request_json = await request.json
     try:
@@ -289,25 +300,27 @@ async def texts_put_mark(text_no):
 @requires_login
 async def texts_delete_mark(text_no):
     """Unmark a text.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      DELETE /<server_id>/texts/<text_no>/mark HTTP/1.1
-    
-    .. rubric:: Response
-    
-    Success::
-    
-      HTTP/1.1 204 OK
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X DELETE "http://localhost:5001/lyskom/texts/4711/mark"
-    
+
+    **Request:**
+
+    ```
+    DELETE /<server_id>/texts/<text_no>/mark HTTP/1.1
+    ```
+
+    **Response:**
+
+    Success:
+
+    ```
+    HTTP/1.1 204 OK
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X DELETE "http://localhost:5001/lyskom/texts/4711/mark"
+    ```
+
     """
     try:
         await g.ksession.unmark_text(text_no)
@@ -320,25 +333,27 @@ async def texts_delete_mark(text_no):
 @requires_login
 async def texts_put_read_marking(text_no):
     """Mark a text as read in all recipient conferences.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      PUT /<server_id>/texts/<int:text_no>/read-marking HTTP/1.0
-    
-    .. rubric:: Responses
-    
-    Text was marked as read::
-    
-      HTTP/1.0 201 Created
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X PUT "http://localhost:5001/lyskom/texts/19680717/read-marking"
-    
+
+    **Request:**
+
+    ```
+    PUT /<server_id>/texts/<int:text_no>/read-marking HTTP/1.0
+    ```
+
+    **Responses:**
+
+    Text was marked as read:
+
+    ```
+    HTTP/1.0 201 Created
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X PUT "http://localhost:5001/lyskom/texts/19680717/read-marking"
+    ```
+
     """
     await g.ksession.mark_as_read(text_no)
     return empty_response(201)
@@ -348,25 +363,27 @@ async def texts_put_read_marking(text_no):
 @requires_login
 async def texts_delete_read_marking(text_no):
     """Mark a text as unread in all recipient conferences.
-    
-    .. rubric:: Request
-    
-    ::
-    
-      DELETE /<server_id>/texts/<int:text_no>/read-marking HTTP/1.0
-    
-    .. rubric:: Responses
-    
-    Text was marked as unread::
 
-      HTTP/1.0 204 NO CONTENT
+    **Request:**
 
-    .. rubric:: Example
+    ```
+    DELETE /<server_id>/texts/<int:text_no>/read-marking HTTP/1.0
+    ```
 
-    ::
+    **Responses:**
 
-      curl -v -X DELETE "http://localhost:5001/lyskom/texts/19680717/read-marking"
-    
+    Text was marked as unread:
+
+    ```
+    HTTP/1.0 204 NO CONTENT
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X DELETE "http://localhost:5001/lyskom/texts/19680717/read-marking"
+    ```
+
     """
     await g.ksession.mark_as_unread(text_no)
     return empty_response(204)

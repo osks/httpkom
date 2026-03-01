@@ -15,32 +15,32 @@ from .sessions import requires_session
 async def server_info():
     """Get information about the LysKOM server.
 
-    .. rubric:: Request
+    **Request:**
 
-    ::
+    ```
+    GET /<server_id>/server/info HTTP/1.1
+    ```
 
-      GET /<server_id>/server/info HTTP/1.1
+    **Response:**
 
-    .. rubric:: Response
+    ```json
+    HTTP/1.1 200 OK
 
-    ::
+    {
+      "version": "2.1.2",
+      "conf_pres_conf": 1,
+      "pers_pres_conf": 2,
+      "motd_conf": 3,
+      "kom_news_conf": 4,
+      "mot_of_day": 0
+    }
+    ```
 
-      HTTP/1.1 200 OK
+    **Example:**
 
-      {
-        "version": "2.1.2",
-        "conf_pres_conf": 1,
-        "pers_pres_conf": 2,
-        "motd_conf": 3,
-        "kom_news_conf": 4,
-        "mot_of_day": 0
-      }
-
-    .. rubric:: Example
-
-    ::
-
-      curl -v "http://localhost:5001/lyskom/server/info"
+    ```bash
+    curl -v "http://localhost:5001/lyskom/server/info"
+    ```
 
     """
     return jsonify(await to_dict(await g.ksession.get_server_info(), g.ksession))

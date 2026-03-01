@@ -1,0 +1,61 @@
+dev_addr: localhost:8001
+
+site_name: httpkom
+site_description: REST-like HTTP API for LysKOM
+site_url: https://github.com/osks/httpkom
+
+repo_url: https://github.com/osks/httpkom
+repo_name: osks/httpkom
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - content.code.copy
+    - navigation.sections
+    - navigation.expand
+    - search.highlight
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: false
+            show_root_heading: true
+            members_order: source
+            heading_level: 3
+
+nav:
+  - Introduction: index.md
+  - API Reference:
+    - Sessions: sessions.md
+    - Conferences: conferences.md
+    - Texts: texts.md
+    - Persons: persons.md
+    - Memberships: memberships.md
+    - Server: server.md
+    - WebSocket: websocket.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.details
+  - toc:
+      permalink: true

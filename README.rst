@@ -23,13 +23,26 @@ For required Python packages, see requirements.txt. Install them with::
     $ pip install -r requirements.txt
 
 
+Documentation
+-------------
+
+The documentation is built with `MkDocs <https://www.mkdocs.org/>`_ and
+`Material for MkDocs <https://squidfunk.github.io/mkdocs-material/>`_.
+Source files are in the ``docs/`` directory.
+
+To serve the docs locally::
+
+    uv run mkdocs serve
+
+The docs are automatically deployed to GitHub Pages on push to master
+via GitHub Actions.
+
+
 Development
 -----------
 
 Preparing a release
 *******************
-
-TODO: How do we update the documentation on github pages?
 
 On master:
 

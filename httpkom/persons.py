@@ -19,34 +19,37 @@ from .misc import empty_response
 async def persons_get_user_area_block(pers_no, block_name):
     """Get a user area block.
 
-    :param pers_no: Person number
-    :type pers_no: int
-    :param block_name: Name of the user area block
-    :type block_name: string
+    Args:
+        pers_no (int): Person number.
+        block_name (string): Name of the user area block.
 
-    .. rubric:: Request
+    **Request:**
 
-    ::
+    ```
+    GET /<server_id>/persons/<pers_no>/user-area/<block_name> HTTP/1.1
+    ```
 
-      GET /<server_id>/persons/<pers_no>/user-area/<block_name> HTTP/1.1
+    **Responses:**
 
-    .. rubric:: Responses
+    Block exists:
 
-    Block exists::
+    ```json
+    HTTP/1.1 200 OK
 
-      HTTP/1.1 200 OK
+    { ... }
+    ```
 
-      { ... }
+    Block does not exist:
 
-    Block does not exist::
+    ```
+    HTTP/1.1 404 NOT FOUND
+    ```
 
-      HTTP/1.1 404 NOT FOUND
+    **Example:**
 
-    .. rubric:: Example
-
-    ::
-
-      curl -v "http://localhost:5001/lyskom/persons/14506/user-area/common"
+    ```bash
+    curl -v "http://localhost:5001/lyskom/persons/14506/user-area/common"
+    ```
 
     """
     block = await g.ksession.get_user_area_block(pers_no, block_name)
@@ -60,32 +63,34 @@ async def persons_get_user_area_block(pers_no, block_name):
 async def persons_set_presentation(pers_no):
     """Set the presentation text for a person.
 
-    :param pers_no: Person number
-    :type pers_no: int
+    Args:
+        pers_no (int): Person number.
 
-    .. rubric:: Request
+    **Request:**
 
-    ::
+    ```
+    POST /<server_id>/persons/<pers_no>/set-presentation HTTP/1.1
 
-      POST /<server_id>/persons/<pers_no>/set-presentation HTTP/1.1
+    {
+      "text_no": 19680717
+    }
+    ```
 
-      {
-        "text_no": 19680717
-      }
+    **Response:**
 
-    .. rubric:: Response
+    Success:
 
-    Success::
+    ```
+    HTTP/1.1 201 Created
+    ```
 
-      HTTP/1.1 201 Created
+    **Example:**
 
-    .. rubric:: Example
-
-    ::
-
-      curl -v -X POST -H "Content-Type: application/json" \\
-           -d '{ "text_no": 19680717 }' \\
-           "http://localhost:5001/lyskom/persons/14506/set-presentation"
+    ```bash
+    curl -v -X POST -H "Content-Type: application/json" \\
+         -d '{ "text_no": 19680717 }' \\
+         "http://localhost:5001/lyskom/persons/14506/set-presentation"
+    ```
 
     """
     request_json = await request.json
@@ -102,33 +107,35 @@ async def persons_set_presentation(pers_no):
 async def persons_set_passwd(pers_no):
     """Change password for a person.
 
-    :param pers_no: Person number
-    :type pers_no: int
+    Args:
+        pers_no (int): Person number.
 
-    .. rubric:: Request
+    **Request:**
 
-    ::
+    ```
+    POST /<server_id>/persons/<pers_no>/set-passwd HTTP/1.1
 
-      POST /<server_id>/persons/<pers_no>/set-passwd HTTP/1.1
+    {
+      "old_pwd": "oldpassword",
+      "new_pwd": "newpassword"
+    }
+    ```
 
-      {
-        "old_pwd": "oldpassword",
-        "new_pwd": "newpassword"
-      }
+    **Response:**
 
-    .. rubric:: Response
+    Success:
 
-    Success::
+    ```
+    HTTP/1.1 201 Created
+    ```
 
-      HTTP/1.1 201 Created
+    **Example:**
 
-    .. rubric:: Example
-
-    ::
-
-      curl -v -X POST -H "Content-Type: application/json" \\
-           -d '{ "old_pwd": "oldpassword", "new_pwd": "newpassword" }' \\
-           "http://localhost:5001/lyskom/persons/14506/set-passwd"
+    ```bash
+    curl -v -X POST -H "Content-Type: application/json" \\
+         -d '{ "old_pwd": "oldpassword", "new_pwd": "newpassword" }' \\
+         "http://localhost:5001/lyskom/persons/14506/set-passwd"
+    ```
 
     """
     request_json = await request.json
@@ -144,38 +151,40 @@ async def persons_set_passwd(pers_no):
 @bp.route('/persons/', methods=['POST'])
 @requires_session
 async def persons_create():
-    """Create a person
-    
-    .. rubric:: Request
-    
-    ::
-    
-      POST /<server_id>/persons/ HTTP/1.0
-      
-      {
-        "name": "Oskars Testperson",
-        "passwd": "test123",
-      }
-    
-    .. rubric:: Responses
-    
-    Person was created::
-    
-      HTTP/1.0 201 Created
-      
-      {
-        "pers_no": 14506,
-        "pers_name": "Oskars Testperson"
-      }
-    
-    .. rubric:: Example
-    
-    ::
-    
-      curl -v -X POST -H "Content-Type: application/json" \\
-           -d '{ "name": "Oskar Testperson", "passwd": "test123" }' \\
-           http://localhost:5001/lyskom/persons/
-    
+    """Create a person.
+
+    **Request:**
+
+    ```
+    POST /<server_id>/persons/ HTTP/1.0
+
+    {
+      "name": "Oskars Testperson",
+      "passwd": "test123",
+    }
+    ```
+
+    **Responses:**
+
+    Person was created:
+
+    ```json
+    HTTP/1.0 201 Created
+
+    {
+      "pers_no": 14506,
+      "pers_name": "Oskars Testperson"
+    }
+    ```
+
+    **Example:**
+
+    ```bash
+    curl -v -X POST -H "Content-Type: application/json" \\
+         -d '{ "name": "Oskar Testperson", "passwd": "test123" }' \\
+         http://localhost:5001/lyskom/persons/
+    ```
+
     """
     request_json = await request.json
     name = request_json['name']
