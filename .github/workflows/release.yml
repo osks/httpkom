@@ -2,15 +2,17 @@ name: Release to PyPI
 
 on:
   release:
-    types: [published]
+    types: [created]
 
 permissions:
-  id-token: write
+  contents: read
 
 jobs:
   release:
     runs-on: ubuntu-latest
     environment: release
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
