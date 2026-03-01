@@ -35,7 +35,7 @@ To serve the docs locally::
     uv run mkdocs serve
 
 The docs are automatically deployed to GitHub Pages on push to master
-via GitHub Actions.
+via GitHub Actions (see ``.github/workflows/docs.yml``).
 
 
 Development

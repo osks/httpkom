@@ -16,6 +16,9 @@ dependencies = [
     "Quart>=0.18.0",
 ]
 
+[project.scripts]
+httpkom-cli = "httpkom.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/osks/httpkom"
 Documentation = "https://osks.github.io/httpkom/"
