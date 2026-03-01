@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+
+## 0.30 (2026-03-01)
+
+### Added
+
+- Experimental CLI for calling endpoints
+- Experimental Websocket API.
+- Basic POST /conferences/ for creating conferences.
+- Login now optionally accepts a person name instead of a person number.
+- Basic tox tests for multiple Python versions.
+
+### Fixed
+
+- Fix crossdomain handling to return '*' if configured.
+
+### Changed
+
+- Documentation uses Mkdocs instead of Sphinx.
+
+
+## 0.21 (2022-09-19)
+
 ### Fixed
 
 - Fixed with_connection_id wrapper to be async. For some reason it
