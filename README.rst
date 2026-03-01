@@ -49,53 +49,22 @@ On master:
 1. Update and check CHANGELOG.md.
 
 2. Increment version number and remove ``+dev`` suffix
-   IN BOTH ``setup.py`` AND ``httpkom/version.py``!
+   in ``httpkom/version.py``.
 
 3. Test manually by using jskom.
 
 4. Commit, push.
 
-5. Tag (annotated) with ``v<version>`` (example: ``v0.1``) and push the tag::
+5. Go to https://github.com/osks/httpkom/releases and draft a new
+   release. Create a new tag (e.g. ``v0.21``), set title to
+   "Version <version>", and publish the release.
 
-       git tag -a v0.1 -m "Version 0.1"
-       git push origin v0.1
+6. GitHub Actions will automatically build and publish to PyPI
+   (see ``.github/workflows/release.yml``).
 
-6. Build PyPI dist: ``make dist``
+7. Verify at https://pypi.org/project/httpkom/ .
 
-7. Push to Test PyPI: ``twine upload --repository testpypi dist/*`` and check
-   https://test.pypi.org/project/httpkom/ .
-
-8. Push to PyPI: ``twine upload dist/*`` and check
-   https://pypi.org/project/httpkom/ .
-
-9. Add ``+dev`` suffix to version number, commit and push.
-
-10. Github release: Go to https://github.com/osks/httpkom/releases
-    and draft a new release. Select tag and set title to "Version
-    <version>", and then publish the release.
-
-
-Tools
-*****
-
-Install and update release tools with::
-
-    pip install --upgrade setuptools wheel pip twine
-
-Twine is used for pushing the built dist to PyPI. The examples in the
-release process depends on a ``.pypirc`` file with config for the pypi
-and testpypi repositories.
-
-Example of ``.pypirc``::
-
-    [pypi]
-    username = __token__
-    password = pypi-...
-
-    [testpypi]
-    repository = https://test.pypi.org/legacy/
-    username = __token__
-    password = pypi-...
+8. Add ``+dev`` suffix to version number, commit and push.
 
 
 Authors
