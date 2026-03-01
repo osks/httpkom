@@ -2,24 +2,25 @@ all: pyflakes docs
 
 clean:
 	rm -rf dist
-	rm -rf docs/_build
-	rm -rf gh-pages
+	rm -rf site
 
 run-debug-server:
 	python3 -m httpkom --config configs/debug.cfg --host 127.0.0.1
 
 dist:
 	rm -rf dist
-	python3 setup.py sdist
+	uv build
 
-docs: docs-html
+docs:
+	uv run mkdocs build --strict
 
-docs-html:
-	make -C docs html
-	mkdir -p gh-pages/html
-	cp -r ./docs/_build/html/* ./gh-pages/html/
+docs-serve:
+	uv run mkdocs serve
+
+tox:
+	uvx tox
 
 pyflakes:
 	pyflakes ./httpkom
 
-.PHONY: all clean run-debug-server dist docs docs-html pyflakes
+.PHONY: all clean run-debug-server dist docs docs-serve tox pyflakes

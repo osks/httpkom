@@ -1,0 +1,37 @@
+[project]
+name = "httpkom"
+dynamic = ["version"]
+description = "REST-like HTTP API for LysKOM"
+readme = "README.rst"
+license = "GPL-2.0-or-later"
+authors = [
+    { name = "Oskar Skoog", email = "oskar@osd.se" },
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pylyskom>=0.8",
+    "Flask>=2.2.2",
+    "Hypercorn>=0.14.3",
+    "six>=1.14.0",
+    "Quart>=0.18.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/osks/httpkom"
+Documentation = "https://osks.github.io/httpkom/"
+
+[project.optional-dependencies]
+docs = [
+    "mkdocs-material",
+    "mkdocstrings[python]",
+]
+
+[tool.setuptools]
+packages = ["httpkom"]
+
+[tool.setuptools.dynamic]
+version = {attr = "httpkom.version.__version__"}
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
