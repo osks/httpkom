@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.31 (2026-03-01)
+
+### Fixed
+
+- Hopefully fixed Github release workflow
+
 
 ## 0.30 (2026-03-01)
 
