@@ -17,10 +17,39 @@ from .misc import empty_response
 @bp.route('/persons/<int:pers_no>/user-area/<string:block_name>', methods=['GET'])
 @requires_login
 async def persons_get_user_area_block(pers_no, block_name):
-    """Get a user area block
+    """Get a user area block.
+
+    :param pers_no: Person number
+    :type pers_no: int
+    :param block_name: Name of the user area block
+    :type block_name: string
+
+    .. rubric:: Request
+
+    ::
+
+      GET /<server_id>/persons/<pers_no>/user-area/<block_name> HTTP/1.1
+
+    .. rubric:: Responses
+
+    Block exists::
+
+      HTTP/1.1 200 OK
+
+      { ... }
+
+    Block does not exist::
+
+      HTTP/1.1 404 NOT FOUND
+
+    .. rubric:: Example
+
+    ::
+
+      curl -v "http://localhost:5001/lyskom/persons/14506/user-area/common"
+
     """
     block = await g.ksession.get_user_area_block(pers_no, block_name)
-    print(block)
     if block is None:
         return empty_response(404)
     return jsonify(block)
@@ -29,6 +58,36 @@ async def persons_get_user_area_block(pers_no, block_name):
 @bp.route('/persons/<int:pers_no>/set-presentation', methods=['POST'])
 @requires_login
 async def persons_set_presentation(pers_no):
+    """Set the presentation text for a person.
+
+    :param pers_no: Person number
+    :type pers_no: int
+
+    .. rubric:: Request
+
+    ::
+
+      POST /<server_id>/persons/<pers_no>/set-presentation HTTP/1.1
+
+      {
+        "text_no": 19680717
+      }
+
+    .. rubric:: Response
+
+    Success::
+
+      HTTP/1.1 201 Created
+
+    .. rubric:: Example
+
+    ::
+
+      curl -v -X POST -H "Content-Type: application/json" \\
+           -d '{ "text_no": 19680717 }' \\
+           "http://localhost:5001/lyskom/persons/14506/set-presentation"
+
+    """
     request_json = await request.json
     text_no = request_json['text_no']
     try:
@@ -41,6 +100,37 @@ async def persons_set_presentation(pers_no):
 @bp.route('/persons/<int:pers_no>/set-passwd', methods=['POST'])
 @requires_login
 async def persons_set_passwd(pers_no):
+    """Change password for a person.
+
+    :param pers_no: Person number
+    :type pers_no: int
+
+    .. rubric:: Request
+
+    ::
+
+      POST /<server_id>/persons/<pers_no>/set-passwd HTTP/1.1
+
+      {
+        "old_pwd": "oldpassword",
+        "new_pwd": "newpassword"
+      }
+
+    .. rubric:: Response
+
+    Success::
+
+      HTTP/1.1 201 Created
+
+    .. rubric:: Example
+
+    ::
+
+      curl -v -X POST -H "Content-Type: application/json" \\
+           -d '{ "old_pwd": "oldpassword", "new_pwd": "newpassword" }' \\
+           "http://localhost:5001/lyskom/persons/14506/set-passwd"
+
+    """
     request_json = await request.json
     old_pwd = request_json['old_pwd']
     new_pwd = request_json['new_pwd']
@@ -82,7 +172,7 @@ async def persons_create():
     
     ::
     
-      curl -v -X POST H "Content-Type: application/json" \\
+      curl -v -X POST -H "Content-Type: application/json" \\
            -d '{ "name": "Oskar Testperson", "passwd": "test123" }' \\
            http://localhost:5001/lyskom/persons/
     

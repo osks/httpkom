@@ -48,10 +48,10 @@ Subsequent request to that server should contain the returned
 Httpkom-Connection header. For example, a login request will look
 like this::
 
-  POST /<server_id>/sessions/login
+  POST /<server_id>/sessions/current/login
   Content-Type: application/json
   Httpkom-Connection: <uuid>
-  
+
   { "pers_no": 14506, "passwd": "test123" }
 
 and the response::
@@ -228,7 +228,47 @@ def requires_login(f):
 @bp.route("/sessions/current/who-am-i")
 @requires_session
 async def sessions_who_am_i():
-    """TODO
+    """Get information about the current session.
+
+    Returns the session number and, if logged in, the current person.
+
+    .. rubric:: Request
+
+    ::
+
+      GET /<server_id>/sessions/current/who-am-i HTTP/1.1
+      Httpkom-Connection: <id>
+
+    .. rubric:: Response
+
+    Logged in::
+
+      HTTP/1.1 200 OK
+
+      {
+        "session_no": 12345,
+        "person": {
+          "pers_no": 14506,
+          "pers_name": "Oskars Testperson"
+        }
+      }
+
+    Not logged in::
+
+      HTTP/1.1 200 OK
+
+      {
+        "session_no": 12345,
+        "person": null
+      }
+
+    .. rubric:: Example
+
+    ::
+
+      curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
+           "http://localhost:5001/lyskom/sessions/current/who-am-i"
+
     """
     try:
         session_no = await g.ksession.who_am_i()
@@ -246,12 +286,27 @@ async def sessions_who_am_i():
 @bp.route("/sessions/current/active", methods=['POST'])
 @requires_session
 async def sessions_current_active():
-    """
-    Tell the LysKOM server that the current user is active.
+    """Tell the LysKOM server that the current user is active.
+
+    .. rubric:: Request
 
     ::
 
       POST /<server_id>/sessions/current/active HTTP/1.1
+      Httpkom-Connection: <id>
+
+    .. rubric:: Response
+
+    ::
+
+      HTTP/1.1 204 No Content
+
+    .. rubric:: Example
+
+    ::
+
+      curl -v -X POST -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
+           "http://localhost:5001/lyskom/sessions/current/active"
 
     """
     await g.ksession.user_is_active()
@@ -480,7 +535,7 @@ async def sessions_delete(session_no):
     ::
     
       curl -v -H "Httpkom-Connection: 033556ee-3e52-423f-9c9a-d85aed7688a1" \\
-           -X DELETE "http://localhost:5001/lyskom/sessions/abc123"
+           -X DELETE "http://localhost:5001/lyskom/sessions/12345"
     
     """
     try:

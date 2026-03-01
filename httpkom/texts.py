@@ -172,8 +172,8 @@ async def texts_create():
 
       curl -v -X POST -H "Content-Type: application/json" \\
            -d '{ "body": "r\u00e4ksm\u00f6rg\u00e5s", \\
-                 "subject": "jaha",
-                 "recipipent_list": [ { recpt: { "conf_no": 14506 }, "type": "to" } ], \\
+                 "subject": "jaha", \\
+                 "recipient_list": [ { "recpt": { "conf_no": 14506 }, "type": "to" } ], \\
                  "content_type": "text/x-kom-basic", \\
                  "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \\
            "http://localhost:5001/lyskom/texts/"
@@ -184,9 +184,9 @@ async def texts_create():
     ::
 
       curl -v -X POST -H "Content-Type: application/json" \\
-           -d '{ "body": <base64>, \\
-                 "subject": "jaha",
-                 "recipipent_list": [ { recpt: { "conf_no": 14506 }, "type": "to" } ], \\
+           -d '{ "body": "<base64>", \\
+                 "subject": "jaha", \\
+                 "recipient_list": [ { "recpt": { "conf_no": 14506 }, "type": "to" } ], \\
                  "content_type": "image/jpeg", \\
                  "content_encoding": "base64", \\
                  "comment_to_list": [ { "type": "footnote", "text_no": 19675793 } ] }' \\
@@ -357,15 +357,15 @@ async def texts_delete_read_marking(text_no):
     
     .. rubric:: Responses
     
-    Text was marked as read::
-    
+    Text was marked as unread::
+
       HTTP/1.0 204 NO CONTENT
-    
+
     .. rubric:: Example
-    
+
     ::
-    
-      curl -v DELETE "http://localhost:5001/lyskom/texts/19680717/read-marking"
+
+      curl -v -X DELETE "http://localhost:5001/lyskom/texts/19680717/read-marking"
     
     """
     await g.ksession.mark_as_unread(text_no)

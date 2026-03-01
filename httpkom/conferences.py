@@ -279,7 +279,7 @@ async def conferences_get_texts(conf_no):
     
     ::
     
-      GET /<server_id>/conferences/texts/ HTTP/1.0
+      GET /<server_id>/conferences/<conf_no>/texts/ HTTP/1.0
     
     .. rubric:: Response
     
@@ -320,7 +320,7 @@ async def conferences_get_texts(conf_no):
     ::
     
       curl -v -X GET -H "Content-Type: application/json" \\
-           "http://localhost:5001/lyskom/conferences/texts/?no-of-texts=3"
+           "http://localhost:5001/lyskom/conferences/14506/texts/?no-of-texts=3"
     
     """
     no_of_texts = int(request.args.get('no-of-texts', 10))

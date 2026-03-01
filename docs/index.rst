@@ -19,6 +19,8 @@ Contents:
    memberships
    sessions
    texts
+   server
+   websocket
 
 
 

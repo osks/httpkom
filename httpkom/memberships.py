@@ -226,7 +226,7 @@ async def persons_get_membership(pers_no, conf_no):
 @bp.route('/persons/<int:pers_no>/memberships/<int:conf_no>/unread')
 @requires_login
 async def persons_get_membership_unread(pers_no, conf_no):
-    """Get membershup unread for a person's membership.
+    """Get membership unread for a person's membership.
     
     :param pers_no: Person number
     :type pers_no: int

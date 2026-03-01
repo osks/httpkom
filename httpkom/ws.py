@@ -129,6 +129,36 @@ class WebSocketConnection:
 
 @app.websocket('/websocket')
 async def ws_new():
+    """Open a WebSocket connection for sending raw protocol A requests.
+
+    Note: This endpoint is registered directly on the app, not the
+    blueprint, so it does **not** have the ``/<server_id>/`` prefix.
+
+    The connection id is passed as a query parameter::
+
+      ws://localhost:5001/websocket?Httpkom-Connection=<uuid>
+
+    Messages are JSON objects with the following format:
+
+    Request::
+
+      {
+        "protocol": "a",
+        "ref_no": 1,
+        "request": "92 0 { ... }\\n"
+      }
+
+    Reply::
+
+      {
+        "protocol": "a",
+        "ref_no": 1,
+        "reply": "=1 ...\\n"
+      }
+
+    The ``echo`` protocol can be used for testing -- it echoes back the
+    request as the reply.
+    """
     app.logger.debug("Websocket connected")
 
     g.connection_id = _get_connection_id_from_websocket()
