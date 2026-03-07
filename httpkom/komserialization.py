@@ -13,6 +13,7 @@ from pylyskom.komsession import (
     KomPerson,
     KomPersonName,
     KomText,
+    KomTextStat,
     KomUConference,
     KomServerInfo,
 )
@@ -63,6 +64,8 @@ async def to_dict(obj, session=None):
         return KomPerson_to_dict(obj)
     elif isinstance(obj, KomPersonName):
         return KomPersonName_to_dict(obj)
+    elif isinstance(obj, KomTextStat):
+        return await KomTextStat_to_dict(obj, session)
     elif isinstance(obj, KomText):
         return await KomText_to_dict(obj, session)
     elif isinstance(obj, datatypes.MIRecipient):
@@ -250,6 +253,46 @@ async def KomText_to_dict(komtext, session):
     
     return d
 
+async def KomTextStat_to_dict(komtextstat, session):
+    d = dict(
+        text_no=komtextstat.text_no,
+        author=KomPerson_to_dict(komtextstat.author),
+        no_of_marks=komtextstat.no_of_marks,
+    )
+
+    if komtextstat.recipient_list is None:
+        d['recipient_list'] = None
+    else:
+        d['recipient_list'] = [ await MIRecipient_to_dict(r, session)
+                                for r in komtextstat.recipient_list ]
+
+    if komtextstat.comment_to_list is None:
+        d['comment_to_list'] = None
+    else:
+        d['comment_to_list'] = [ await MICommentTo_to_dict(ct, session)
+                                 for ct in komtextstat.comment_to_list ]
+
+    if komtextstat.comment_in_list is None:
+        d['comment_in_list'] = None
+    else:
+        d['comment_in_list'] = [ await MICommentIn_to_dict(ci, session)
+                                 for ci in komtextstat.comment_in_list ]
+
+    if komtextstat.aux_items is None:
+        d['aux_items'] = None
+    else:
+        aux_items = []
+        for ai in [ai for ai in komtextstat.aux_items if ai.tag in _ALLOWED_KOMTEXT_AUXITEMS]:
+            aux_items.append(KomAuxItem_to_dict(ai))
+        d['aux_items'] = aux_items
+
+    if komtextstat.creation_time is None:
+        d['creation_time'] = None
+    else:
+        d['creation_time'] = Time_to_dict(komtextstat.creation_time)
+
+    return d
+
 async def MIRecipient_to_dict(mir, session):
     if not mir.type in MIRecipient_type_to_str:
         raise KeyError("Unknown MIRecipient type: %s" % mir.type)
@@ -277,14 +320,14 @@ async def MIRecipient_to_dict(mir, session):
 async def MICommentTo_to_dict(micto, session):
     if not micto.type in MICommentTo_type_to_str:
         raise KeyError("Unknown MICommentTo type: %s" % micto.type)
-    
+
     author = None
     try:
         cts = await session.get_text_stat(micto.text_no)
-        author = await pers_to_dict(cts.author, session)
+        author = KomPersonName_to_dict(cts.author)
     except (errors.NoSuchText, errors.TextZero):
         pass
-    
+
     return dict(type=MICommentTo_type_to_str[micto.type],
                 text_no=micto.text_no,
                 author=author)
@@ -292,14 +335,14 @@ async def MICommentTo_to_dict(micto, session):
 async def MICommentIn_to_dict(micin, session):
     if not micin.type in MICommentIn_type_to_str:
         raise KeyError("Unknown MICommentIn type: %s" % micin.type)
-    
+
     author = None
     try:
         cts = await session.get_text_stat(micin.text_no)
-        author = await pers_to_dict(cts.author, session)
+        author = KomPersonName_to_dict(cts.author)
     except (errors.NoSuchText, errors.TextZero):
         pass
-    
+
     return dict(type=MICommentIn_type_to_str[micin.type],
                 text_no=micin.text_no,
                 author=author)

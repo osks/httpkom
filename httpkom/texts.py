@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import
 
+import asyncio
 from io import BytesIO
 
 from quart import g, request, jsonify, send_file, url_for
@@ -10,7 +11,7 @@ from quart import g, request, jsonify, send_file, url_for
 import pylyskom.errors as komerror
 from pylyskom.utils import parse_content_type
 
-from .komserialization import to_dict
+from .komserialization import to_dict, KomTextStat_to_dict
 
 from httpkom import bp
 from .errors import error_response
@@ -83,6 +84,77 @@ async def texts_get(text_no):
         return jsonify(await to_dict(await g.ksession.get_text(text_no), g.ksession))
     except komerror.NoSuchText as ex:
         return error_response(404, kom_error=ex)
+
+
+@bp.route('/textstats/<int:text_no>')
+@requires_login
+async def textstats_get(text_no):
+    """Get text stat (metadata without body/subject).
+
+    Same shape as GET /texts/<text_no> but without subject, body, and
+    content_type. Useful for comment-tree discovery without fetching
+    full text bodies.
+
+    **Request:**
+
+    ```
+    GET /<server_id>/textstats/19680717 HTTP/1.1
+    ```
+
+    """
+    try:
+        return jsonify(await KomTextStat_to_dict(
+            await g.ksession.get_text_stat(text_no), g.ksession))
+    except (komerror.NoSuchText, komerror.TextZero) as ex:
+        return error_response(404, kom_error=ex)
+
+
+@bp.route('/textstats', methods=['POST'])
+@requires_login
+async def textstats_batch():
+    """Get text stats for multiple texts in one request.
+
+    **Request:**
+
+    ```
+    POST /<server_id>/textstats HTTP/1.1
+
+    {
+      "text_nos": [100, 101, 102]
+    }
+    ```
+
+    **Response:**
+
+    ```json
+    HTTP/1.1 200 OK
+
+    {
+      "text_stats": {
+        "100": { ... },
+        "101": { ... },
+        "102": null
+      }
+    }
+    ```
+
+    Missing texts are returned as null. Maximum 100 text numbers per request.
+
+    """
+    request_json = await request.json
+    text_nos = request_json.get('text_nos', [])
+    if len(text_nos) > 100:
+        return error_response(400, error_msg='Maximum 100 text numbers per request.')
+
+    async def get_one(text_no):
+        try:
+            ts = await g.ksession.get_text_stat(text_no)
+            return str(text_no), await KomTextStat_to_dict(ts, g.ksession)
+        except (komerror.NoSuchText, komerror.TextZero):
+            return str(text_no), None
+
+    results = await asyncio.gather(*[get_one(no) for no in text_nos])
+    return jsonify(text_stats=dict(results))
 
 
 @bp.route('/texts/<int:text_no>/body')
