@@ -6,6 +6,10 @@
 
 - `--log-level` option (default INFO). Previously logging was always DEBUG,
   which logs all LysKOM protocol traffic including text contents.
+- Session events are logged at INFO: created, login (and failed login),
+  logout, removed (with reason, e.g. connection to LysKOM lost), and
+  requests with an unknown session. Each line has a short tag derived from
+  the connection id, so one session can be followed through the log.
 
 ## 0.32 (2026-03-01)
 

@@ -109,6 +109,8 @@ perspective to have them different resources (i.e. different
 from __future__ import absolute_import
 import errno
 import functools
+import hashlib
+import logging
 import socket
 import uuid
 
@@ -124,6 +126,17 @@ from httpkom import HTTPKOM_CONNECTION_HEADER, bp
 from .errors import error_response
 from .misc import empty_response
 from .stats import stats
+
+
+log = logging.getLogger("httpkom.sessions")
+
+
+def _tag(connection_id):
+    """Short, non-secret tag for a connection id, for logging (first 8 hex
+    chars of its SHA-256), so a session can be followed in the log."""
+    if connection_id is None:
+        return '-'
+    return hashlib.sha256(connection_id.encode('utf-8')).hexdigest()[:8]
 
 
 # These komsessions methods are the only ones that should access the
@@ -147,12 +160,13 @@ def _save_komsession(ksession):
     stats.set('sessions.komsessions.saved.last', 1, agg='sum')
     return connection_id
 
-def _delete_komsession(connection_id):
+def _delete_komsession(connection_id, reason):
     if connection_id is None:
         return
     if connection_id in _komsessions:
         del _komsessions[connection_id]
         stats.set('sessions.komsessions.deleted.last', 1, agg='sum')
+        log.info("[%s] session removed: %s (%d active)", _tag(connection_id), reason, len(_komsessions))
 
 def _get_komsession(connection_id):
     stats.set('sessions.komsessions.active.last', len(_komsessions), agg='last')
@@ -207,16 +221,18 @@ def requires_session(f):
     async def decorated(*args, **kwargs):
         g.ksession = _get_komsession(g.connection_id)
         if g.ksession is None:
+            if g.connection_id is not None:
+                log.info("[%s] unknown session, returning 403", _tag(g.connection_id))
             return empty_response(403)
         try:
             return await f(*args, **kwargs)
         except KomSessionNotConnected:
-            _delete_komsession(g.connection_id)
+            _delete_komsession(g.connection_id, "connection to LysKOM lost")
             return empty_response(403)
         except socket.error as e:
             (eno, msg) = e.args
             if eno in (errno.EPIPE, errno.ECONNRESET):
-                _delete_komsession(g.connection_id)
+                _delete_komsession(g.connection_id, "socket error: {}".format(msg))
                 return empty_response(403)
             else:
                 raise
@@ -399,7 +415,11 @@ async def sessions_create():
             ksession = await _open_komsession(
                 g.server.host, g.server.port, client_name, client_version)
             connection_id = _save_komsession(ksession)
-            response = jsonify(session_no=await ksession.who_am_i(), connection_id=connection_id)
+            session_no = await ksession.who_am_i()
+            log.info("[%s] session created: server %s, session %s, client %s %s (%d active)",
+                     _tag(connection_id), g.server.id, session_no, client_name, client_version,
+                     len(_komsessions))
+            response = jsonify(session_no=session_no, connection_id=connection_id)
             response.headers[HTTPKOM_CONNECTION_HEADER] = connection_id
             return response, 201
         else:
@@ -486,9 +506,11 @@ async def sessions_login():
 
     try:
         kom_person = await g.ksession.login(pers_no=pers_no, pers_name=pers_name, passwd=passwd)
+        log.info("[%s] login: person %s", _tag(g.connection_id), kom_person.pers_no)
         return jsonify(await to_dict(kom_person, g.ksession)), 201
     except (komerror.InvalidPassword, komerror.UndefinedPerson, komerror.LoginDisallowed,
             komerror.ConferenceZero) as ex:
+        log.info("[%s] login failed: %s", _tag(g.connection_id), ex.__class__.__name__)
         return error_response(401, kom_error=ex)
 
 
@@ -522,6 +544,7 @@ async def sessions_logout():
     """
 
     await g.ksession.logout()
+    log.info("[%s] logout", _tag(g.connection_id))
     return empty_response(204)
 
 
@@ -574,7 +597,7 @@ async def sessions_delete(session_no):
         # We should delete the connection if we're no longer connected
         # (i.e. we disconnected the curent session).
         if not g.ksession.is_connected():
-            _delete_komsession(g.connection_id)
+            _delete_komsession(g.connection_id, "disconnected")
         return empty_response(204)
     except komerror.UndefinedSession as ex:
         return error_response(404, kom_error=ex)
