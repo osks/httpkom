@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- `--log-level` option (default INFO). Previously logging was always DEBUG,
+  which logs all LysKOM protocol traffic including text contents.
+
 ## 0.32 (2026-03-01)
 
 ### Fixed

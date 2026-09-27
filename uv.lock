@@ -259,6 +259,7 @@ wheels = [
 name = "griffelib"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/06/eccbd311c9e2b3ca45dbc063b93134c57a1ccc7607c5e545264ad092c4a9/griffelib-2.0.0.tar.gz", hash = "sha256:e504d637a089f5cab9b5daf18f7645970509bf4f53eda8d79ed71cce8bd97934", size = 166312, upload-time = "2026-03-23T21:06:55.954Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4d/51/c936033e16d12b627ea334aaaaf42229c37620d0f15593456ab69ab48161/griffelib-2.0.0-py3-none-any.whl", hash = "sha256:01284878c966508b6d6f1dbff9b6fa607bc062d8261c5c7253cb285b06422a7f", size = 142004, upload-time = "2026-02-09T19:09:40.561Z" },
 ]
@@ -319,7 +320,7 @@ requires-dist = [
     { name = "hypercorn", specifier = ">=0.14.3" },
     { name = "mkdocs-material", marker = "extra == 'docs'" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'" },
-    { name = "pylyskom", specifier = ">=0.8" },
+    { name = "pylyskom", specifier = ">=0.9" },
     { name = "quart", specifier = ">=0.18.0" },
     { name = "six", specifier = ">=1.14.0" },
 ]
@@ -392,7 +393,7 @@ name = "importlib-metadata"
 version = "8.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.10'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f3/49/3b30cad09e7771a4982d9975a8cbf64f00d4a1ececb53297f1d9a7be1b10/importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb", size = 57107, upload-time = "2025-12-21T10:00:19.278Z" }
 wheels = [
@@ -800,12 +801,15 @@ wheels = [
 
 [[package]]
 name = "pylyskom"
-version = "0.8"
+version = "0.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "six" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/47/08/e2a18b63ecfe28f6c23bb80501d637a7fa33b135366119a9f3a5f429f877/pylyskom-0.8.tar.gz", hash = "sha256:88d22f0ca3759468e98039310110e143942810610e08218e80097c19c05301ec", size = 56167, upload-time = "2022-09-12T19:22:02.49Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8b/08/529a5a1a8c126b2d31ace319687bf4a788a214d80c483a7a4465343dd74d/pylyskom-0.9.tar.gz", hash = "sha256:694cd31804d4db77b0b50065d5401e5bf723fc55206df8b5172ce12d1597d4bc", size = 71089, upload-time = "2026-03-01T20:54:52.816Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f3/82/f17df709690411c43c439d12143771b45fd1fc4bb11c5e565f4ae30bcc2a/pylyskom-0.9-py3-none-any.whl", hash = "sha256:98d9daa035a68911d71cf555c2457d68f02a4a3d6f94d3e299e827cb9308410c", size = 65191, upload-time = "2026-03-01T20:54:51.26Z" },
+]
 
 [[package]]
 name = "pymdown-extensions"

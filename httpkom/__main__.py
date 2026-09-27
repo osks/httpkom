@@ -35,8 +35,6 @@ def run_http_server(args):
 
 
 def main():
-    logging.basicConfig(format='%(asctime)s %(levelname)-7s %(name)-15s %(message)s', level=logging.DEBUG)
-
     parser = argparse.ArgumentParser(description='Httpkom')
 
     parser.add_argument('--config', help='Path to configuration file',
@@ -52,7 +50,13 @@ def main():
     parser.add_argument('--graphite-port', help='Port for Graphite plaintext protocol',
                         type=int, default=2003)
 
+    parser.add_argument('--log-level', help='Log level (DEBUG logs all LysKOM protocol traffic)',
+                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], default='INFO')
+
     args = parser.parse_args()
+
+    logging.basicConfig(format='%(asctime)s %(levelname)-7s %(name)-15s %(message)s',
+                        level=getattr(logging, args.log_level))
 
     log.info("Using args: %s", args)
 
