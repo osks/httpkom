@@ -4,6 +4,11 @@
 
 ### Added
 
+- `--keepalive-interval` / `--keepalive-timeout`: send who-am-i on every
+  LysKOM connection at an interval, and remove sessions whose connection
+  doesn't reply. Keeps idle connections from being dropped silently, and
+  turns a dead connection into a 403 instead of hanging requests. Off by
+  default.
 - `--log-level` option (default INFO). Previously logging was always DEBUG,
   which logs all LysKOM protocol traffic including text contents.
 - Session events are logged at INFO: created, login (and failed login),

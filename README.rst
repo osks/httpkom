@@ -60,6 +60,14 @@ Options:
     logs all LysKOM protocol traffic, including the contents of texts,
     so don't use it in production.
 
+``--keepalive-interval``, ``--keepalive-timeout``
+    Send a request without side effects (who-am-i) on every LysKOM
+    connection each ``--keepalive-interval`` seconds (default 0: off).
+    The traffic keeps idle connections from being dropped by NATs and
+    firewalls along the way, and a connection that doesn't reply within
+    ``--keepalive-timeout`` seconds (default 30) is closed and its
+    session removed, so clients get 403 instead of hanging requests.
+
 ``--graphite-host``, ``--graphite-port``
     Send stats to Graphite (off unless a host is given).
 
@@ -77,6 +85,7 @@ itself, which works like a password::
     [2b01858d] logout
     [2b01858d] session removed: disconnected (3 active)
     [2b01858d] session removed: connection to LysKOM lost (3 active)
+    [2b01858d] session removed: keepalive failed: no reply in 30.0s (3 active)
     [ef2e7fb3] unknown session, returning 403
 
 Errors are logged with stack traces. Requests themselves are not

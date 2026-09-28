@@ -107,6 +107,7 @@ perspective to have them different resources (i.e. different
 """
 
 from __future__ import absolute_import
+import asyncio
 import errno
 import functools
 import hashlib
@@ -174,6 +175,33 @@ def _get_komsession(connection_id):
 
 def _new_connection_id():
     return str(uuid.uuid4())
+
+
+async def _ping_komsession(connection_id, ksession, timeout):
+    try:
+        await asyncio.wait_for(ksession.who_am_i(), timeout)
+    except Exception as ex:
+        reason = "keepalive failed: {}".format(
+            "no reply in {}s".format(timeout) if isinstance(ex, asyncio.TimeoutError) else repr(ex))
+        # Close first, so requests waiting on the dead connection fail too
+        try:
+            await ksession.close()
+        except Exception:
+            pass
+        _delete_komsession(connection_id, reason)
+
+
+async def keepalive_loop(interval, timeout):
+    """Send a request without side effects (who-am-i) on every LysKOM
+    connection each `interval` seconds. The traffic keeps idle connections
+    from being dropped along the way (NATs, firewalls), and a connection
+    that doesn't reply within `timeout` seconds is closed and its session
+    removed, so clients get 403 instead of hanging requests."""
+    log.info("Keepalive every %ss (timeout %ss)", interval, timeout)
+    while True:
+        await asyncio.sleep(interval)
+        sessions = list(_komsessions.items())
+        await asyncio.gather(*(_ping_komsession(cid, ks, timeout) for cid, ks in sessions))
 
 
 def _get_connection_id_from_request():
